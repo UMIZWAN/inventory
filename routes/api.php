@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AssetsBranchController;
 use App\Http\Controllers\Api\AssetsCategoryController;
 use App\Http\Controllers\Api\AssetsTagController;
+use App\Http\Controllers\Api\AssetsController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -35,3 +36,4 @@ Route::apiResource('assets-branch', AssetsBranchController::class);
 Route::apiResource('assets-category', AssetsCategoryController::class);
 
 Route::apiResource('assets-tag', AssetsTagController::class);
+Route::apiResource('assets', AssetsController::class);
