@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
             $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
-            $table->string('assets_transaction_description');
+            $table->string('transaction_value');
             $table->timestamps();
         });
 
