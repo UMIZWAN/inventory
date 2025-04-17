@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Assets;
+use Illuminate\Support\Facades\Auth;
 
 class AssetsController extends Controller
 {
@@ -63,6 +64,10 @@ class AssetsController extends Controller
                 ], 422);
             }
 
+            $message[] = $this->getName() . ' mencipta Asset dengan nomor ' . $request['asset_running_number'];
+
+            $request['assets_log'] = $message;
+
             $assets = Assets::create($request->all());
 
             return response()->json([
@@ -83,7 +88,7 @@ class AssetsController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes',
-                'asset_running_number' => 'sometimes',
+                // 'asset_running_number' => 'sometimes',
                 'asset_type' => 'sometimes',
                 'asset_category_id' => 'sometimes',
                 'asset_tag_id' => 'sometimes',
@@ -104,6 +109,43 @@ class AssetsController extends Controller
             }
 
             $assets = Assets::find($id);
+
+            $message = $this->log('mengemaskini', $request->asset_running_number);
+
+            // Get old logs and append new message
+            try {
+                // 1) get raw log (could be string, array or null)
+                $rawLog = $assets->assets_log;
+
+                // 2) normalize into PHP array
+                if (is_string($rawLog)) {
+                    $existingLog = json_decode($rawLog, true) ?? [];
+                } elseif (is_array($rawLog)) {
+                    $existingLog = $rawLog;
+                } else {
+                    $existingLog = [];
+                }
+
+                // 3) append new entry
+                $existingLog[] = $message;
+
+                // 4) if your model casts assets_log to array, you can skip json_encode
+                //    otherwise, encode it back:
+                // $encoded = is_array($rawLog)
+                //     ? json_encode($existingLog)
+                //     : json_encode($existingLog);
+
+                // 5) return (or update—here we’re just returning for debug)
+                // return response()->json([
+                //     'log' => $existingLog
+                // ]);
+            } catch (Exception $error) {
+                return response()->json([
+                    'message' => 'Terjadi Kesalahan!',
+                    'error'   => $error->getMessage()
+                ], 500);
+            }
+            $request['assets_log'] = json_encode($existingLog);
 
             if (!$assets) {
                 return response()->json([
@@ -126,5 +168,18 @@ class AssetsController extends Controller
                 'error' => $error->getMessage()
             ], 500);
         }
+    }
+
+    protected function log($action, $running_number)
+    {
+        $name = $this->getName();
+        $message = "$name $action Asset $running_number pada " . date('Y-m-d H:i:s');
+        return $message;
+    }
+
+    public function getName()
+    {
+        $user = Auth::user();
+        return $user ? $user->name : 'Guest';
     }
 }

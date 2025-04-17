@@ -29,6 +29,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::apiResource('assets', AssetsController::class);
 });
 
 Route::apiResource('assets-branch', AssetsBranchController::class);
@@ -36,4 +37,4 @@ Route::apiResource('assets-branch', AssetsBranchController::class);
 Route::apiResource('assets-category', AssetsCategoryController::class);
 
 Route::apiResource('assets-tag', AssetsTagController::class);
-Route::apiResource('assets', AssetsController::class);
+// Route::apiResource('assets', AssetsController::class);

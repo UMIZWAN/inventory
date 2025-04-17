@@ -34,6 +34,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'access_level_id' => 1,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -61,10 +62,12 @@ class AuthController extends Controller
         $user = User::where('email', $request['email'])->firstOrFail();
 
         $token = $user->createToken('auth_token')->plainTextToken;
+        $name = $user->name;
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'name' => $name,
         ]);
     }
 
