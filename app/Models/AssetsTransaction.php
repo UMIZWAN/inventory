@@ -13,10 +13,3 @@ class AssetsTransaction extends Model
         'assets_transaction_description'
     ];
 }
-Schema::create('assets_transaction', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
-    $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
-    $table->string('assets_transaction_description');
-    $table->timestamps();
-});

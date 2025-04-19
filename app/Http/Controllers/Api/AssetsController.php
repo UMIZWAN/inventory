@@ -8,22 +8,31 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Assets;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\AssetsResource;
 
 class AssetsController extends Controller
 {
     public function index()
     {
-        $assets = Assets::all();
-        return response()->json([
-            'success' => true,
-            'message' => 'Data Assets Berhasil Ditampilkan!',
-            'data' => $assets
-        ], 200);
+        try {
+            $assets = Assets::with(['branch', 'tag', 'category'])->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Assets Berhasil Ditampilkan!',
+                'data' => AssetsResource::collection($assets),
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function show($id)
     {
-        $assets = Assets::find($id);
+        $assets = Assets::with(['branch', 'tag', 'category'])->find($id);
         if ($assets) {
             return response()->json([
                 'success' => true,
@@ -34,7 +43,7 @@ class AssetsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Data Assets Tidak Ditemukan!',
-                'data' => $assets
+                'data' => new AssetsResource($assets),
             ], 404);
         }
     }

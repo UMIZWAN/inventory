@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 // use Database\Seeders\AssetCategorySeeder;
 use Database\Seeders\AssetsSeeder;
 use Database\Seeders\AccessLevelSeeder;
+use Database\Seeders\UserSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -24,9 +25,9 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            // UserSeeder::class,
-            AssetsSeeder::class,
             AccessLevelSeeder::class,
+            UserSeeder::class,
+            AssetsSeeder::class,
             // Add any other seeder classes here
         ]);
     }

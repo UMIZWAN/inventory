@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::table('transaction_list', function (Blueprint $table) {
+        Schema::create('transaction_list', function (Blueprint $table) {
             $table->id();
             $table->string('assets_transaction_running_number')->nullable();
             $table->foreignId('asset_transaction_id')->constrained('assets_transaction')->cascadeOnDelete();
