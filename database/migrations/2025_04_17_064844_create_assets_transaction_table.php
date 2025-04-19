@@ -13,16 +13,8 @@ return new class extends Migration
     {
         Schema::create('assets_transaction', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
-            $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
-            $table->string('transaction_value');
-            $table->timestamps();
-        });
-
-        Schema::create('transaction_list', function (Blueprint $table) {
-            $table->id();
             $table->string('assets_transaction_running_number')->nullable();
-            $table->foreignId('asset_transaction_id')->constrained('assets_transaction')->cascadeOnDelete();
+            $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
             $table->string('assets_transaction_type')->default('ASSET IN');
             $table->string('assets_transaction_status')->default('PENDING');
             $table->unsignedBigInteger('created_by')->nullable();
@@ -38,6 +30,13 @@ return new class extends Migration
             $table->foreign('received_by')->references('id')->on('users')->nullOnDelete();
             $table->foreign('approved_by')->references('id')->on('users')->nullOnDelete();
         });
+        Schema::create('assets_transaction_item_list', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
+            $table->foreignId('asset_transaction_id')->constrained('assets_transaction')->cascadeOnDelete();
+            $table->string('transaction_value');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -45,7 +44,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transaction_list');
+        Schema::dropIfExists('assets_transaction_item_list');
         Schema::dropIfExists('assets_transaction');
     }
 };
