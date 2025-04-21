@@ -4,10 +4,26 @@ import api from '../api/api';
 const AssetsContext = createContext();
 
 export const AssetMetaProvider = ({ children }) => {
+  const [assets, setAssets] = useState([]);
   const [categories, setCategories] = useState({});
   const [tags, setTags] = useState({});
   const [branches, setBranches] = useState({});
   const [loading, setLoading] = useState(true);
+
+  const fetchAssets = () => {
+    api.get('/api/assets')
+      .then(response => {
+        if (response.data.success) {
+          setAssets(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching assets:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
     const fetchAllMeta = async () => {
@@ -47,8 +63,21 @@ export const AssetMetaProvider = ({ children }) => {
     fetchAllMeta();
   }, []);
 
+  useEffect(() => {
+    fetchAssets();
+  }, []);
+
   return (
-    <AssetsContext.Provider value={{ categories, tags, branches, loading }}>
+    <AssetsContext.Provider
+      value={{
+        assets,
+        categories,
+        tags,
+        branches,
+        loading
+      }}
+    >
+
       {children}
     </AssetsContext.Provider>
   );
