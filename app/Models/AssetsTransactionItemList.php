@@ -9,13 +9,15 @@ class AssetsTransactionItemList extends Model
     protected $table = 'assets_transaction_item_list';
     protected $fillable = [
         'assets_transaction_id',
-        'assets_id',
-        'transaction_value'
+        'asset_id',
+        'transaction_value',
+        'created_at',
+        'updated_at'
     ];
 
     public function asset()
     {
-        return $this->belongsTo(Assets::class, 'assets_id');
+        return $this->belongsTo(Assets::class, 'asset_id');
     }
     public function transaction()
     {

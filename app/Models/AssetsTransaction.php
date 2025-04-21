@@ -22,6 +22,11 @@ class AssetsTransaction extends Model
         'approved_at'
     ];
 
+    public function itemList()
+    {
+        return $this->hasMany(AssetsTransactionItemList::class, 'asset_transaction_id');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'users_id');

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('assets_transaction', function (Blueprint $table) {
             $table->id();
-            $table->string('assets_transaction_running_number')->nullable();
+            $table->string('assets_transaction_running_number')->unique();
             $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
             $table->string('assets_transaction_type')->default('ASSET IN');
             $table->string('assets_transaction_status')->default('PENDING');
