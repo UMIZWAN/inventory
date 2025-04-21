@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             AccessLevelSeeder::class,
             UserSeeder::class,
             AssetsSeeder::class,
+            AssetsTransactionSeeder::class,
             // Add any other seeder classes here
         ]);
     }

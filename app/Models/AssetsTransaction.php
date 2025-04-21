@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AssetsTransaction extends Model
 {
+    use HasFactory;
     protected $table = 'assets_transaction';
     protected $fillable = [
         'assets_transaction_running_number',
