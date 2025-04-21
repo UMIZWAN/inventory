@@ -33,17 +33,22 @@ class AssetsSeeder extends Seeder
             'asset_category_id' => 1,
             'asset_tag_id' => 1,
             'asset_stable_value' => 10,
-            'asset_current_value' => 5,
+            'asset_current_value' => 7,
+            'asset_purchase_cost' => 1000,  // Example value
+            'asset_sales_cost' => 800,  // Example value
+            'asset_unit_measure' => 'Unit',
             'assets_branch_id' => 1,
-            'assets_location' => 'Office',
-            'assets_remark' => [
+            'assets_location_id' => 1,  // Corrected to location ID
+            'asset_image' => 'path/to/image.jpg',  // Example value
+            'assets_remark' => json_encode([ // Encoding remarks as JSON
                 "New Laptop for staff",
                 "Laptop repaired"
-            ],
-            "assets_log" => [
+            ]),
+            'assets_log' => json_encode([ // Encoding log as JSON
                 "Laptop Entered by Izwan"
-            ],
+            ]),
         ]);
+
         Assets::factory()->create([
             'name' => 'Thinkpad X1 Carbon',
             'asset_running_number' => 'E-0002',
@@ -52,18 +57,23 @@ class AssetsSeeder extends Seeder
             'asset_tag_id' => 1,
             'asset_stable_value' => 5,
             'asset_current_value' => 2,
+            'asset_purchase_cost' => 1500,  // Example value
+            'asset_sales_cost' => 1200,  // Example value
+            'asset_unit_measure' => 'Unit',
             'assets_branch_id' => 1,
-            'assets_location' => 'Office',
-            'assets_remark' => [
+            'assets_location_id' => 1,  // Corrected to location ID
+            'asset_image' => 'path/to/image2.jpg',  // Example value
+            'assets_remark' => json_encode([ // Encoding remarks as JSON
                 "New Laptop for staff",
                 "Laptop repaired"
-            ],
-            "assets_log" => [
+            ]),
+            'assets_log' => json_encode([ // Encoding log as JSON
                 "Laptop Entered by Izwan",
                 "Laptop repaired by Izwan",
                 "Laptop repaired by Ahmad"
-            ],
+            ]),
         ]);
+
         Assets::factory()->create([
             'name' => 'A4 Printer',
             'asset_running_number' => 'E-0003',
@@ -71,16 +81,20 @@ class AssetsSeeder extends Seeder
             'asset_category_id' => 1,
             'asset_tag_id' => 1,
             'asset_stable_value' => 6,
-            'asset_current_value' => 2,
+            'asset_current_value' => 10,
+            'asset_purchase_cost' => 300,  // Example value
+            'asset_sales_cost' => 250,  // Example value
+            'asset_unit_measure' => 'Piece',
             'assets_branch_id' => 1,
-            'assets_location' => 'Office',
-            'assets_remark' => [
-                "New Laptop for staff",
-                "Laptop repaired"
-            ],
-            "assets_log" => [
+            'assets_location_id' => 1,  // Corrected to location ID
+            'asset_image' => 'path/to/image3.jpg',  // Example value
+            'assets_remark' => json_encode([ // Encoding remarks as JSON
+                "New Printer for office",
+                "Printer repaired"
+            ]),
+            'assets_log' => json_encode([ // Encoding log as JSON
                 "Printer Entered by Izwan"
-            ],
+            ]),
         ]);
     }
 }

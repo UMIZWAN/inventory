@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
             $table->string('assets_transaction_type')->default('ASSET IN');
             $table->string('assets_transaction_status')->default('PENDING');
+            $table->text('assets_transaction_remark')->nullable();
+            $table->json('assets_transaction_log')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->dateTime('created_at')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
@@ -34,6 +36,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
             $table->foreignId('asset_transaction_id')->constrained('assets_transaction')->cascadeOnDelete();
+            $table->string('status')->nullable();
             $table->string('transaction_value');
             $table->timestamps();
         });
