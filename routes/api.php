@@ -7,8 +7,8 @@ use App\Http\Controllers\Api\AssetsBranchController;
 use App\Http\Controllers\Api\AssetsCategoryController;
 use App\Http\Controllers\Api\AssetsTagController;
 use App\Http\Controllers\Api\AssetsController;
-use App\Models\AssetsTransaction;
-use App\Models\AssetsTransactionItemList;
+use App\Http\Controllers\Api\AssetsTransactionController;
+use App\Http\Controllers\Api\AssetsTransactionItemListController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -41,4 +41,4 @@ Route::apiResource('assets-category', AssetsCategoryController::class);
 Route::apiResource('assets-tag', AssetsTagController::class);
 // Route::apiResource('assets', AssetsController::class);
 
-Route::apiResource('assets-transaction', AssetsTransactionItemList::class);
+Route::apiResource('assets-transaction', AssetsTransactionController::class);
