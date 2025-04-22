@@ -5,9 +5,11 @@ import { useAssetMeta } from "../../context/AssetsContext";
 
 function ReceiveForm() {
 
-  const { assets } = useAssetMeta();
+  const { assets, branches } = useAssetMeta();
   const [isUsingPO, setIsUsingPO] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
+  const [referenceNo, setReferenceNo] = useState("");
+  const [branch, setBranch] = useState("");
   const [items, setItems] = useState([
     {
       item: '',
@@ -93,6 +95,30 @@ function ReceiveForm() {
               </select>
             </div>
           )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Reference No.</label>
+          <input
+            type="text"
+            className="w-full border rounded p-2 mt-1"
+            value={referenceNo}
+            onChange={(e) => setReferenceNo(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Branch</label>
+          <select
+            className="w-full border rounded p-2 mt-1"
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+          >
+            <option value="">[Select Branch]</option>
+            {Object.entries(branches).map(([id, name]) => (
+              <option key={id} value={id}>{name}</option>
+            ))}
+          </select>
         </div>
 
         <div>

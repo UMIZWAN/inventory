@@ -58,6 +58,28 @@ const Sidebar = () => {
 
     return (
         <div className="w-64 bg-gray-200 p-2 shadow-md h-full overflow-y-auto">
+            <div className="mb-2 rounded">
+                <ul>
+                    <Link href="/assets" >
+                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                            <span>Inventory</span>
+                        </li>
+                    </Link>
+                    <Link href="/categories" >
+                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                            <span>Categories</span>
+                        </li>
+                    </Link>
+                    <Link href="/tags" >
+                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                            <span>Tag</span>
+                        </li>
+                    </Link>
+                    <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                        <span>Suppliers</span>
+                    </li>
+                </ul>
+            </div>
             {menu.map((section, index) => {
                 const isOpen = openSections[section.title];
                 return (
@@ -89,10 +111,11 @@ const SidebarSection = ({ title, items, isOpen, onToggle }) => {
     }, [isOpen]);
 
     return (
-        <div className="mb-4 bg-gray-300 rounded">
+        <div className="mb-2 bg-gray-300 rounded">
+
             <div
                 onClick={onToggle}
-                className="bg-gray-400 text-white font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer"
+                className=" text-white font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer"
             >
                 <span>{title}</span>
                 {isOpen ? (

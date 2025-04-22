@@ -5,8 +5,8 @@ const AssetsContext = createContext();
 
 export const AssetMetaProvider = ({ children }) => {
   const [assets, setAssets] = useState([]);
-  const [categories, setCategories] = useState({});
-  const [tags, setTags] = useState({});
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
   const [branches, setBranches] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -28,30 +28,16 @@ export const AssetMetaProvider = ({ children }) => {
   useEffect(() => {
     const fetchAllMeta = async () => {
       try {
-        const [catRes, tagRes, branchRes] = await Promise.all([
-          api.get('/api/assets-category'),
-          api.get('/api/assets-tag'),
+        const [branchRes] = await Promise.all([
           api.get('/api/assets-branch'),
         ]);
 
-        const catMap = {};
-        const tagMap = {};
         const branchMap = {};
-
-        catRes.data.data.forEach((item) => {
-          catMap[item.id] = item.name;
-        });
-
-        tagRes.data.data.forEach((item) => {
-          tagMap[item.id] = item.name;
-        });
 
         branchRes.data.data.forEach((item) => {
           branchMap[item.id] = item.name;
         });
 
-        setCategories(catMap);
-        setTags(tagMap);
         setBranches(branchMap);
       } catch (err) {
         console.error('Error fetching metadata:', err);
@@ -63,7 +49,73 @@ export const AssetMetaProvider = ({ children }) => {
     fetchAllMeta();
   }, []);
 
+  // --------------------------------------------------------------------------------
+  // Category functions
+  // --------------------------------------------------------------------------------
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/api/assets-category');
+      setCategories(res.data.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addCategory = async (name) => {
+    await api.post('/api/assets-category', { name });
+    fetchCategories();
+  };
+
+  const updateCategory = async (id, name) => {
+    await api.put(`/api/assets-category/${id}`, { name });
+    fetchCategories();
+  };
+
+  const deleteCategory = async (id) => {
+    await api.delete(`/api/assets-category/${id}`);
+    fetchCategories();
+  };
+
+  const getCategoryById = (id) => categories.find(c => c.id === id);
+
+  // --------------------------------------------------------------------------------
+  // Tag functions
+  // --------------------------------------------------------------------------------
+  const fetchTags = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/api/assets-tag');
+      const data = res.data?.data;
+      setTags(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      setTags([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addTag = async (name) => {
+    await api.post('/api/assets-tag', { name });
+    fetchTags();
+  };
+
+  const updateTag = async (id, name) => {
+    await api.put(`/api/assets-tag/${id}`, { name });
+    fetchTags();
+  };
+
+  const deleteTag = async (id) => {
+    await api.delete(`/api/assets-tag/${id}`);
+    fetchTags();
+  };
+
   useEffect(() => {
+    fetchTags();
+    fetchCategories();
     fetchAssets();
   }, []);
 
@@ -72,9 +124,16 @@ export const AssetMetaProvider = ({ children }) => {
       value={{
         assets,
         categories,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        getCategoryById,
         tags,
+        addTag,
+        updateTag,
+        deleteTag,
         branches,
-        loading
+        loading,
       }}
     >
 
