@@ -69,21 +69,21 @@ function AddAsset({ setShowModal }) {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input name="name" placeholder="Name" value={form.name} onChange={handleChange} className="w-full p-2 border rounded" required />
                     <input name="asset_type" placeholder="Type" value={form.asset_type} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <input name="asset_running_number" placeholder="Running Number" value={form.asset_running_number} onChange={handleChange} className="w-full p-2 border rounded" required />
+                    <input name="asset_running_number" placeholder="Item Code" value={form.asset_running_number} onChange={handleChange} className="w-full p-2 border rounded" required />
 
                     {/* Category Dropdown */}
                     <select name="asset_category_id" value={form.asset_category_id || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
                         <option value="">Select Category</option>
-                        {Object.entries(categories).map(([id, name]) => (
-                            <option key={id} value={id}>{name}</option>
+                        {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
                     </select>
 
                     {/* Tag Dropdown */}
                     <select name="asset_tag_id" value={form.asset_tag_id || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
                         <option value="">Select Tag</option>
-                        {Object.entries(tags).map(([id, name]) => (
-                            <option key={id} value={id}>{name}</option>
+                        {tags.map((tag) => (
+                            <option key={tag.id} value={tag.id}>{tag.name}</option>
                         ))}
                     </select>
 

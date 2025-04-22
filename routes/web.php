@@ -12,6 +12,14 @@ Route::get('/assets', function () {
     return inertia('Assets');
 });
 
+Route::get('/categories', function () {
+    return inertia('CategoryPage');
+});
+
+Route::get('/tags', function () {
+    return inertia('TagPage');
+});
+
 Route::prefix('purchase')->group(function () {
     Route::get('/order-stock', fn () => Inertia::render('Purchase/OrderStock'));
     Route::get('/receive-stock', fn () => Inertia::render('Purchase/ReceiveForm'));
