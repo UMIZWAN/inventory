@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -33,6 +34,36 @@ class Assets extends Model
         'assets_remark' => 'array',
         'assets_log' => 'array',
     ];
+
+    /**
+     * Append an action to the assets_log as a sentence describing changes.
+     *
+     * @param string $action
+     * @param array  $changes  Field => ['old' => oldValue, 'new' => newValue]
+     */
+    public function appendLogSentence(string $action, array $changes = []): void
+    {
+        $running   = $this->asset_running_number;
+        $user      = Auth::user()->name;
+        $time      = now()->format('Y-m-d H:i:s');
+        $descriptions = [];
+
+        foreach ($changes as $field => $vals) {
+            $descriptions[] = "{$field} dari '{$vals['old']}' menjadi '{$vals['new']}'";
+        }
+
+        $detail = $descriptions
+            ? implode(', ', $descriptions)
+            : 'tanpa perubahan pada detail';
+
+        $sentence = "$user $action Asset $running pada $time, $detail.";
+
+        $logs = $this->assets_log ?? [];
+        $logs[] = $sentence;
+
+        $this->assets_log = $logs;
+        $this->saveQuietly();
+    }
 
     public function category()
     {

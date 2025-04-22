@@ -15,7 +15,7 @@ class AssetsController extends Controller
     public function index()
     {
         try {
-            $assets = Assets::with(['branch', 'tag', 'category'])->get();
+            $assets = Assets::with(['category', 'branch', 'tag', 'location'])->get();
 
             return response()->json([
                 'success' => true,
@@ -32,7 +32,7 @@ class AssetsController extends Controller
 
     public function show($id)
     {
-        $assets = Assets::with(['branch', 'tag', 'category'])->find($id);
+        $assets = Assets::with(['branch', 'tag', 'category', 'location'])->find($id);
         if ($assets) {
             return response()->json([
                 'success' => true,
@@ -52,15 +52,20 @@ class AssetsController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'required',
-                'asset_running_number' => 'required',
-                'asset_type' => 'required',
-                'asset_category_id' => 'required',
-                'asset_tag_id' => 'required',
-                'asset_stable_value' => 'required',
-                'asset_current_value' => 'required',
-                'assets_branch_id' => 'required',
-                'assets_location' => 'required',
+                'name' => 'required|string|max:255',
+                'asset_running_number' => 'required|string|max:255',
+                'asset_description' => 'nullable|string',
+                'asset_type' => 'nullable|string',
+                'asset_category_id' => 'bail|required|integer|min:1|exists:assets_category,id',
+                'asset_tag_id'      => 'bail|required|integer|min:1|exists:assets_tag,id',
+                'asset_stable_value' => 'bail|required|integer|min:1',
+                'asset_current_value' => 'bail|required|integer|min:1',
+                'asset_purchase_cost' => 'bail|required|numeric|min:0',
+                'asset_sales_cost' => 'bail|nullable|numeric|min:0',
+                'asset_unit_measure' => 'bail|required|string',
+                'assets_branch_id' => 'bail|required|integer|min:1|exists:assets_branch,id',
+                'assets_location_id' => 'bail|required|integer|min:1|exists:assets_branch,id',
+                'asset_image' => 'nullable|string',
                 'assets_remark' => 'nullable',
                 'assets_log' => 'nullable',
             ]);
@@ -73,7 +78,8 @@ class AssetsController extends Controller
                 ], 422);
             }
 
-            $message[] = $this->getName() . ' mencipta Asset dengan nomor ' . $request['asset_running_number'];
+            $username = Auth::user()->name ?? 'Unknown';
+            $message[] = $username . ' mencipta Asset dengan nomor ' . $request['asset_running_number'];
 
             $request['assets_log'] = $message;
 
@@ -92,21 +98,27 @@ class AssetsController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update an existing asset, tracking changes as transaction history.
+     */
+    public function update(Request $request, Assets $asset)
     {
         try {
+            // 1️⃣ Validate input data
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes',
-                // 'asset_running_number' => 'sometimes',
-                'asset_type' => 'sometimes',
-                'asset_category_id' => 'sometimes',
-                'asset_tag_id' => 'sometimes',
-                'asset_stable_value' => 'sometimes',
-                'asset_current_value' => 'sometimes',
-                'assets_branch_id' => 'sometimes',
-                'assets_location' => 'sometimes',
-                'assets_remark' => 'nullable',
-                'assets_log' => 'nullable',
+                'name'                 => 'sometimes|string|max:255',
+                'asset_running_number' => 'sometimes|string|max:255',
+                'asset_description'    => 'sometimes|string',
+                'asset_type'           => 'sometimes|string|max:100',
+                'asset_category_id'    => 'sometimes|integer|exists:assets_category,id',
+                'asset_tag_id'         => 'sometimes|integer|exists:assets_tag,id',
+                'asset_stable_value'   => 'sometimes|numeric|min:0',
+                'asset_current_value'  => 'sometimes|numeric|min:0',
+                'asset_purchase_cost'  => 'sometimes|numeric|min:0',
+                'asset_sales_cost'     => 'sometimes|numeric|min:0',
+                'asset_unit_measure'   => 'sometimes|string|max:100',
+                'assets_branch_id'     => 'sometimes|integer|exists:assets_branch,id',
+                'assets_location_id'   => 'sometimes|integer|exists:assets_branch,id',
             ]);
 
             if ($validator->fails()) {
@@ -117,78 +129,56 @@ class AssetsController extends Controller
                 ], 422);
             }
 
-            $assets = Assets::find($id);
+            // 2️⃣ Track changes - compare original values with new values
+            $changes = [];
+            $requestData = $request->all();
 
-            $message = $this->log('mengemaskini', $request->asset_running_number);
-
-            // Get old logs and append new message
-            try {
-                // 1) get raw log (could be string, array or null)
-                $rawLog = $assets->assets_log;
-
-                // 2) normalize into PHP array
-                if (is_string($rawLog)) {
-                    $existingLog = json_decode($rawLog, true) ?? [];
-                } elseif (is_array($rawLog)) {
-                    $existingLog = $rawLog;
-                } else {
-                    $existingLog = [];
+            // Only check fillable fields that are present in the request
+            $fillableFields = $asset->getFillable();
+            foreach ($fillableFields as $field) {
+                if (!array_key_exists($field, $requestData)) {
+                    continue; // Skip if field not provided in request
                 }
 
-                // 3) append new entry
-                $existingLog[] = $message;
+                $oldValue = $asset->$field;
+                $newValue = $requestData[$field];
 
-                // 4) if your model casts assets_log to array, you can skip json_encode
-                //    otherwise, encode it back:
-                // $encoded = is_array($rawLog)
-                //     ? json_encode($existingLog)
-                //     : json_encode($existingLog);
+                // Handle array values
+                if (is_array($newValue) || is_array($oldValue)) {
+                    $oldValueStr = is_array($oldValue) ? json_encode($oldValue) : (string)$oldValue;
+                    $newValueStr = is_array($newValue) ? json_encode($newValue) : (string)$newValue;
+                } else {
+                    $oldValueStr = (string)$oldValue;
+                    $newValueStr = (string)$newValue;
+                }
 
-                // 5) return (or update—here we’re just returning for debug)
-                // return response()->json([
-                //     'log' => $existingLog
-                // ]);
-            } catch (Exception $error) {
-                return response()->json([
-                    'message' => 'Terjadi Kesalahan!',
-                    'error'   => $error->getMessage()
-                ], 500);
-            }
-            $request['assets_log'] = json_encode($existingLog);
-
-            if (!$assets) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data Tidak Ditemukan!',
-                    'data' => $assets
-                ], 404);
+                // Only record if values are different
+                if ($oldValueStr !== $newValueStr) {
+                    $changes[$field] = ['old' => $oldValueStr, 'new' => $newValueStr];
+                }
             }
 
-            $assets->update($request->all());
+            // 3️⃣ Apply changes
+            $asset->fill($requestData);
+            $asset->save(); // Actually save the changes to the database
 
+            // 4️⃣ Append a descriptive log entry
+            if (!empty($changes)) {
+                $asset->appendLogSentence('mengemaskini', $changes);
+            }
+
+            // 5️⃣ Return updated asset
             return response()->json([
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!',
-                'data' => $assets
+                'data'    => $requestData,
             ], 200);
-        } catch (Exception $error) {
+        } catch (Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Terjadi Kesalahan!',
-                'error' => $error->getMessage()
+                'error' => $e->getMessage()
             ], 500);
         }
-    }
-
-    protected function log($action, $running_number)
-    {
-        $name = $this->getName();
-        $message = "$name $action Asset $running_number pada " . date('Y-m-d H:i:s');
-        return $message;
-    }
-
-    public function getName()
-    {
-        $user = Auth::user();
-        return $user ? $user->name : 'Guest';
     }
 }
