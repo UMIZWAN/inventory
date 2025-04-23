@@ -11,43 +11,12 @@ return new class extends Migration
    */
   public function up(): void
   {
-    /** Purchase Order
-         Schema::create('supplier', function (Blueprint $table) {
-           $table->id();
-           $table->string('supplier_name');
-           $table->string('supplier_office_number')->nullable();
-           $table->string('supplier_email')->nullable();
-           $table->string('supplier_address')->nullable();
-         });
-
-         Schema::create('tax', function (Blueprint $table) {
-           $table->id();
-           $table->string('tax_name');
-           $table->decimal('tax_percentage', 5, 2);
-         });
-
-          Schema::create('purchase_order', function (Blueprint $table) {
-           $table->id();
-           $table->foreignId('supplier_id')->constrained('supplier')->cascadeOnDelete();
-           $table->date('expected_receipt_date');
-           $table->foreignId('tax_id')->constrained('tax')->cascadeOnDelete();
-           $table->text('billing_address');
-           $table->text('shipping_address');
-           $table->string('tracking_ref')->unique();
-           $table->text('purchase_order_notes')->nullable();
-           $table->text('purchase_internal_notes')->nullable();
-           $table->string('purchase_order_running_number')->unique();
-           $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
-         });
-         
-         
-     **/
-
 
     Schema::create('assets_transaction', function (Blueprint $table) {
       $table->id();
       $table->string('assets_transaction_running_number')->unique();
-      $table->foreignId('users_id')->constrained('users')->cascadeOnDelete();
+      $table->unsignedBigInteger('purchase_order_id')->nullable();
+      $table->foreign('purchase_order_id')->references('id')->on('purchase_order')->nullOnDelete();
 
       $table->enum('assets_transaction_type', ['ASSET IN', 'ASSET OUT']);
       $table->enum('assets_transaction_status', ['PENDING', 'APPROVED', 'REJECTED'])->default('PENDING');
@@ -72,8 +41,8 @@ return new class extends Migration
 
     Schema::create('assets_transaction_item_list', function (Blueprint $table) {
       $table->id();
-      $table->foreignId('asset_transaction_id')->constrained('assets_transaction')->cascadeOnDelete();
-      $table->unsignedBigInteger('tax_id')->nullable();
+      $table->foreignId('asset_transaction_id')->nullable()->constrained('assets_transaction')->cascadeOnDelete();
+      $table->foreignId('purchase_order_id')->nullable()->constrained('purchase_order')->cascadeOnDelete();
       $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
       $table->enum('status', ['ON HOLD', 'DELIVERED', 'FROZEN', 'RECEIVED', 'RETURNED', 'DISPOSED'])->nullable();
       $table->integer('asset_unit');

@@ -26,10 +26,45 @@ class AccessLevelFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->word(), // Generate a unique word for the name
-            'add_asset' => $this->faker->boolean(), // Generate a random boolean (true or false)
-            'edit_asset' => $this->faker->boolean(),
-            'delete_asset' => $this->faker->boolean(),
+            'name' => $this->faker->unique()->jobTitle(),
+
+            // Role
+            'add_edit_role' => $this->faker->boolean(),
+            'view_role' => $this->faker->boolean(),
+
+            // User
+            'add_edit_user' => $this->faker->boolean(),
+            'view_user' => $this->faker->boolean(),
+
+            // Asset
+            'add_edit_asset' => $this->faker->boolean(),
+            'view_asset' => $this->faker->boolean(),
+
+            // Branch
+            'add_edit_branch' => $this->faker->boolean(),
+            'view_branch' => $this->faker->boolean(),
+
+            // Transaction
+            'add_edit_transaction' => $this->faker->boolean(),
+            'view_transaction' => $this->faker->boolean(),
+            'approve_reject_transaction' => $this->faker->boolean(),
+            'receive_transaction' => $this->faker->boolean(),
+
+            // Purchase Order
+            'add_edit_purchase_order' => $this->faker->boolean(),
+            'view_purchase_order' => $this->faker->boolean(),
+
+            // Supplier
+            'add_edit_supplier' => $this->faker->boolean(),
+            'view_supplier' => $this->faker->boolean(),
+
+            // Tax
+            'add_edit_tax' => $this->faker->boolean(),
+            'view_tax' => $this->faker->boolean(),
+
+            // Reports
+            'view_reports' => $this->faker->boolean(),
+            'download_reports' => $this->faker->boolean(),
         ];
     }
 }

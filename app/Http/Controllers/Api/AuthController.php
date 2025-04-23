@@ -34,7 +34,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'access_level_id' => 1,
+            'access_level_id' => $request->access_level_id,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -68,6 +68,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
             'name' => $name,
+            // 'access_level_id' => $user->access_level_id, ?? Make this Resource for access level to be use in front end
         ]);
     }
 
