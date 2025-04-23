@@ -13,7 +13,7 @@ function ReceiveForm() {
   const [items, setItems] = useState([
     {
       item: '',
-      location: '',
+      unitMeasure: '',
       recvQty: 0,
       unitCost: 0,
       stockQty: 0,
@@ -27,26 +27,38 @@ function ReceiveForm() {
       type: "select",
       options: assets.map((a) => ({ value: a.id, label: a.name })),
     },
-    { key: "location", label: "Location" },
+    { key: "unitMeasure", label: "Unit of Measure" },
     { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-right" },
     { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-right" },
-    { key: "stockQty", label: "Stock Qty", type: "number", min: 0, align: "text-right" },
   ];
 
   const handleChange = (index, field, value) => {
     const updated = [...items];
-    updated[index][field] = field === 'recvQty' || field === 'unitCost' || field === 'stockQty'
-      ? parseFloat(value)
-      : value;
+  
+    if (field === 'item') {
+      const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
+      updated[index].item = value;
+  
+      if (selectedAsset) {
+        updated[index].unitCost = parseFloat(selectedAsset.asset_sales_cost || 0 );
+        updated[index].unitMeasure = selectedAsset.asset_unit_measure || '' ;
+      }
+    } else {
+      updated[index][field] =
+        field === 'recvQty' || field === 'unitCost' || field === 'unitMeasure'
+          ? parseFloat(value)
+          : value;
+    }
+  
     setItems(updated);
-  };
+  };  
 
   const addItem = () => {
     setItems([
       ...items,
       {
         item: '',
-        location: '',
+        unitMeasure: '',
         recvQty: 0,
         unitCost: 0,
         stockQty: 0,
@@ -97,28 +109,30 @@ function ReceiveForm() {
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium">Reference No.</label>
-          <input
-            type="text"
-            className="w-full border rounded p-2 mt-1"
-            value={referenceNo}
-            onChange={(e) => setReferenceNo(e.target.value)}
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Reference No.</label>
+            <input
+              type="text"
+              className="w-full border rounded p-2 mt-1"
+              value={referenceNo}
+              onChange={(e) => setReferenceNo(e.target.value)}
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium">Branch</label>
-          <select
-            className="w-full border rounded p-2 mt-1"
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-          >
-            <option value="">[Select Branch]</option>
-            {Object.entries(branches).map(([id, name]) => (
-              <option key={id} value={id}>{name}</option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium">Branch</label>
+            <select
+              className="w-full border rounded p-2 mt-1"
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+            >
+              <option value="">[Select Branch]</option>
+              {branches.map((br) => (
+                <option key={br.id} value={br.id}>{br.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div>
@@ -152,10 +166,10 @@ function ReceiveForm() {
           <textarea className="w-full border rounded p-2 mt-1 h-24"></textarea>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <input type="checkbox" id="mark-fully-received" />
           <label htmlFor="mark-fully-received" className="text-sm">Mark order as fully received</label>
-        </div>
+        </div> */}
 
         <div className="flex justify-end gap-3 pt-4">
           <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded">Cancel</button>

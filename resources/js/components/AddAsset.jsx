@@ -90,8 +90,8 @@ function AddAsset({ setShowModal }) {
                     {/* Branch Dropdown */}
                     <select name="assets_branch_id" value={form.assets_branch_id || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
                         <option value="">Select Branch</option>
-                        {Object.entries(branches).map(([id, name]) => (
-                            <option key={id} value={id}>{name}</option>
+                        {branches.map((br) => (
+                            <option key={br.id} value={br.id}>{br.name}</option>
                         ))}
                     </select>
 

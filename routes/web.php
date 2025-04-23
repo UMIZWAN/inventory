@@ -7,17 +7,17 @@ Route::get('/', function () {
     return inertia('Login');
 });
 
-
-Route::get('/assets', function () {
-    return inertia('Assets');
-});
-
 Route::get('/categories', function () {
     return inertia('CategoryPage');
 });
 
 Route::get('/tags', function () {
     return inertia('TagPage');
+});
+
+Route::prefix('items')->group(function () {
+    Route::get('/item-list', fn () => Inertia::render('Items/Assets'));
+    Route::get('/transfer-stock', fn () => Inertia::render('Items/StockTransfer'));
 });
 
 Route::prefix('purchase')->group(function () {

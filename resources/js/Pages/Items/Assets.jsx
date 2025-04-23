@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import AddAsset from '../components/AddAsset';
+import AddAsset from '../../components/AddAsset';
+import ItemDetails from '../../components/ItemDetails';
 import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
-import Layout from '../components/layout/Layout';
-import { useAssetMeta } from '../context/AssetsContext';
-import placeholder from '../assets/image/placeholder.png';
+import Layout from '../../components/layout/Layout';
+import { useAssetMeta } from '../../context/AssetsContext';
+import placeholder from '../../assets/image/placeholder.png';
 
 const Assets = () => {
     const { assets } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
+    const [selectedAsset, setSelectedAsset] = useState(null);
 
+    const handleView = (asset) => setSelectedAsset(asset);
 
     return (
         <>
@@ -47,6 +50,12 @@ const Assets = () => {
                                             Category
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Cost
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Price
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Tag
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -61,14 +70,14 @@ const Assets = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Action
-                                        </th>
+                                        </th> */}
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {assets.map((asset) => (
-                                        <tr key={asset.id} className="hover:bg-gray-50">
+                                        <tr key={asset.id} className="hover:bg-gray-50" onClick={() => handleView(asset)}>
                                             {/* <td className="px-6 py-4 whitespace-nowrap">
                                         <input
                                             type="checkbox"
@@ -83,7 +92,7 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10">
-                                                        <img className="h-10 w-10 rounded" src={asset.image_url || placeholder } alt={asset.name} />
+                                                        <img className="h-10 w-10 rounded" src={asset.image_url || placeholder} alt={asset.name} />
                                                     </div>
                                                     <div className="ml-4">
                                                         <div className="text-sm font-medium text-gray-900">{asset.name}</div>
@@ -95,6 +104,12 @@ const Assets = () => {
                                                 {asset.asset_category_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {Number(asset.asset_purchase_cost).toFixed(2) || '—'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {Number(asset.asset_sales_cost).toFixed(2) || '—'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_tag_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -104,7 +119,7 @@ const Assets = () => {
                                                 {asset.asset_current_value}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.assets_location}
+                                                {asset.assets_location_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {(() => {
@@ -132,7 +147,7 @@ const Assets = () => {
                                                     );
                                                 })()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex space-x-2">
                                                     <button className="text-blue-600 hover:text-blue-900" onClick={() => handleView(asset)}>
                                                         <FiEye />
@@ -144,7 +159,7 @@ const Assets = () => {
                                                         <FiTrash2 />
                                                     </button>
                                                 </div>
-                                            </td>
+                                            </td> */}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -156,6 +171,15 @@ const Assets = () => {
                     {showModal && (
                         <AddAsset setShowModal={setShowModal} />
                     )}
+
+
+                    {selectedAsset && (
+                        <ItemDetails
+                            asset={selectedAsset}
+                            onClose={() => setSelectedAsset(null)}
+                        />
+                    )}
+
                 </div>
             </Layout>
         </>

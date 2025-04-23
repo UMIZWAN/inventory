@@ -4,14 +4,14 @@ import ItemsTable from "../../components/ItemsTable";
 import { useAssetMeta } from "../../context/AssetsContext";
 
 function OrderStock() {
-    const { assets } = useAssetMeta(); 
+    const { assets } = useAssetMeta();
     const [form, setForm] = useState({
         poNumber: '',
         branch: '',
         orderDate: '',
         status: 'Pending',
         supplier: '',
-        items: [{ name: '', quantity: 1, price: 0 }],
+        items: [{ name: '', unitMeasure: '',quantity: 1, price: 0 }],
     });
 
     const columns = [
@@ -21,6 +21,7 @@ function OrderStock() {
             type: "select",
             options: assets.map((a) => ({ value: a.id, label: a.name })),
         },
+        { key: "unitMeasure", label: "Unit of Measure" },
         { key: "quantity", label: "Quantity", type: "number", min: 1, align: "text-right" },
         { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right" },
         { key: "amount", label: "Amount", align: "text-right", disabled: true }, // optionally display computed
@@ -36,9 +37,24 @@ function OrderStock() {
     };
 
     const handleItemChange = (index, field, value) => {
-        const items = [...form.items];
-        items[index][field] = field === 'quantity' || field === 'price' ? parseFloat(value) : value;
-        setForm({ ...form, items });
+        const updated = [...form.items];
+
+        if (field === 'item') {
+            const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
+            updated[index].item = value;
+        
+            if (selectedAsset) {
+              updated[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
+              updated[index].unitMeasure = selectedAsset.asset_unit_measure || '' ;
+            }
+          } else {
+            updated[index][field] =
+              field === 'quantity' || field === 'price' || field === 'unitMeasure'
+                ? parseFloat(value)
+                : value;
+          }
+        
+        setForm({ ...form, updated });
     };
 
     const getTotal = () => {
@@ -85,13 +101,15 @@ function OrderStock() {
 
                     <div>
                         <label className="block font-medium text-gray-700">Supplier</label>
-                        <input
+                        <select
                             type="text"
                             value={form.supplier}
                             onChange={(e) => setForm({ ...form, supplier: e.target.value })}
                             className="w-full mt-1 p-2 border rounded"
                             required
-                        />
+                        >
+                            <option value="">[Select Supplier]</option>
+                        </select>
                     </div>
 
                     <div>

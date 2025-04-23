@@ -7,7 +7,7 @@ export const AssetMetaProvider = ({ children }) => {
   const [assets, setAssets] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
-  const [branches, setBranches] = useState({});
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAssets = () => {
@@ -25,29 +25,27 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
-  useEffect(() => {
-    const fetchAllMeta = async () => {
-      try {
-        const [branchRes] = await Promise.all([
-          api.get('/api/assets-branch'),
-        ]);
+  const updateAsset = async (id, updatedData) => {
+    try {
+      await api.put(`/api/assets/${id}`, updatedData);
+      fetchAssets(); // Refresh the list after update
+    } catch (err) {
+      console.error('Failed to update asset:', err);
+      throw err;
+    }
+  };
 
-        const branchMap = {};
-
-        branchRes.data.data.forEach((item) => {
-          branchMap[item.id] = item.name;
-        });
-
-        setBranches(branchMap);
-      } catch (err) {
-        console.error('Error fetching metadata:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllMeta();
-  }, []);
+  const fetchBranches = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/api/assets-branch');
+      setBranches(res.data.data);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --------------------------------------------------------------------------------
   // Category functions
@@ -114,6 +112,7 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    fetchBranches();
     fetchTags();
     fetchCategories();
     fetchAssets();
@@ -123,6 +122,7 @@ export const AssetMetaProvider = ({ children }) => {
     <AssetsContext.Provider
       value={{
         assets,
+        updateAsset,
         categories,
         addCategory,
         updateCategory,
