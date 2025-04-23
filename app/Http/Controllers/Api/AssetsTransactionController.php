@@ -18,7 +18,8 @@ class AssetsTransactionController extends Controller
     {
         try {
             $transactions = AssetsTransaction::with([
-                'branch',
+                'fromBranch',
+                'toBranch',
                 'itemList',
                 'createdByUser',
                 'updatedByUser',
@@ -56,7 +57,7 @@ class AssetsTransactionController extends Controller
                 'assets_transaction_status' => 'required|string',
                 'assets_transaction_item_list' => 'required|array',
                 'assets_transaction_item_list.*.asset_id' => 'required|exists:assets,id',
-                'assets_transaction_item_list.*.transaction_value' => 'required|string',
+                'assets_transaction_item_list.*.asset_unit' => 'required|string',
             ]);
 
             if ($validator->fails()) {
@@ -86,7 +87,7 @@ class AssetsTransactionController extends Controller
                 DB::table('assets_transaction_item_list')->insert([
                     'asset_transaction_id' => $assets->id,
                     'asset_id' => $item['asset_id'],
-                    'transaction_value' => $item['transaction_value']
+                    'asset_unit' => $item['asset_unit']
                 ]);
             }
 
