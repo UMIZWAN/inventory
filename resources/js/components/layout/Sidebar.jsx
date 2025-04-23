@@ -73,9 +73,11 @@ const Sidebar = () => {
                             <span>Tag</span>
                         </li>
                     </Link>
-                    <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                        <span>Suppliers</span>
-                    </li>
+                    <Link href="/supplier" >
+                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                            <span>Suppliers</span>
+                        </li>
+                    </Link>
                 </ul>
             </div>
             {menu.map((section, index) => {
@@ -131,7 +133,7 @@ const SidebarSection = ({ title, items, prefix, isOpen, onToggle }) => {
                 <ul>
                     {items.map((item, idx) => {
                         const slug = item.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-                        const href = `/${prefix}/${slug}`; 
+                        const href = `/${prefix}/${slug}`;
 
                         return (
                             <li
