@@ -4,7 +4,7 @@ import ItemsTable from "../../components/ItemsTable";
 import { useAssetMeta } from "../../context/AssetsContext";
 
 function OrderStock() {
-    const { assets } = useAssetMeta(); 
+    const { assets } = useAssetMeta();
     const [form, setForm] = useState({
         poNumber: '',
         branch: '',
@@ -85,13 +85,15 @@ function OrderStock() {
 
                     <div>
                         <label className="block font-medium text-gray-700">Supplier</label>
-                        <input
+                        <select
                             type="text"
                             value={form.supplier}
                             onChange={(e) => setForm({ ...form, supplier: e.target.value })}
                             className="w-full mt-1 p-2 border rounded"
                             required
-                        />
+                        >
+                            <option value="">[Select Supplier]</option>
+                        </select>
                     </div>
 
                     <div>
