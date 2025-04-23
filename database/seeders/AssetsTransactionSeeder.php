@@ -25,7 +25,7 @@ class AssetsTransactionSeeder extends Seeder
             ->create();
         
         AssetsTransaction::factory()
-            ->count(3)
+            ->count(7)
             ->ofType('ASSET OUT')
             ->create();
     }

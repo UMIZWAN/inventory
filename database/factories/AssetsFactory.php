@@ -30,13 +30,10 @@ class AssetsFactory extends Factory
             'assets_branch_id' => $this->faker->numberBetween(1, 3),
             'assets_location_id' => $this->faker->numberBetween(1, 3), // Assuming this is a reference to branches
             'asset_image' => $this->faker->imageUrl(), // Generate a random image URL
-            'assets_remark' => json_encode([ // Encoding array into JSON
-                $this->faker->sentence(),
-                $this->faker->sentence()
-            ]),
-            'assets_log' => json_encode([ // Encoding array into JSON
-                'Created by ' . $this->faker->name(),
-            ]),
+            'assets_remark' => $this->faker->sentence() . ' ' . $this->faker->sentence(),
+            'assets_log' => [
+                "Created by " . $this->faker->name()
+            ],
             'created_at' => now(),
             'updated_at' => now(),
         ];

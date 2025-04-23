@@ -8,12 +8,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class AssetsTransaction extends Model
 {
     use HasFactory;
+
+    public const TYPES = ['ASSET IN', 'ASSET OUT'];
+    public const STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
+    public const PURPOSES = ['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST'];
+
     protected $table = 'assets_transaction';
+
     protected $fillable = [
         'assets_transaction_running_number',
         'users_id',
         'assets_transaction_type',
         'assets_transaction_status',
+        'assets_transaction_purpose',
+        'assets_branch_id',
+        'assets_transaction_remark',
+        'assets_transaction_log',
         'created_by',
         'created_at',
         'updated_by',
@@ -24,6 +34,7 @@ class AssetsTransaction extends Model
         'approved_at'
     ];
 
+    // Relationships
     public function itemList()
     {
         return $this->hasMany(AssetsTransactionItemList::class, 'asset_transaction_id');
@@ -52,5 +63,10 @@ class AssetsTransaction extends Model
     public function approvedByUser()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(AssetsBranch::class, 'assets_branch_id');
     }
 }

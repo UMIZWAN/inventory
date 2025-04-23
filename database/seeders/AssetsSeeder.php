@@ -40,13 +40,6 @@ class AssetsSeeder extends Seeder
             'assets_branch_id' => 1,
             'assets_location_id' => 1,  // Corrected to location ID
             'asset_image' => 'path/to/image.jpg',  // Example value
-            'assets_remark' => json_encode([ // Encoding remarks as JSON
-                "New Laptop for staff",
-                "Laptop repaired"
-            ]),
-            'assets_log' => json_encode([ // Encoding log as JSON
-                "Laptop Entered by Izwan"
-            ]),
         ]);
 
         Assets::factory()->create([
@@ -63,15 +56,6 @@ class AssetsSeeder extends Seeder
             'assets_branch_id' => 1,
             'assets_location_id' => 1,  // Corrected to location ID
             'asset_image' => 'path/to/image2.jpg',  // Example value
-            'assets_remark' => json_encode([ // Encoding remarks as JSON
-                "New Laptop for staff",
-                "Laptop repaired"
-            ]),
-            'assets_log' => json_encode([ // Encoding log as JSON
-                "Laptop Entered by Izwan",
-                "Laptop repaired by Izwan",
-                "Laptop repaired by Ahmad"
-            ]),
         ]);
 
         Assets::factory()->create([
@@ -88,13 +72,6 @@ class AssetsSeeder extends Seeder
             'assets_branch_id' => 1,
             'assets_location_id' => 1,  // Corrected to location ID
             'asset_image' => 'path/to/image3.jpg',  // Example value
-            'assets_remark' => json_encode([ // Encoding remarks as JSON
-                "New Printer for office",
-                "Printer repaired"
-            ]),
-            'assets_log' => json_encode([ // Encoding log as JSON
-                "Printer Entered by Izwan"
-            ]),
         ]);
     }
 }

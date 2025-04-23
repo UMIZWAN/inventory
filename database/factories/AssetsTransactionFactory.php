@@ -2,38 +2,39 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\AssetsTransaction;
+use App\Models\AssetsTransactionItemList;
 use App\Models\User;
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AssetsTransaction>
- */
+use App\Models\AssetsBranch;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
 class AssetsTransactionFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = AssetsTransaction::class;
+
     public function definition(): array
     {
-        // Get random user ID or create fallback
-        $userId = User::pluck('id')->random() ?? 1;
+        $user = User::inRandomOrder()->first() ?? User::factory()->create();
 
-        // Transaction types and statuses
-        $types = ['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER'];
-        $statuses = ['PENDING', 'APPROVED', 'REJECTED', 'COMPLETED'];
+        $types = ['ASSET IN', 'ASSET OUT'];
+        $statuses = ['PENDING', 'APPROVED', 'REJECTED'];
 
-        // Generate a unique running number
         static $runningNumber = 1;
         $transactionNumber = sprintf('AR-%03d', $runningNumber++);
 
         return [
             'assets_transaction_running_number' => $transactionNumber,
-            'users_id' => $userId,
+            'users_id' => $user->id,
             'assets_transaction_type' => $this->faker->randomElement($types),
             'assets_transaction_status' => $this->faker->randomElement($statuses),
-            'created_by' => $userId,
+            'assets_transaction_purpose' => $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']),
+            'assets_branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
+            'assets_transaction_remark' => $this->faker->optional()->sentence(),
+            'assets_transaction_log' => null,
+            'created_by' => $user->id,
+            'created_at' => now(),
             'updated_by' => null,
+            'updated_at' => null,
             'received_by' => null,
             'received_at' => null,
             'approved_by' => null,
@@ -41,43 +42,46 @@ class AssetsTransactionFactory extends Factory
         ];
     }
 
-    /**
-     * Configure the model factory.
-     */
     public function configure()
     {
-        return $this->afterCreating(function (\App\Models\AssetsTransaction $transaction) {
-            // Create 1-3 items for this transaction
-            \App\Models\AssetsTransactionItemList::factory()
-                ->count($this->faker->numberBetween(1, 3))
+        return $this->afterCreating(function (AssetsTransaction $transaction) {
+            $count = fake()->numberBetween(1, 3);
+
+            AssetsTransactionItemList::factory()
+                ->count($count)
                 ->create([
-                    'asset_transaction_id' => $transaction->id
+                    'asset_transaction_id' => $transaction->id,
                 ]);
         });
     }
 
-    /**
-     * Indicate the transaction is approved.
-     */
     public function approved()
     {
         return $this->state(function (array $attributes) {
+            $approver = User::inRandomOrder()->first()?->id ?? User::factory();
+
             return [
                 'assets_transaction_status' => 'APPROVED',
-                'approved_by' => User::pluck('id')->random(),
+                'approved_by' => $approver,
                 'approved_at' => now(),
             ];
         });
     }
 
-    /**
-     * Indicate the transaction is a specific type.
-     */
     public function ofType($type)
     {
         return $this->state(function (array $attributes) use ($type) {
+            $purpose = null;
+
+            if ($type === 'ASSET IN') {
+                $purpose = 'ASSET IN';
+            } else {
+                $purpose = fake()->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']);
+            }
+
             return [
                 'assets_transaction_type' => $type,
+                'assets_transaction_purpose' => $purpose,
             ];
         });
     }

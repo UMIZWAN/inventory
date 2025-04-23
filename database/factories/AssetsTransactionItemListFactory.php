@@ -2,27 +2,22 @@
 
 namespace Database\Factories;
 
-
-use App\Models\Assets;
+use App\Models\AssetsTransactionItemList;
 use App\Models\AssetsTransaction;
+use App\Models\Assets;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AssetsTransactionItemList>
- */
 class AssetsTransactionItemListFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = AssetsTransactionItemList::class;
+
     public function definition(): array
     {
         return [
             'asset_transaction_id' => AssetsTransaction::factory(),
-            'asset_id' => Assets::pluck('id')->random() ?? 1,
-            'transaction_value' => (string)$this->faker->numberBetween(100, 10000),
+            'asset_id' => Assets::inRandomOrder()->first()?->id ?? Assets::factory(),
+            'status' => $this->faker->randomElement(AssetsTransactionItemList::STATUSES),
+            'asset_unit' => (string) $this->faker->numberBetween(50, 200),
         ];
     }
 }

@@ -8,13 +8,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class AssetsTransactionItemList extends Model
 {
     use HasFactory;
+
+    public const STATUSES = [
+        'ON HOLD',
+        'DELIVERED',
+        'FROZEN',
+        'RECEIVED',
+        'RETURNED',
+        'DISPOSED',
+    ];
+
     protected $table = 'assets_transaction_item_list';
+
     protected $fillable = [
         'assets_transaction_id',
         'asset_id',
-        'transaction_value',
-        'created_at',
-        'updated_at'
+        'tax_id',
+        'status',
+        'asset_unit',
     ];
 
     public function asset()
