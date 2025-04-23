@@ -30,7 +30,7 @@ function ReceiveForm() {
     { key: "location", label: "Location" },
     { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-right" },
     { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-right" },
-    { key: "stockQty", label: "Stock Qty", type: "number", min: 0, align: "text-right" },
+    // { key: "stockQty", label: "Stock Qty", type: "number", min: 0, align: "text-right" },
   ];
 
   const handleChange = (index, field, value) => {
@@ -97,28 +97,30 @@ function ReceiveForm() {
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium">Reference No.</label>
-          <input
-            type="text"
-            className="w-full border rounded p-2 mt-1"
-            value={referenceNo}
-            onChange={(e) => setReferenceNo(e.target.value)}
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Reference No.</label>
+            <input
+              type="text"
+              className="w-full border rounded p-2 mt-1"
+              value={referenceNo}
+              onChange={(e) => setReferenceNo(e.target.value)}
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium">Branch</label>
-          <select
-            className="w-full border rounded p-2 mt-1"
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-          >
-            <option value="">[Select Branch]</option>
-            {Object.entries(branches).map(([id, name]) => (
-              <option key={id} value={id}>{name}</option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium">Branch</label>
+            <select
+              className="w-full border rounded p-2 mt-1"
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+            >
+              <option value="">[Select Branch]</option>
+              {branches.map((br) => (
+                <option key={br.id} value={br.id}>{br.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div>
