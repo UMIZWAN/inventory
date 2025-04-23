@@ -15,6 +15,10 @@ Route::get('/tags', function () {
     return inertia('TagPage');
 });
 
+Route::get('/supplier', function () {
+    return inertia('SupplierForm');
+});
+
 Route::prefix('items')->group(function () {
     Route::get('/item-list', fn () => Inertia::render('Items/Assets'));
     Route::get('/transfer-stock', fn () => Inertia::render('Items/StockTransfer'));
