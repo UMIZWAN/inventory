@@ -68,7 +68,7 @@ function ReceiveForm() {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-4">
+      <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-4">
         <h2 className="text-2xl font-semibold mb-4">Receive Stock</h2>
 
         <div className="flex items-center gap-4">

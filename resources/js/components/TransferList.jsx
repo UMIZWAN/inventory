@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import api from "../api/api";
 import { Dialog } from "@headlessui/react";
+import TransferForm from "./TransferForm";
 
 export default function TransferListTab() {
     const [requests, setRequests] = useState([]);
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [showTransferForm, setShowTransferForm] = useState(false);
 
     useEffect(() => {
         api.get("/api/assets-transaction")
@@ -44,7 +46,21 @@ export default function TransferListTab() {
 
     return (
         <>
-            <div className="overflow-x-auto bg-white shadow rounded-lg">
+            {showTransferForm && (
+                <TransferForm setShowTransferForm={setShowTransferForm} />
+            )}
+
+            <div className="overflow-x-auto bg-white shadow rounded-lg p-3">
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-bold">Request List</h1>
+                    <button
+                        onClick={() => setShowTransferForm(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                        + New Request
+                    </button>
+                </div>
+
                 <table className="min-w-full text-sm text-left border border-gray-200">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
