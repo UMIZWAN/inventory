@@ -42,16 +42,16 @@ return new class extends Migration
             $table->decimal('asset_sales_cost', 12, 4)->nullable();
             $table->string('asset_unit_measure');
             $table->string('asset_image')->nullable();
-            $table->json('assets_remark')->nullable();
+            $table->text('assets_remark')->nullable();
             $table->json('assets_log')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('asset_branch_values', function (Blueprint $table) {
+        Schema::create('assets_branch_values', function (Blueprint $table) {
             $table->id();
             $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
-            $table->foreignId('assets_branch_id')->constrained('assets_branch')->cascadeOnDelete();
-            $table->foreignId('assets_location_id')->constrained('assets_branch')->cascadeOnDelete();
+            $table->foreignId('asset_branch_id')->constrained('assets_branch')->cascadeOnDelete();
+            $table->foreignId('asset_location_id')->constrained('assets_branch')->cascadeOnDelete();
             $table->unsignedInteger('asset_current_unit')->default(0);
         });
     }

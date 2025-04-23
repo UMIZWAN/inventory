@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\AssetsTransaction;
 use App\Models\AssetsTransactionItemList;
+use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\AssetsBranch;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,67 +24,87 @@ class AssetsTransactionFactory extends Factory
         $transactionNumber = sprintf('AR-%03d', $runningNumber++);
 
         return [
-            'assets_transaction_running_number' => $transactionNumber,
-            'users_id' => $user->id,
-            'assets_transaction_type' => $this->faker->randomElement($types),
-            'assets_transaction_status' => $this->faker->randomElement($statuses),
-            'assets_transaction_purpose' => $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']),
-            'assets_from_branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
-            'assets_to_branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
-            'assets_transaction_remark' => $this->faker->optional()->sentence(),
-            'assets_transaction_log' => null,
-            'created_by' => $user->id,
+            'assets_transaction_running_number' => $this->faker->unique()->numerify('AT-####'),
+            'purchase_order_id' => PurchaseOrder::factory(),
+            'assets_transaction_type' => $this->faker->randomElement(['ASSET IN', 'ASSET OUT']),
+            'assets_transaction_status' => 'PENDING',
+            'assets_transaction_purpose' => $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST', 'ASSET IN']),
+            'assets_from_branch_id' => AssetsBranch::factory(),
+            'assets_to_branch_id' => AssetsBranch::factory(),
+            'assets_transaction_remark' => $this->faker->text,
+            'assets_transaction_log' => json_encode(['log' => 'Some transaction log']),
+            'created_by' => User::factory(),
+            'updated_by' => User::factory(),
+            'received_by' => User::factory(),
+            'approved_by' => User::factory(),
             'created_at' => now(),
-            'updated_by' => null,
-            'updated_at' => null,
-            'received_by' => null,
-            'received_at' => null,
-            'approved_by' => null,
-            'approved_at' => null,
+            'updated_at' => now(),
+            'received_at' => now(),
+            'approved_at' => now(),
         ];
+
+        // return [
+        //     'assets_transaction_running_number' => $transactionNumber,
+        //     'users_id' => $user->id,
+        //     'assets_transaction_type' => $this->faker->randomElement($types),
+        //     'assets_transaction_status' => $this->faker->randomElement($statuses),
+        //     'assets_transaction_purpose' => $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']),
+        //     'assets_from_branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
+        //     'assets_to_branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
+        //     'assets_transaction_remark' => $this->faker->optional()->sentence(),
+        //     'assets_transaction_log' => null,
+        //     'created_by' => $user->id,
+        //     'created_at' => now(),
+        //     'updated_by' => null,
+        //     'updated_at' => null,
+        //     'received_by' => null,
+        //     'received_at' => null,
+        //     'approved_by' => null,
+        //     'approved_at' => null,
+        // ];
     }
 
-    public function configure()
-    {
-        return $this->afterCreating(function (AssetsTransaction $transaction) {
-            $count = fake()->numberBetween(1, 3);
+    // public function configure()
+    // {
+    //     return $this->afterCreating(function (AssetsTransaction $transaction) {
+    //         $count = fake()->numberBetween(1, 3);
 
-            AssetsTransactionItemList::factory()
-                ->count($count)
-                ->create([
-                    'asset_transaction_id' => $transaction->id,
-                ]);
-        });
-    }
+    //         AssetsTransactionItemList::factory()
+    //             ->count($count)
+    //             ->create([
+    //                 'asset_transaction_id' => $transaction->id,
+    //             ]);
+    //     });
+    // }
 
-    public function approved()
-    {
-        return $this->state(function (array $attributes) {
-            $approver = User::inRandomOrder()->first()?->id ?? User::factory();
+    // public function approved()
+    // {
+    //     return $this->state(function (array $attributes) {
+    //         $approver = User::inRandomOrder()->first()?->id ?? User::factory();
 
-            return [
-                'assets_transaction_status' => 'APPROVED',
-                'approved_by' => $approver,
-                'approved_at' => now(),
-            ];
-        });
-    }
+    //         return [
+    //             'assets_transaction_status' => 'APPROVED',
+    //             'approved_by' => $approver,
+    //             'approved_at' => now(),
+    //         ];
+    //     });
+    // }
 
-    public function ofType($type)
-    {
-        return $this->state(function (array $attributes) use ($type) {
-            $purpose = null;
+    // public function ofType($type)
+    // {
+    //     return $this->state(function (array $attributes) use ($type) {
+    //         $purpose = null;
 
-            if ($type === 'ASSET IN') {
-                $purpose = 'ASSET IN';
-            } else {
-                $purpose = fake()->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']);
-            }
+    //         if ($type === 'ASSET IN') {
+    //             $purpose = 'ASSET IN';
+    //         } else {
+    //             $purpose = fake()->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']);
+    //         }
 
-            return [
-                'assets_transaction_type' => $type,
-                'assets_transaction_purpose' => $purpose,
-            ];
-        });
-    }
+    //         return [
+    //             'assets_transaction_type' => $type,
+    //             'assets_transaction_purpose' => $purpose,
+    //         ];
+    //     });
+    // }
 }

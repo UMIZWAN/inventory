@@ -21,19 +21,30 @@ class AssetsTransactionItemList extends Model
     protected $table = 'assets_transaction_item_list';
 
     protected $fillable = [
-        'assets_transaction_id',
+        'asset_transaction_id',
+        'purchase_order_id',
         'asset_id',
-        'tax_id',
         'status',
         'asset_unit',
     ];
 
-    public function asset()
+    protected $casts = [
+        'status' => 'string',
+    ];
+
+    // Relationships
+    public function assetsTransaction()
+    {
+        return $this->belongsTo(AssetsTransaction::class, 'asset_transaction_id');
+    }
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
+    }
+
+    public function assets()
     {
         return $this->belongsTo(Assets::class, 'asset_id');
-    }
-    public function transaction()
-    {
-        return $this->belongsTo(AssetsTransaction::class, 'assets_transaction_id');
     }
 }

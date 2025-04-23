@@ -12,12 +12,12 @@ class AssetsBranch extends Model
     protected $table = 'assets_branch';
     protected $fillable = ['name'];
 
-    public function assets()
+    public function branch()
     {
-        return $this->hasMany(Assets::class, 'assets_branch_id');
+        return $this->hasMany(AssetsBranchValues::class, 'assets_branch_id');
     }
     public function location()
     {
-        return $this->hasMany(Assets::class, 'assets_location_id');
+        return $this->hasMany(AssetsBranchValues::class, 'assets_location_id');
     }
 }

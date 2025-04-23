@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\AssetsTransactionItemList;
 use App\Models\AssetsTransaction;
 use App\Models\Assets;
+use App\Models\PurchaseOrder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AssetsTransactionItemListFactory extends Factory
@@ -15,9 +16,10 @@ class AssetsTransactionItemListFactory extends Factory
     {
         return [
             'asset_transaction_id' => AssetsTransaction::factory(),
-            'asset_id' => Assets::inRandomOrder()->first()?->id ?? Assets::factory(),
-            'status' => $this->faker->randomElement(AssetsTransactionItemList::STATUSES),
-            'asset_unit' => (string) $this->faker->numberBetween(50, 200),
+            'purchase_order_id' => PurchaseOrder::factory(),
+            'asset_id' => Assets::factory(),
+            'status' => $this->faker->randomElement(['ON HOLD', 'DELIVERED', 'FROZEN', 'RECEIVED', 'RETURNED', 'DISPOSED']),
+            'asset_unit' => $this->faker->numberBetween(1, 10),
         ];
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Assets extends Model
 {
     use HasFactory;
+
     protected $table = 'assets';
 
     protected $fillable = [
@@ -18,23 +19,24 @@ class Assets extends Model
         'asset_type',
         'asset_category_id',
         'asset_tag_id',
+        'asset_stable_unit',
         'asset_purchase_cost',
         'asset_sales_cost',
         'asset_unit_measure',
         'asset_image',
         'assets_remark',
-        'assets_log'
+        'assets_log',
     ];
 
     protected $casts = [
-        'assets_remark' => 'array',
         'assets_log' => 'array',
+        'asset_purchase_cost' => 'decimal:4',
+        'asset_sales_cost' => 'decimal:4',
     ];
-    // Relations(asset_category_id, asset_tag_id)
-    // Relations(assets_branch_id, assets_location_id)
+
     public function branchValues()
     {
-        return $this->hasMany(AssetBranchValues::class, 'asset_id');
+        return $this->hasMany(AssetsBranchValues::class, 'asset_id');
     }
 
     public function category()
@@ -47,10 +49,10 @@ class Assets extends Model
         return $this->belongsTo(AssetsTag::class, 'asset_tag_id');
     }
 
-    public function itemList()
-    {
-        return $this->hasMany(AssetsTransactionItemList::class, 'assets_id');
-    }
+    // public function itemList()
+    // {
+    //     return $this->hasMany(AssetsTransactionItemList::class, 'assets_id');
+    // }
     /**
      * Append an action to the assets_log as a sentence describing changes.
      *

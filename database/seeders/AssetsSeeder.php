@@ -8,6 +8,10 @@ use App\Models\Assets;
 use App\Models\AssetsBranch;
 use App\Models\AssetsCategory;
 use App\Models\AssetsTag;
+use App\Models\Suppliers;
+use App\Models\PurchaseOrder;
+use App\Models\AssetsTransaction;
+use App\Models\AssetsTransactionItemList;
 
 class AssetsSeeder extends Seeder
 {
@@ -18,6 +22,21 @@ class AssetsSeeder extends Seeder
      */
     public function run(): void
     {
+        Suppliers::factory(10)->create()->each(function ($supplier) {
+            $purchaseOrder = PurchaseOrder::factory()->create([
+                'supplier_id' => $supplier->id,
+            ]);
+
+            $assetTransaction = AssetsTransaction::factory()->create([
+                'purchase_order_id' => $purchaseOrder->id,
+            ]);
+
+            AssetsTransactionItemList::factory(3)->create([
+                'asset_transaction_id' => $assetTransaction->id,
+                'purchase_order_id' => $purchaseOrder->id,
+            ]);
+        });
+
         AssetsBranch::factory()->create(['name' => 'UMKK1']);
         AssetsBranch::factory()->create(['name' => 'UMKK2']);
         AssetsBranch::factory()->create(['name' => 'UMTWU']);
