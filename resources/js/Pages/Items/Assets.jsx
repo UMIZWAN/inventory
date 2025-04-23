@@ -16,7 +16,7 @@ const Assets = () => {
     return (
         <>
             <Layout>
-                <div className="p-6 max-w-7xl mx-auto">
+                <div className="p-6 max-w-9xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold">Assets List</h1>
                         <button

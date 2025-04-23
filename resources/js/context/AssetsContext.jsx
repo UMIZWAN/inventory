@@ -25,6 +25,28 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
+  const addAsset = async (form) => {
+    console.log('Adding asset:', form);
+    const formData = new FormData();
+    Object.entries(form).forEach(([key, value]) => {
+      if (key === 'assets_remark') {
+        value.split('\n').forEach((line, i) => {
+          formData.append(`assets_remark[${i}]`, line);
+        });
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    try {
+      await api.post('/api/assets', formData);
+      fetchAssets(); // Refresh the list after update
+    } catch (err) {
+      console.error('Failed to update asset:', err);
+      throw err;
+    }
+  };
+
   const updateAsset = async (id, updatedData) => {
     try {
       await api.put(`/api/assets/${id}`, updatedData);
@@ -35,6 +57,9 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
+  // --------------------------------------------------------------------------------
+  // Branch functions
+  // --------------------------------------------------------------------------------
   const fetchBranches = async () => {
     setLoading(true);
     try {
@@ -122,6 +147,7 @@ export const AssetMetaProvider = ({ children }) => {
     <AssetsContext.Provider
       value={{
         assets,
+        addAsset,
         updateAsset,
         categories,
         addCategory,
