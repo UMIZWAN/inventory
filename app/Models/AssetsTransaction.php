@@ -21,7 +21,8 @@ class AssetsTransaction extends Model
         'assets_transaction_type',
         'assets_transaction_status',
         'assets_transaction_purpose',
-        'assets_branch_id',
+        'assets_from_branch_id',
+        'assets_to_branch_id',
         'assets_transaction_remark',
         'assets_transaction_log',
         'created_by',
@@ -65,8 +66,13 @@ class AssetsTransaction extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function branch()
+    public function fromBranch()
     {
-        return $this->belongsTo(AssetsBranch::class, 'assets_branch_id');
+        return $this->belongsTo(AssetsBranch::class, 'assets_from_branch_id');
+    }
+
+    public function toBranch()
+    {
+        return $this->belongsTo(AssetsBranch::class, 'assets_to_branch_id');
     }
 }
