@@ -49,6 +49,58 @@ class Assets extends Model
         $descriptions = [];
 
         foreach ($changes as $field => $vals) {
+            if ($field == 'asset_type') {
+                $field = 'Tipe Aset';
+            }
+            if ($field == 'asset_category_id') {
+                $field = 'Kategori Aset';
+                $categoryName = AssetsCategory::find($vals['new'])->name ?? 'Unknown Category';
+                $vals['new'] = $categoryName;
+                $categoryOldName = AssetsCategory::find($vals['old'])->name ?? 'Unknown Category';
+                $vals['old'] = $categoryOldName;
+            }
+            if ($field == 'asset_tag_id') {
+                $field = 'Tag Aset';
+                $tagName = AssetsTag::find($vals['new'])->name ?? 'Unknown Tag';
+                $vals['new'] = $tagName;
+                $tagOldName = AssetsTag::find($vals['old'])->name ?? 'Unknown Tag';
+                $vals['old'] = $tagOldName;
+            }
+            if ($field == 'asset_stable_value') {
+                $field = 'Nilai Aset Tetap';
+            }
+            if ($field == 'asset_current_value') {
+                $field = 'Nilai Aset Sekarang';
+            }
+            if ($field == 'assets_branch_id') {
+                $field = 'Cabang';
+                // Get the branch name
+                $branchName = AssetsBranch::find($vals['new'])->name ?? 'Unknown Branch';
+                $vals['new'] = $branchName;
+                $branchOldName = AssetsBranch::find($vals['old'])->name ?? 'Unknown Branch';
+                $vals['old'] = $branchOldName;
+            }
+            if ($field == 'assets_location_id') {
+                $field = 'Lokasi';
+                // Get the location name
+                $locationName = AssetsBranch::find($vals['new'])->name ?? 'Unknown Location';
+                $vals['new'] = $locationName;
+                $locationOldName = AssetsBranch::find($vals['old'])->name ?? 'Unknown Location';
+                $vals['old'] = $locationOldName;
+            }
+            if ($field == 'asset_sales_cost') {
+                $field = 'Harga Jual';
+            }
+            if ($field == 'asset_purchase_cost') {
+                $field = 'Harga Beli';
+            }
+            if ($field == 'asset_unit_measure') {
+                $field = 'Ukuran Unit';
+            }
+            if ($field == 'assets_remark') {
+                $field = 'Catatan';
+            }
+
             $descriptions[] = "{$field} dari '{$vals['old']}' menjadi '{$vals['new']}'";
         }
 
