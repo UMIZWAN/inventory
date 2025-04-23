@@ -73,7 +73,6 @@ const TagPage = () => {
                     <table className="w-full border text-sm">
                         <thead className="bg-gray-100 text-left">
                             <tr>
-                                <th className="border px-3 py-2">ID</th>
                                 <th className="border px-3 py-2">Name</th>
                                 <th className="border px-3 py-2 text-center">Actions</th>
                             </tr>
@@ -82,7 +81,6 @@ const TagPage = () => {
                             {Array.isArray(tags) && tags.length > 0 ? (
                                 tags.map((tag) => (
                                     <tr key={tag.id} className="hover:bg-gray-50">
-                                        <td className="border px-3 py-2">{tag.id}</td>
                                         <td className="border px-3 py-2">{tag.name}</td>
                                         <td className="border px-3 py-2 text-center space-x-2">
                                             <button

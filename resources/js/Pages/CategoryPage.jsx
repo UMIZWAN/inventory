@@ -80,7 +80,6 @@ const CategoryPage = () => {
         <table className="w-full border text-sm">
           <thead className="bg-gray-100 text-left">
             <tr>
-              <th className="border px-3 py-2">ID</th>
               <th className="border px-3 py-2">Name</th>
               <th className="border px-3 py-2 text-center">Actions</th>
             </tr>
@@ -88,7 +87,6 @@ const CategoryPage = () => {
           <tbody>
             {categories.map((cat) => (
               <tr key={cat.id} className="hover:bg-gray-50">
-                <td className="border px-3 py-2">{cat.id}</td>
                 <td className="border px-3 py-2">{cat.name}</td>
                 <td className="border px-3 py-2 text-center space-x-2">
                   <button
