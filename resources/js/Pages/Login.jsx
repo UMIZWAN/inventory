@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext"; // Import context
+import { useAuth } from "../context/AuthContext";
+import { router } from "@inertiajs/react";
 
 const Login = () => {
   const { login } = useAuth(); // use login from context
@@ -17,7 +18,7 @@ const Login = () => {
       setError(result.message);
     } else {
       console.log("Login success!");
-      // Optional: Redirect using react-router-dom
+      router.visit("/items/item-list");
     }
   };
 
