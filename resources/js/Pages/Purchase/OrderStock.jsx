@@ -11,7 +11,7 @@ function OrderStock() {
         orderDate: '',
         status: 'Pending',
         supplier: '',
-        items: [{ name: '', unitMeasure: '',quantity: 1, price: 0 }],
+        items: [{ name: '', unitMeasure: '', quantity: 1, price: 0 }],
     });
 
     const columns = [
