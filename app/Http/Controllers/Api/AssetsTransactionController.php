@@ -17,7 +17,14 @@ class AssetsTransactionController extends Controller
     public function index()
     {
         try {
-            $transactions = AssetsTransaction::with('itemList')->paginate(10);
+            $transactions = AssetsTransaction::with([
+                'branch',
+                'itemList',
+                'createdByUser',
+                'updatedByUser',
+                'approvedByUser',
+                'receivedByUser'
+            ])->paginate(10);
 
             return response()->json([
                 'success' => true,

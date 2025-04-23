@@ -23,16 +23,25 @@ class AssetsTransactionResource extends JsonResource
             'assets_transaction_purpose' => $this->assets_transaction_purpose,
             'assets_transaction_remark' => $this->assets_transaction_remark,
             'assets_branch_id' => $this->assets_branch_id,
-            'assets_branch_name' => $this->branch->name,
+            'assets_branch_name' => $this->branch->name ?? null,
             'assets_transaction_log' => $this->assets_transaction_log,
+
             'created_by' => $this->created_by,
+            'created_by_name' => $this->createdByUser->name ?? null,
             'created_at' => $this->created_at,
+
             'updated_by' => $this->updated_by,
+            'updated_by_name' => $this->updatedByUser->name ?? null,
             'updated_at' => $this->updated_at,
+
             'received_by' => $this->received_by,
+            'received_by_name' => $this->receivedByUser->name ?? null,
             'received_at' => $this->received_at,
+
             'approved_by' => $this->approved_by,
+            'approved_by_name' => $this->approvedByUser->name ?? null,
             'approved_at' => $this->approved_at,
+
             'assets_transaction_item_list' => AssetsTransactionItemListResource::collection($this->whenLoaded('itemList')),
         ];
     }
