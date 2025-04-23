@@ -52,6 +52,19 @@ const Sidebar = () => {
 
     const [openSections, setOpenSections] = useState({});
 
+    useEffect(() => {
+        // Load from localStorage on mount
+        const savedState = localStorage.getItem('sidebarOpenSections');
+        if (savedState) {
+            setOpenSections(JSON.parse(savedState));
+        }
+    }, []);
+
+    useEffect(() => {
+        // Save to localStorage whenever openSections changes
+        localStorage.setItem('sidebarOpenSections', JSON.stringify(openSections));
+    }, [openSections]);
+
     const toggleSection = (title) => {
         setOpenSections((prev) => ({
             ...prev,
