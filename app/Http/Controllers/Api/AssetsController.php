@@ -172,6 +172,7 @@ class AssetsController extends Controller
                 'success' => true,
                 'message' => 'Data Berhasil Diupdate!',
                 'data'    => $requestData,
+                'assets_log' => $asset->assets_log
             ], 200);
         } catch (Exception $e) {
             return response()->json([

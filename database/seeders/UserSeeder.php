@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
         User::factory()->create(
             [
                 'name' => 'KAMALEIAH BINTI HARUN',
-                'email' => 'kamaeleiah@gmail.com',
+                'email' => 'kamal@gmail.com',
                 'password' => bcrypt('12345678'),
                 'access_level_id' => 2,
             ]
