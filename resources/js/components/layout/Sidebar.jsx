@@ -6,45 +6,48 @@ const Sidebar = () => {
     const menu = [
         {
             title: 'Items',
+            prefix: 'items',
             items: [
-                'Add New Item',
-                'Find Item',
-                'View Transfers',
+                'Item List',
+                // 'View Transfers',
                 'Transfer Stock',
                 'Import Items from CSV',
             ],
         },
         {
             title: 'Purchase',
+            prefix: 'purchase',
             items: [
                 'Order Stock',
                 'Receive Stock',
                 'View Orders',
                 'View Receive History',
-                'View Items On Order',
+                // 'View Items On Order',
                 'Order Low Stock Items',
-                'Return Stock',
+                // 'Return Stock',
             ],
         },
         {
             title: 'Sell',
+            prefix: 'sell',
             items: [
                 'Sell Stock',
                 'View Sales History',
             ],
         },
-        {
-            title: 'Reports',
-            items: [
-                'Inventory',
-                'Inventory by Location and Category',
-                'Inventory with Image by Category',
-                'Low Level Stock',
-                'Inventory by Default Supplier',
-                'Backorder Report',
-                'Sales Report',
-            ],
-        },
+        // {
+        //     title: 'Reports',
+        //     prefix: 'reports',
+        //     items: [
+        //         'Inventory',
+        //         'Inventory by Location and Category',
+        //         'Inventory with Image by Category',
+        //         'Low Level Stock',
+        //         'Inventory by Default Supplier',
+        //         'Backorder Report',
+        //         'Sales Report',
+        //     ],
+        // },
     ];
 
     const [openSections, setOpenSections] = useState({});
@@ -60,11 +63,6 @@ const Sidebar = () => {
         <div className="w-64 bg-gray-200 p-2 shadow-md h-full overflow-y-auto">
             <div className="mb-2 rounded">
                 <ul>
-                    <Link href="/assets" >
-                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                            <span>Inventory</span>
-                        </li>
-                    </Link>
                     <Link href="/categories" >
                         <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
                             <span>Categories</span>
@@ -87,6 +85,7 @@ const Sidebar = () => {
                         key={index}
                         title={section.title}
                         items={section.items}
+                        prefix={section.prefix}
                         isOpen={isOpen}
                         onToggle={() => toggleSection(section.title)}
                     />
@@ -96,7 +95,7 @@ const Sidebar = () => {
     );
 };
 
-const SidebarSection = ({ title, items, isOpen, onToggle }) => {
+const SidebarSection = ({ title, items, prefix, isOpen, onToggle }) => {
     const contentRef = useRef(null);
     const [height, setHeight] = useState('0px');
 
@@ -132,7 +131,7 @@ const SidebarSection = ({ title, items, isOpen, onToggle }) => {
                 <ul>
                     {items.map((item, idx) => {
                         const slug = item.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-                        const href = `/purchase/${slug}`; // adjust prefix if needed
+                        const href = `/${prefix}/${slug}`; 
 
                         return (
                             <li
