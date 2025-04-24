@@ -16,10 +16,10 @@ class AssetsTransactionItemListFactory extends Factory
     {
         return [
             'asset_transaction_id' => AssetsTransaction::factory(),
-            'purchase_order_id' => PurchaseOrder::factory(),
+            'purchase_order_id' => $this->faker->boolean(70) ? PurchaseOrder::factory() : null,
             'asset_id' => Assets::factory(),
             'status' => $this->faker->randomElement(['ON HOLD', 'DELIVERED', 'FROZEN', 'RECEIVED', 'RETURNED', 'DISPOSED']),
-            'asset_unit' => $this->faker->numberBetween(1, 10),
+            'asset_unit' => $this->faker->numberBetween(1, 20),
         ];
     }
 }

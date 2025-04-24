@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\AccessLevel;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -9,6 +10,10 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\AssetsSeeder;
 use Database\Seeders\AccessLevelSeeder;
 use Database\Seeders\UserSeeder;
+use Database\Seeders\SuppliersSeeder;
+use Database\Seeders\TaxSeeder;
+use Database\Seeders\PurchaseOrderSeeder;
+use Database\Seeders\AssetsTransactionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,19 +22,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
         $this->call([
             AccessLevelSeeder::class,
             UserSeeder::class,
             AssetsSeeder::class,
+            SuppliersSeeder::class,
+            TaxSeeder::class,
+            PurchaseOrderSeeder::class,
             AssetsTransactionSeeder::class,
-            // Add any other seeder classes here
         ]);
     }
 }

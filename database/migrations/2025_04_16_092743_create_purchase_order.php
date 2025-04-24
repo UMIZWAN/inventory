@@ -27,7 +27,7 @@ return new class extends Migration
 
         Schema::create('purchase_order', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('supplier_id')->constrained('supplier')->cascadeOnDelete();
+            $table->foreignId('supplier_id')->constrained('suppliers')->cascadeOnDelete();
             $table->date('expected_receipt_date');
             $table->foreignId('tax_id')->constrained('tax')->cascadeOnDelete();
             $table->text('billing_address');

@@ -43,6 +43,7 @@ return new class extends Migration
             // Reports
             $table->boolean('view_reports')->default(false);
             $table->boolean('download_reports')->default(false);
+            $table->timestamps();
         });
 
         Schema::create('users', function (Blueprint $table) {

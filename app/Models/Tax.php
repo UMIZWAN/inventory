@@ -16,6 +16,8 @@ class Tax extends Model
         'tax_percentage',
     ];
 
+    public $timestamps = false;
+
     public function purchaseOrders()
     {
         return $this->hasMany(PurchaseOrder::class);

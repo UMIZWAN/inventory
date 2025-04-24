@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Assets;
 use App\Models\AssetsBranch;
+use App\Models\AssetsBranchValues;
 use App\Models\AssetsCategory;
 use App\Models\AssetsTag;
 use App\Models\Suppliers;
@@ -22,75 +23,36 @@ class AssetsSeeder extends Seeder
      */
     public function run(): void
     {
-        Suppliers::factory(10)->create()->each(function ($supplier) {
-            $purchaseOrder = PurchaseOrder::factory()->create([
-                'supplier_id' => $supplier->id,
-            ]);
+        // Create some basic categories
+        $categories = ['Electronics', 'Furniture', 'Office Supplies', 'Vehicles', 'Tools'];
+        foreach ($categories as $category) {
+            AssetsCategory::create(['name' => $category]);
+        }
 
-            $assetTransaction = AssetsTransaction::factory()->create([
-                'purchase_order_id' => $purchaseOrder->id,
-            ]);
+        // Create some basic tags
+        $tags = ['High Value', 'Low Value', 'Consumable', 'Depreciated', 'New'];
+        foreach ($tags as $tag) {
+            AssetsTag::create(['name' => $tag]);
+        }
 
-            AssetsTransactionItemList::factory(3)->create([
-                'asset_transaction_id' => $assetTransaction->id,
-                'purchase_order_id' => $purchaseOrder->id,
-            ]);
+        // Create branches
+        $branches = ['UMKK1', 'UMKK2', 'UMTWU', 'UMKGU', 'UMLD'];
+        foreach ($branches as $branch) {
+            AssetsBranch::create(['name' => $branch]);
+        }
+
+        // Create 50 assets
+        Assets::factory(50)->create()->each(function ($asset) {
+            // For each asset, create between 1 and 3 branch values
+            $branchIds = AssetsBranch::inRandomOrder()->take(rand(1, 3))->pluck('id')->toArray();
+            foreach ($branchIds as $branchId) {
+                AssetsBranchValues::create([
+                    'asset_id' => $asset->id,
+                    'asset_branch_id' => $branchId,
+                    'asset_location_id' => AssetsBranch::inRandomOrder()->first()->id,
+                    'asset_current_unit' => rand(1, 20),
+                ]);
+            }
         });
-
-        AssetsBranch::factory()->create(['name' => 'UMKK1']);
-        AssetsBranch::factory()->create(['name' => 'UMKK2']);
-        AssetsBranch::factory()->create(['name' => 'UMTWU']);
-        AssetsCategory::factory()->create(['name' => 'Electronics']);
-        AssetsCategory::factory()->create(['name' => 'Furniture']);
-        AssetsCategory::factory()->create(['name' => 'Stationery']);
-        AssetsTag::factory()->create(['name' => 'Assembly']);
-        AssetsTag::factory()->create(['name' => 'Component']);
-        Assets::factory()->create([
-            'name' => 'Thinkpad',
-            'asset_running_number' => 'E-0001',
-            'asset_type' => 'Laptop',
-            'asset_category_id' => 1,
-            'asset_tag_id' => 1,
-            'asset_stable_value' => 10,
-            'asset_current_value' => 7,
-            'asset_purchase_cost' => 1000,  // Example value
-            'asset_sales_cost' => 800,  // Example value
-            'asset_unit_measure' => 'Unit',
-            'assets_branch_id' => 1,
-            'assets_location_id' => 1,  // Corrected to location ID
-            'asset_image' => 'path/to/image.jpg',  // Example value
-        ]);
-
-        Assets::factory()->create([
-            'name' => 'Thinkpad X1 Carbon',
-            'asset_running_number' => 'E-0002',
-            'asset_type' => 'Laptop',
-            'asset_category_id' => 1,
-            'asset_tag_id' => 1,
-            'asset_stable_value' => 5,
-            'asset_current_value' => 2,
-            'asset_purchase_cost' => 1500,  // Example value
-            'asset_sales_cost' => 1200,  // Example value
-            'asset_unit_measure' => 'Unit',
-            'assets_branch_id' => 1,
-            'assets_location_id' => 1,  // Corrected to location ID
-            'asset_image' => 'path/to/image2.jpg',  // Example value
-        ]);
-
-        Assets::factory()->create([
-            'name' => 'A4 Printer',
-            'asset_running_number' => 'E-0003',
-            'asset_type' => 'Printer',
-            'asset_category_id' => 1,
-            'asset_tag_id' => 1,
-            'asset_stable_value' => 6,
-            'asset_current_value' => 10,
-            'asset_purchase_cost' => 300,  // Example value
-            'asset_sales_cost' => 250,  // Example value
-            'asset_unit_measure' => 'Piece',
-            'assets_branch_id' => 1,
-            'assets_location_id' => 1,  // Corrected to location ID
-            'asset_image' => 'path/to/image3.jpg',  // Example value
-        ]);
     }
 }

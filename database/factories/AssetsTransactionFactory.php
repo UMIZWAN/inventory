@@ -15,32 +15,32 @@ class AssetsTransactionFactory extends Factory
 
     public function definition(): array
     {
-        $user = User::inRandomOrder()->first() ?? User::factory()->create();
-
-        $types = ['ASSET IN', 'ASSET OUT'];
-        $statuses = ['PENDING', 'APPROVED', 'REJECTED'];
-
-        static $runningNumber = 1;
-        $transactionNumber = sprintf('AR-%03d', $runningNumber++);
+        $transactionType = $this->faker->randomElement(['ASSET IN', 'ASSET OUT']);
+        $transactionPurpose = $transactionType === 'ASSET IN'
+            ? 'ASSET IN'
+            : $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']);
 
         return [
-            'assets_transaction_running_number' => $this->faker->unique()->numerify('AT-####'),
-            'purchase_order_id' => PurchaseOrder::factory(),
-            'assets_transaction_type' => $this->faker->randomElement(['ASSET IN', 'ASSET OUT']),
-            'assets_transaction_status' => 'PENDING',
-            'assets_transaction_purpose' => $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST', 'ASSET IN']),
+            'assets_transaction_running_number' => 'TRX-' . $this->faker->unique()->numerify('######'),
+            'purchase_order_id' => $transactionType === 'ASSET IN' ? PurchaseOrder::factory() : null,
+            'assets_transaction_type' => $transactionType,
+            'assets_transaction_status' => $this->faker->randomElement(['PENDING', 'APPROVED', 'REJECTED']),
+            'assets_transaction_purpose' => $transactionPurpose,
             'assets_from_branch_id' => AssetsBranch::factory(),
             'assets_to_branch_id' => AssetsBranch::factory(),
-            'assets_transaction_remark' => $this->faker->text,
-            'assets_transaction_log' => json_encode(['log' => 'Some transaction log']),
+            'assets_transaction_remark' => $this->faker->sentence(),
+            'assets_transaction_log' => json_encode([
+                'created' => $this->faker->dateTime()->format('Y-m-d H:i:s'),
+                'updated' => $this->faker->dateTime()->format('Y-m-d H:i:s'),
+            ]),
             'created_by' => User::factory(),
             'updated_by' => User::factory(),
-            'received_by' => User::factory(),
-            'approved_by' => User::factory(),
-            'created_at' => now(),
-            'updated_at' => now(),
-            'received_at' => now(),
-            'approved_at' => now(),
+            'received_by' => $this->faker->boolean(70) ? User::factory() : null,
+            'approved_by' => $this->faker->boolean(60) ? User::factory() : null,
+            'created_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
+            'updated_at' => $this->faker->dateTimeBetween('-5 months', 'now'),
+            'received_at' => $this->faker->boolean(70) ? $this->faker->dateTimeBetween('-4 months', 'now') : null,
+            'approved_at' => $this->faker->boolean(60) ? $this->faker->dateTimeBetween('-3 months', 'now') : null,
         ];
 
         // return [

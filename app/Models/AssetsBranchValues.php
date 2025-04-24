@@ -18,6 +18,8 @@ class AssetsBranchValues extends Model
         'asset_current_unit',
     ];
 
+    public $timestamps = false;
+
     public function assets()
     {
         return $this->belongsTo(Assets::class, 'asset_id');

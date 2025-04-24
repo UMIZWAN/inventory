@@ -18,6 +18,8 @@ class Suppliers extends Model
         'supplier_address',
     ];
 
+    public $timestamps = false;
+
     public function purchaseOrders()
     {
         return $this->hasMany(PurchaseOrder::class);

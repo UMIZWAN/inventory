@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Suppliers;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,11 +15,16 @@ class SuppliersFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    protected $model = Suppliers::class;
+
     public function definition(): array
     {
         return [
-            'tax_name' => $this->faker->word,
-            'tax_percentage' => $this->faker->randomFloat(2, 0, 100),  // Random percentage between 0 and 100
+            'supplier_name' => $this->faker->company(),
+            'supplier_office_number' => $this->faker->phoneNumber(),
+            'supplier_email' => $this->faker->companyEmail(),
+            'supplier_address' => $this->faker->address(),
         ];
     }
 }
