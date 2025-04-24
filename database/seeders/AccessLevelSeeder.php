@@ -15,7 +15,40 @@ class AccessLevelSeeder extends Seeder
      */
     public function run(): void
     {
-        // Admin - full access
+        // Public - no access
+        AccessLevel::factory()->create([
+            'name' => 'Admin',
+            // Role
+            'add_edit_role' => false,
+            'view_role' => false,
+            // User
+            'add_edit_user' => false,
+            'view_user' => false,
+            // Asset
+            'add_edit_asset' => false,
+            'view_asset' => false,
+            // Branch
+            'add_edit_branch' => false,
+            'view_branch' => false,
+            // Transaction
+            'add_edit_transaction' => false,
+            'view_transaction' => false,
+            'approve_reject_transaction' => false,
+            'receive_transaction' => false,
+            // Purchase Order
+            'add_edit_purchase_order' => false,
+            'view_purchase_order' => false,
+            // Supplier
+            'add_edit_supplier' => false,
+            'view_supplier' => false,
+            // Tax
+            'add_edit_tax' => false,
+            'view_tax' => false,
+            // Reports
+            'view_reports' => true,
+            'download_reports' => false,
+        ]);
+
         AccessLevel::factory()->create([
             'name' => 'Admin',
             // Role

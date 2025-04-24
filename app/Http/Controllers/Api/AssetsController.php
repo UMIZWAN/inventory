@@ -15,7 +15,7 @@ class AssetsController extends Controller
     public function index()
     {
         try {
-            $assets = Assets::with(['category', 'branch', 'tag', 'location'])->get();
+            $assets = Assets::with(['category', 'tag', 'branchValues'])->get();
 
             return response()->json([
                 'success' => true,
