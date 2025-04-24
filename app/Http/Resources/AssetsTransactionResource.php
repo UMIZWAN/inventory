@@ -17,7 +17,7 @@ class AssetsTransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'assets_transaction_running_number' => $this->assets_transaction_running_number,
-            'users_id' => $this->users_id,
+            'purchase_order_id' => $this->purchase_order_id,
             'assets_transaction_type' => $this->assets_transaction_type,
             'assets_transaction_status' => $this->assets_transaction_status,
             'assets_transaction_purpose' => $this->assets_transaction_purpose,
@@ -44,7 +44,7 @@ class AssetsTransactionResource extends JsonResource
             'approved_by_name' => $this->approvedByUser->name ?? null,
             'approved_at' => $this->approved_at,
 
-            'assets_transaction_item_list' => AssetsTransactionItemListResource::collection($this->whenLoaded('itemList')),
+            'assets_transaction_item_list' => AssetsTransactionItemListResource::collection($this->whenLoaded('transactionItems')),
         ];
     }
 }

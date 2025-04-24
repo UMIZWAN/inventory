@@ -37,12 +37,10 @@ class AssetsTransactionItemList extends Model
     {
         return $this->belongsTo(AssetsTransaction::class, 'asset_transaction_id');
     }
-
     public function purchaseOrder()
     {
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
-
     public function assets()
     {
         return $this->belongsTo(Assets::class, 'asset_id');

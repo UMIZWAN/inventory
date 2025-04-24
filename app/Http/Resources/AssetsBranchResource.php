@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class AssetsTransactionItemListResource extends JsonResource
+class AssetsBranchResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,11 +16,7 @@ class AssetsTransactionItemListResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'assets_transaction_id' => $this->asset_transaction_id,
-            'purchase_order_id' => $this->asset_id,
-            'asset_id' => $this->transaction_value,
-            'status' => $this->created_at,
-            'assets' => new AssetsResource($this->whenLoaded('assets')),
+            'name' => $this->name,
         ];
     }
 }

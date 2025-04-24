@@ -35,7 +35,12 @@ class PurchaseOrder extends Model
         'approved_at' => 'datetime',
     ];
 
-    public function suppliers()
+    public function items()
+    {
+        return $this->hasMany(AssetsTransactionItemList::class, 'purchase_order_id');
+    }
+
+    public function supplier()
     {
         return $this->belongsTo(Suppliers::class, 'supplier_id');
     }
