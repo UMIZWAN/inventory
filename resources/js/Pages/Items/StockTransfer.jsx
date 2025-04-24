@@ -4,7 +4,7 @@ import TransferForm from "../../components/TransferForm";
 import TransferList from "../../components/TransferList";
 
 const tabs = [
-  { key: "list", label: "Requests List" },
+  { key: "list", label: "Transfer List" },
   { key: "receive", label: "To Receive" },
 ];
 

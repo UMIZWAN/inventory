@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import api from "../api/api";
 import { Dialog } from "@headlessui/react";
 import TransferForm from "./TransferForm";
+import TransferDetailModal from "./TransferDetailModal";
 
-export default function TransferListTab() {
+
+export default function TransferList() {
     const [requests, setRequests] = useState([]);
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showTransferForm, setShowTransferForm] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
 
     useEffect(() => {
         api.get("/api/assets-transaction")
@@ -16,6 +20,18 @@ export default function TransferListTab() {
             })
             .catch((err) => console.error("Fetch error:", err));
     }, []);
+
+    const filteredTransfers = requests.filter((req) => {
+        const matchesStatus =
+            statusFilter === 'All' || req.assets_transaction_status === statusFilter;
+        const matchesSearch =
+            req.assets_transaction_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            req.assets_transaction_item_list?.some((item) =>
+                item.asset_name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        return matchesStatus && matchesSearch;
+    });
+
 
     const openModal = (txn) => {
         setSelected({ ...txn });
@@ -52,13 +68,38 @@ export default function TransferListTab() {
 
             <div className="overflow-x-auto bg-white shadow rounded-lg p-3">
                 <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold">Request List</h1>
+                    <h1 className="text-2xl font-bold">Transfer List</h1>
                     <button
                         onClick={() => setShowTransferForm(true)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                     >
                         + New Request
                     </button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                    <input
+                        type="text"
+                        placeholder="Search by asset name or running number..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="border rounded-lg px-4 py-2 w-full sm:w-72"
+                    />
+
+                    <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
+                        {['All', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => setStatusFilter(status)}
+                                className={`px-3 py-1 rounded-lg border ${statusFilter === status
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white text-gray-800 hover:bg-gray-100'
+                                    }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <table className="min-w-full text-sm text-left border border-gray-200">
@@ -73,7 +114,7 @@ export default function TransferListTab() {
                         </tr>
                     </thead>
                     <tbody className="text-gray-800">
-                        {requests.map((txn) => (
+                        {filteredTransfers.map((txn) => (
                             <tr key={txn.id} >
                                 <td className="px-4 py-2 border hover:underline font-medium" onClick={() => openModal(txn)} >{txn.assets_transaction_running_number}</td>
                                 <td className="px-4 py-2 border">{txn.assets_transaction_purpose}</td>
@@ -96,80 +137,14 @@ export default function TransferListTab() {
             </div>
 
             {/* Modal */}
-            <Dialog open={isOpen} onClose={closeModal} className="relative z-50">
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-                <div className="fixed inset-0 flex items-center justify-center p-4">
-                    <Dialog.Panel className="w-full max-w-2xl bg-white rounded-2xl p-6 shadow-xl space-y-6">
-                        <Dialog.Title className="text-2xl font-bold text-gray-800">Transaction Details</Dialog.Title>
+            <TransferDetailModal
+                isOpen={isOpen}
+                onClose={closeModal}
+                data={selected}
+                onApprove={() => handleAction("APPROVED")}
+                onReject={() => handleAction("REJECTED")}
+            />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Transaction Type</label>
-                                <input
-                                    type="text"
-                                    name="assets_transaction_type"
-                                    value={selected?.assets_transaction_type || ""}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <select
-                                    name="assets_transaction_status"
-                                    value={selected?.assets_transaction_status || ""}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
-                                >
-                                    <option value="PENDING">Pending</option>
-                                    <option value="APPROVED">Approved</option>
-                                    <option value="REJECTED">Rejected</option>
-                                    <option value="CANCELLED">Cancelled</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="font-semibold mb-2">Items</h4>
-                            <ul className="list-disc pl-6 text-sm text-gray-700 space-y-1">
-                                {selected?.assets_transaction_item_list.map((item) => (
-                                    <li key={item.id}>
-                                        {item.asset_name} ({item.asset_running_number}) – {item.asset_branch_name}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div className="flex justify-end space-x-2">
-                            <button
-                                onClick={() => handleAction("APPROVED")}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                            >
-                                Approve
-                            </button>
-                            <button
-                                onClick={() => handleAction("REJECTED")}
-                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                            >
-                                Reject
-                            </button>
-                            <button
-                                onClick={() => handleAction("CANCELLED")}
-                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={closeModal}
-                                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </Dialog.Panel>
-                </div>
-            </Dialog>
         </>
     );
 }

@@ -131,7 +131,6 @@ function TransferForm({ setShowTransferForm }) {
                 value={form.status}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                readOnly
               >
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
