@@ -10,8 +10,36 @@ const Assets = () => {
     const { assets } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filters, setFilters] = useState({
+        category: '',
+        tag: '',
+        location: '',
+        status: '',
+    });
 
     const handleView = (asset) => setSelectedAsset(asset);
+
+    const filteredAssets = assets.filter(asset => {
+        const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            asset.asset_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            asset.asset_type?.toLowerCase().includes(searchTerm.toLowerCase()) ;
+
+        const matchesCategory = filters.category ? asset.asset_category_name === filters.category : true;
+        const matchesTag = filters.tag ? asset.asset_tag_name === filters.tag : true;
+        const matchesLocation = filters.location ? asset.assets_location_name === filters.location : true;
+
+        const current = Number(asset.asset_current_value);
+        const stable = Number(asset.asset_stable_value);
+        let computedStatus = 'Normal';
+        if (current <= 0) computedStatus = 'Critical';
+        else if (current <= stable / 3) computedStatus = 'Very Low';
+        else if (current <= (2 * stable) / 3) computedStatus = 'Low';
+
+        const matchesStatus = filters.status ? computedStatus === filters.status : true;
+
+        return matchesSearch && matchesCategory && matchesTag && matchesLocation && matchesStatus;
+    });
 
     return (
         <>
@@ -25,6 +53,67 @@ const Assets = () => {
                         >
                             + Add Item
                         </button>
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                        {/* Search Input */}
+                        <div className="w-full lg:w-1/3">
+                            <input
+                                type="text"
+                                placeholder="Search by name..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        {/* Filters */}
+                        <div className="flex flex-wrap gap-4">
+                            <select
+                                value={filters.category}
+                                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All Categories</option>
+                                {[...new Set(assets.map(a => a.asset_category_name).filter(Boolean))].map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={filters.tag}
+                                onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
+                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All Tags</option>
+                                {[...new Set(assets.map(a => a.asset_tag_name).filter(Boolean))].map(tag => (
+                                    <option key={tag} value={tag}>{tag}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={filters.location}
+                                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All Locations</option>
+                                {[...new Set(assets.map(a => a.assets_location_name).filter(Boolean))].map(loc => (
+                                    <option key={loc} value={loc}>{loc}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={filters.status}
+                                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">All Status</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Low">Low</option>
+                                <option value="Very Low">Very Low</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -76,7 +165,7 @@ const Assets = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {assets.map((asset) => (
+                                    {filteredAssets.map((asset) => (
                                         <tr key={asset.id} className="hover:bg-gray-50" onClick={() => handleView(asset)}>
                                             {/* <td className="px-6 py-4 whitespace-nowrap">
                                         <input
