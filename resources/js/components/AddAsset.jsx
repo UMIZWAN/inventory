@@ -5,19 +5,21 @@ function AddAsset({ setShowModal }) {
     const { categories, branches, tags, addAsset } = useAssetMeta();
     const [form, setForm] = useState({
         name: '',
+        asset_description: '',
         asset_type: '',
         asset_running_number: '',
         asset_category_id: '',
         asset_tag_id: '',
         assets_branch_id: '',
-        asset_purchase_cost: 0,
-        asset_sales_cost: 0,
+        asset_purchase_cost: '',
+        asset_sales_cost: '',
+        asset_stable_value: '',
         asset_unit_measure: '',
         assets_location_id: '',
         assets_remark: '',
         asset_image: null
     });
-    const [imagePreview, setImagePreview] = useState(null);                                            
+    const [imagePreview, setImagePreview] = useState(null);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -42,13 +44,15 @@ function AddAsset({ setShowModal }) {
             setShowModal(false);
             setForm({
                 name: '',
+                asset_description: '',
                 asset_type: '',
                 asset_running_number: '',
                 asset_category_id: '',
                 asset_tag_id: '',
                 assets_branch_id: '',
-                asset_purchase_cost: 0,
-                asset_sales_cost: 0,
+                asset_purchase_cost: '',
+                asset_sales_cost: '',
+                asset_stable_value: '',
                 asset_unit_measure: '',
                 assets_location_id: '',
                 assets_remark: '',
@@ -68,6 +72,7 @@ function AddAsset({ setShowModal }) {
                 <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
                     <input name="name" placeholder="Name" value={form.name} onChange={handleChange} className="w-full p-2 border rounded" required />
                     <input name="asset_type" placeholder="Type" value={form.asset_type} onChange={handleChange} className="w-full p-2 border rounded" />
+                    <input name="asset_description" placeholder="Description" value={form.asset_description} onChange={handleChange} className="w-full p-2 border rounded" />
                     <input name="asset_running_number" placeholder="Item Code" value={form.asset_running_number} onChange={handleChange} className="w-full p-2 border rounded" required />
 
                     <select name="asset_category_id" value={form.asset_category_id || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
@@ -91,11 +96,9 @@ function AddAsset({ setShowModal }) {
                         ))}
                     </select>
 
-                    {/* <input name="asset_stable_value" type="number" placeholder="Stable Value" value={form.asset_stable_value} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <input name="asset_current_value" type="number" placeholder="Current Value" value={form.asset_current_value} onChange={handleChange} className="w-full p-2 border rounded" required /> */}
-
                     <input name="asset_purchase_cost" type="number" placeholder="Cost" value={form.asset_purchase_cost} onChange={handleChange} className="w-full p-2 border rounded" />
                     <input name="asset_sales_cost" type="number" placeholder="Price" value={form.asset_sales_cost} onChange={handleChange} className="w-full p-2 border rounded" />
+                    <input name="asset_stable_value" type="number" placeholder="Stable Quantity" value={form.asset_stable_value} onChange={handleChange} className="w-full p-2 border rounded" />
                     <input name="asset_unit_measure" placeholder="UOM" value={form.unit_measure} onChange={handleChange} className="w-full p-2 border rounded" />
 
                     <select name="assets_location_id" value={form.assets_location_id || ''} onChange={handleChange} className="w-full p-2 border rounded" required>

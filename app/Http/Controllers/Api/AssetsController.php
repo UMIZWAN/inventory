@@ -58,7 +58,7 @@ class AssetsController extends Controller
                 'asset_type' => 'nullable|string',
                 'asset_category_id' => 'bail|required|integer|min:1|exists:assets_category,id',
                 'asset_tag_id'      => 'bail|required|integer|min:1|exists:assets_tag,id',
-                // 'asset_stable_value' => 'bail|required|integer|min:1',
+                'asset_stable_value' => 'bail|required|integer|min:1',
                 // 'asset_current_value' => 'bail|required|integer|min:1',
                 'asset_purchase_cost' => 'bail|required|numeric|min:0',
                 'asset_sales_cost' => 'bail|nullable|numeric|min:0',
