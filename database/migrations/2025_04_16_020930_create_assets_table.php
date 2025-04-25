@@ -29,7 +29,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -38,17 +37,22 @@ return new class extends Migration
             $table->string('asset_type')->nullable();
             $table->foreignId('asset_category_id')->constrained('assets_category')->cascadeOnDelete();
             $table->foreignId('asset_tag_id')->constrained('assets_tag')->cascadeOnDelete();
-            $table->unsignedInteger('asset_stable_value');
-            $table->unsignedInteger('asset_current_value');
-            $table->decimal('asset_purchase_cost', 12, 4);
+            $table->unsignedInteger('asset_stable_unit')->default(0);
+            $table->decimal('asset_purchase_cost', 12, 4)->nullable();
             $table->decimal('asset_sales_cost', 12, 4)->nullable();
             $table->string('asset_unit_measure');
-            $table->foreignId('assets_branch_id')->constrained('assets_branch')->cascadeOnDelete();
-            $table->foreignId('assets_location_id')->constrained('assets_branch')->cascadeOnDelete();
             $table->string('asset_image')->nullable();
-            $table->json('assets_remark')->nullable();
+            $table->text('assets_remark')->nullable();
             $table->json('assets_log')->nullable();
             $table->timestamps();
+        });
+
+        Schema::create('assets_branch_values', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
+            $table->foreignId('asset_branch_id')->constrained('assets_branch')->cascadeOnDelete();
+            $table->foreignId('asset_location_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();
+            $table->unsignedInteger('asset_current_unit')->default(0);
         });
     }
 
@@ -57,6 +61,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('asset_branch_values');
         Schema::dropIfExists('assets');
         Schema::dropIfExists('assets_tag');
         Schema::dropIfExists('assets_category');

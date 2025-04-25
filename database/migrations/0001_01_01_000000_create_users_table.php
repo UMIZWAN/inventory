@@ -14,12 +14,38 @@ return new class extends Migration
         Schema::create('access_level', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->boolean('add_asset')->default(false);
-            $table->boolean('edit_asset')->default(false);
-            $table->boolean('delete_asset')->default(false);
+            // Role 
+            $table->boolean('add_edit_role')->default(false);
+            $table->boolean('view_role')->default(false);
+            // User
+            $table->boolean('add_edit_user')->default(false);
+            $table->boolean('view_user')->default(false);
+            // Asset
+            $table->boolean('add_edit_asset')->default(false);
+            $table->boolean('view_asset')->default(false);
+            // Branch
+            $table->boolean('add_edit_branch')->default(false);
+            $table->boolean('view_branch')->default(false);
+            // Transaction
+            $table->boolean('add_edit_transaction')->default(false);
+            $table->boolean('view_transaction')->default(false);
+            $table->boolean('approve_reject_transaction')->default(false);
+            $table->boolean('receive_transaction')->default(false);
+            // Purchase Order
+            $table->boolean('add_edit_purchase_order')->default(false);
+            $table->boolean('view_purchase_order')->default(false);
+            // Supplier
+            $table->boolean('add_edit_supplier')->default(false);
+            $table->boolean('view_supplier')->default(false);
+            // Tax
+            $table->boolean('add_edit_tax')->default(false);
+            $table->boolean('view_tax')->default(false);
+            // Reports
+            $table->boolean('view_reports')->default(false);
+            $table->boolean('download_reports')->default(false);
             $table->timestamps();
         });
-        
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');

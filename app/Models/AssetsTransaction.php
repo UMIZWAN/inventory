@@ -17,7 +17,7 @@ class AssetsTransaction extends Model
 
     protected $fillable = [
         'assets_transaction_running_number',
-        'users_id',
+        'purchase_order_id',
         'assets_transaction_type',
         'assets_transaction_status',
         'assets_transaction_purpose',
@@ -26,44 +26,27 @@ class AssetsTransaction extends Model
         'assets_transaction_remark',
         'assets_transaction_log',
         'created_by',
-        'created_at',
         'updated_by',
-        'updated_at',
         'received_by',
-        'received_at',
         'approved_by',
-        'approved_at'
+        'created_at',
+        'updated_at',
+        'received_at',
+        'approved_at',
+    ];
+
+    protected $casts = [
+        'assets_transaction_log' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'received_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     // Relationships
-    public function itemList()
+    public function purchaseOrder()
     {
-        return $this->hasMany(AssetsTransactionItemList::class, 'asset_transaction_id');
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'users_id');
-    }
-
-    public function createdByUser()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedByUser()
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function receivedByUser()
-    {
-        return $this->belongsTo(User::class, 'received_by');
-    }
-
-    public function approvedByUser()
-    {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
     public function fromBranch()
@@ -74,5 +57,30 @@ class AssetsTransaction extends Model
     public function toBranch()
     {
         return $this->belongsTo(AssetsBranch::class, 'assets_to_branch_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function receivedBy()
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function transactionItems()
+    {
+        return $this->hasMany(AssetsTransactionItemList::class, 'asset_transaction_id');
     }
 }

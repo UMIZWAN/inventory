@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\AssetsTag;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AssetsTag>
@@ -14,10 +15,12 @@ class AssetsTagFactory extends Factory
      *
      * @return array<string, mixed>
      */
+    protected $model = AssetsTag::class;
+
     public function definition(): array
     {
         return [
-           'name' => $this->faker->unique()->word(),
+            'name' => $this->faker->unique()->word(),
         ];
     }
 }
