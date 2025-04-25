@@ -4,13 +4,12 @@ import TransferForm from "../../components/TransferForm";
 import TransferList from "../../components/TransferList";
 
 const tabs = [
-  { key: "form", label: "New Request" },
-  { key: "list", label: "Requests List" },
+  { key: "list", label: "Transfer List" },
   { key: "receive", label: "To Receive" },
 ];
 
 function StockTransfer() {
-  const [activeTab, setActiveTab] = useState("form");
+  const [activeTab, setActiveTab] = useState("list");
 
   return (
     <Layout>
@@ -31,7 +30,6 @@ function StockTransfer() {
           ))}
         </div>
 
-        {activeTab === "form" && <TransferForm />}
         {activeTab === "list" && <TransferList />}
       </div>
     </Layout>

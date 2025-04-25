@@ -12,9 +12,9 @@ const ItemDetails = ({ asset, onClose }) => {
         assets_branch_id: asset.assets_branch_id,
         assets_location_id: asset.assets_location_id,
     });
+    const [imagePreview, setImagePreview] = useState(null);
 
-    const remarks = safeParse(asset.assets_remark);
-    const logs = safeParse(asset.assets_log);
+    const logs = asset.assets_log;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -52,6 +52,16 @@ const ItemDetails = ({ asset, onClose }) => {
             setTimeout(() => setToast(null), 3000);
         } catch (err) {
             alert('Update failed.');
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        setForm({ ...form, asset_image: file });
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setImagePreview(reader.result);
+            reader.readAsDataURL(file);
         }
     };
 
@@ -124,21 +134,26 @@ const ItemDetails = ({ asset, onClose }) => {
                 {/* Asset Image + Name/Type/Description */}
                 <div className="flex flex-col sm:flex-row gap-6">
                     <div className="flex-shrink-0 relative">
-                        <img
+                        {imagePreview? (
+                            <img src={imagePreview} alt="Preview" className="w-40 h-40 object-cover border rounded-lg" />
+                        ) : (
+                            <img
                             src={form.asset_image || placeholder}
                             alt={form.name}
                             className="w-40 h-40 object-cover rounded-xl border border-gray-200"
                         />
-                        {/* {editMode && (
+                        )}
+                        
+                        {editMode && (
                             <input
-                                type="text"
+                                type="file"
                                 name="asset_image"
-                                value={form.asset_image || ''}
-                                onChange={handleChange}
+                                // value={form.asset_image || ''}
+                                onChange={handleFileChange}
                                 placeholder="Image URL"
                                 className="mt-2 w-40 text-sm px-2 py-1 border rounded"
                             />
-                        )} */}
+                        )}
                     </div>
                     <div className="flex-1 space-y-2">
                         <div>
@@ -197,8 +212,8 @@ const ItemDetails = ({ asset, onClose }) => {
                     <Detail label="Unit" value={isEditing('asset_unit_measure')} />
                     <Detail label="Cost" value={isEditing('asset_purchase_cost')} />
                     <Detail label="Price" value={isEditing(('asset_sales_cost'))} />
-                    <Detail label="Stable Value" value={isEditing('asset_stable_value')} />
-                    <Detail label="Current Value" value={isEditing('asset_current_value')} />
+                    <Detail label="Stable Quantity" value={isEditing('asset_stable_value')} />
+                    <Detail label="Current Quantity" value={isEditing('asset_current_value')} />
                     <Detail
                         label="Branch"
                         value={editMode ? (
@@ -220,9 +235,13 @@ const ItemDetails = ({ asset, onClose }) => {
                 </div>
 
                 {/* Remarks */}
-                {remarks.length > 0 && !editMode && (
-                    <Section title="Remarks" items={remarks} />
+                {asset.assets_remark && !editMode && (
+                    <div className="mt-6">
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Remarks:</h3>
+                        <p className="text-sm text-gray-700">{asset.assets_remark}</p>
+                    </div>
                 )}
+
 
                 {/* Logs */}
                 {logs.length > 0 && !editMode && (
@@ -250,14 +269,5 @@ const Section = ({ title, items }) => (
         </ul>
     </div>
 );
-
-function safeParse(str) {
-    try {
-        const parsed = JSON.parse(str);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-}
 
 export default ItemDetails;

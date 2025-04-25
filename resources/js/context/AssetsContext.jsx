@@ -14,6 +14,7 @@ export const AssetMetaProvider = ({ children }) => {
     api.get('/api/assets')
       .then(response => {
         if (response.data.success) {
+          console.log('Assets fetched:', response.data.data);
           setAssets(response.data.data);
         }
       })
@@ -25,9 +26,41 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
-  const updateAsset = async (id, updatedData) => {
+  const getOneAsset = (id) => {
+    api.get(`/api/assets/${id}`)
+      .then(response => {
+        if (response.data.success) {
+          setAssets(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching assets:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const addAsset = async (form) => {
+    console.log('Adding asset:', form);
+    const formData = new FormData();
+    Object.entries(form).forEach(([key, value]) => {
+      if (key === 'assets_remark') {
+        value.split('\n').forEach((line, i) => {
+          formData.append(`assets_remark[${i}]`, line);
+        });
+      } else {
+        formData.append(key, value);
+      }
+    });
+
     try {
-      await api.put(`/api/assets/${id}`, updatedData);
+      await api.post('/api/assets', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
       fetchAssets(); // Refresh the list after update
     } catch (err) {
       console.error('Failed to update asset:', err);
@@ -35,6 +68,24 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
+  const updateAsset = async (id, updatedData) => {
+    console.log('Updating asset:', id, updatedData);
+    try {
+      await api.put(`/api/assets/${id}`, updatedData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      fetchAssets(); // Refresh the list after update
+    } catch (err) {
+      console.error('Failed to update asset:', err);
+      throw err;
+    }
+  };
+
+  // --------------------------------------------------------------------------------
+  // Branch functions
+  // --------------------------------------------------------------------------------
   const fetchBranches = async () => {
     setLoading(true);
     try {
@@ -122,6 +173,7 @@ export const AssetMetaProvider = ({ children }) => {
     <AssetsContext.Provider
       value={{
         assets,
+        addAsset,
         updateAsset,
         categories,
         addCategory,

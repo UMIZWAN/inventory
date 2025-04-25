@@ -3,7 +3,7 @@ import Layout from "./layout/Layout";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 
-function TransferForm() {
+function TransferForm({ setShowTransferForm }) {
   const { assets, branches } = useAssetMeta();
   const [form, setForm] = useState({
     requester: "",
@@ -12,7 +12,7 @@ function TransferForm() {
     status: "Pending",
     fromBranch: "",
     toBranch: "",
-    items: [{ name: '', quantity: 1, price: 0 }],
+    items: [{ name: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: [],
   });
@@ -26,8 +26,9 @@ function TransferForm() {
       type: "select",
       options: assets.map((a) => ({ value: a.id, label: a.name })),
     },
-    { key: "quantity", label: "Quantity", type: "number", min: 0, align: "text-right" },
-    { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-right" },
+    { key: "unitMeasure", label: "Unit of Measure" },
+    { key: "quantity", label: "Quantity", type: "number", min: 1, align: "text-right" },
+    { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right" },
   ];
 
   const addItem = () => {
@@ -40,9 +41,24 @@ function TransferForm() {
   };
 
   const handleItemChange = (index, field, value) => {
-    const items = [...form.items];
-    items[index][field] = field === 'quantity' || field === 'price' ? parseFloat(value) : value;
-    setForm({ ...form, items });
+    const updated = [...form.items];
+
+    if (field === 'item') {
+      const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
+      updated[index].item = value;
+
+      if (selectedAsset) {
+        updated[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
+        updated[index].unitMeasure = selectedAsset.asset_unit_measure || '';
+      }
+    } else {
+      updated[index][field] =
+        field === 'quantity' || field === 'price' || field === 'unitMeasure'
+          ? parseFloat(value)
+          : value;
+    }
+
+    setForm({ ...form, updated });
   };
 
   const handleChange = (e) => {
@@ -66,6 +82,7 @@ function TransferForm() {
 
   return (
 
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div className="p-6 bg-white shadow-md rounded-xl">
         <h2 className="text-2xl font-semibold mb-4 text-center">Stock Transfer Request</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,7 +131,6 @@ function TransferForm() {
                 value={form.status}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                readOnly
               >
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
@@ -195,14 +211,13 @@ function TransferForm() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Submit Request
-          </button>
+          <div className="flex justify-end gap-4 mt-4">
+            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Submit</button>
+            <button type="button" onClick={() => setShowTransferForm(false)} className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg">Cancel</button>
+          </div>
         </form>
       </div>
+    </div>
 
   );
 }

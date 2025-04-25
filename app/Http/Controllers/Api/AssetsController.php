@@ -98,7 +98,6 @@ class AssetsController extends Controller
             }
 
             $asset->load(['category', 'tag', 'branchValues']);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Asset created successfully',
@@ -216,7 +215,7 @@ class AssetsController extends Controller
                         $asset->appendLogSentence('mengemaskini cabang', $branchChanges);
                     }
                 }
-            }
+            }      
 
             $asset->load(['category', 'tag', 'branchValues']);
 

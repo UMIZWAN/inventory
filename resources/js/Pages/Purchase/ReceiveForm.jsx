@@ -34,14 +34,14 @@ function ReceiveForm() {
 
   const handleChange = (index, field, value) => {
     const updated = [...items];
-  
+
     if (field === 'item') {
       const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
       updated[index].item = value;
-  
+
       if (selectedAsset) {
-        updated[index].unitCost = parseFloat(selectedAsset.asset_sales_cost || 0 );
-        updated[index].unitMeasure = selectedAsset.asset_unit_measure || '' ;
+        updated[index].unitCost = parseFloat(selectedAsset.asset_sales_cost || 0);
+        updated[index].unitMeasure = selectedAsset.asset_unit_measure || '';
       }
     } else {
       updated[index][field] =
@@ -49,9 +49,9 @@ function ReceiveForm() {
           ? parseFloat(value)
           : value;
     }
-  
+
     setItems(updated);
-  };  
+  };
 
   const addItem = () => {
     setItems([
@@ -66,9 +66,15 @@ function ReceiveForm() {
     ]);
   };
 
+  const totalAmount = items.reduce((sum, item) => {
+    const qty = parseFloat(item.recvQty) || 0;
+    const cost = parseFloat(item.unitCost) || 0;
+    return sum + qty * cost;
+  }, 0);
+
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-4">
+      <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-4">
         <h2 className="text-2xl font-semibold mb-4">Receive Stock</h2>
 
         <div className="flex items-center gap-4">
@@ -160,6 +166,17 @@ function ReceiveForm() {
           }}
         />
 
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Total Amount (RM)</label>
+            <input
+              type="text"
+              className="w-full border rounded p-2 mt-1 text-right bg-gray-100"
+              value={totalAmount.toFixed(2)}
+              readOnly
+            />
+          </div>
+        </div>
 
         <div>
           <label className="block text-sm font-medium">Note:</label>
