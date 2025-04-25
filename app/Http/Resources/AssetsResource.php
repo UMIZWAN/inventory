@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\AssetsBranchValuesResource;
 
 class AssetsResource extends JsonResource
 {
@@ -12,6 +13,7 @@ class AssetsResource extends JsonResource
      *
      * @return array<string, mixed>
      */
+
     public function toArray(Request $request): array
     {
         return [
@@ -31,6 +33,9 @@ class AssetsResource extends JsonResource
             'asset_image' => $this->asset_image,
             'assets_remark' => $this->assets_remark,
             'assets_log' => $this->assets_log,
+            'total_units' => $this->whenLoaded('branchValues', function () {
+                return $this->branchValues->sum('asset_current_unit');
+            }, 0),
             'branch_values' => $this->whenLoaded('branchValues', function () {
                 return AssetsBranchValuesResource::collection($this->branchValues);
             }),
