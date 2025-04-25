@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AccessLevelController;
 use App\Http\Controllers\Api\AssetsBranchController;
 use App\Http\Controllers\Api\AssetsCategoryController;
 use App\Http\Controllers\Api\AssetsTagController;
@@ -44,4 +45,10 @@ Route::apiResource('assets-category', AssetsCategoryController::class);
 Route::apiResource('assets-tag', AssetsTagController::class);
 // Route::apiResource('assets', AssetsController::class);
 
-Route::apiResource('assets-transaction', AssetsTransactionController::class);
+// Route::apiResource('assets-transaction', AssetsTransactionController::class);
+
+// Access Level Routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('access-levels', AccessLevelController::class);
+    Route::get('access-levels/{id}/users', [AccessLevelController::class, 'getWithUsers']);
+});

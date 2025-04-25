@@ -51,7 +51,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
             $table->foreignId('asset_branch_id')->constrained('assets_branch')->cascadeOnDelete();
-            $table->foreignId('asset_location_id')->constrained('assets_branch')->cascadeOnDelete();
+            $table->foreignId('asset_location_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();
             $table->unsignedInteger('asset_current_unit')->default(0);
         });
     }

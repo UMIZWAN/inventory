@@ -59,79 +59,113 @@ class Assets extends Model
      * @param string $action
      * @param array  $changes  Field => ['old' => oldValue, 'new' => newValue]
      */
-    // public function appendLogSentence(string $action, array $changes = []): void
-    // {
-    //     $running   = $this->asset_running_number;
-    //     $user      = Auth::user()->name;
-    //     $time      = now()->format('Y-m-d H:i:s');
-    //     $descriptions = [];
+    /**
+     * Append a log entry to the asset's log history
+     * 
+     * @param string $action The action being performed (e.g., 'mengemaskini')
+     * @param array $changes Array of changes with old and new values
+     * @return void
+     */
+    public function appendLogSentence(string $action, array $changes = []): void
+    {
+        $running = $this->asset_running_number;
+        $user = Auth::user()->name;
+        $time = now()->format('Y-m-d H:i:s');
+        $descriptions = [];
 
-    //     foreach ($changes as $field => $vals) {
-    //         if ($field == 'asset_type') {
-    //             $field = 'Tipe Aset';
-    //         }
-    //         if ($field == 'asset_category_id') {
-    //             $field = 'Kategori Aset';
-    //             $categoryName = AssetsCategory::find($vals['new'])->name ?? 'Unknown Category';
-    //             $vals['new'] = $categoryName;
-    //             $categoryOldName = AssetsCategory::find($vals['old'])->name ?? 'Unknown Category';
-    //             $vals['old'] = $categoryOldName;
-    //         }
-    //         if ($field == 'asset_tag_id') {
-    //             $field = 'Tag Aset';
-    //             $tagName = AssetsTag::find($vals['new'])->name ?? 'Unknown Tag';
-    //             $vals['new'] = $tagName;
-    //             $tagOldName = AssetsTag::find($vals['old'])->name ?? 'Unknown Tag';
-    //             $vals['old'] = $tagOldName;
-    //         }
-    //         if ($field == 'asset_stable_value') {
-    //             $field = 'Nilai Aset Tetap';
-    //         }
-    //         if ($field == 'asset_current_value') {
-    //             $field = 'Nilai Aset Sekarang';
-    //         }
-    //         if ($field == 'assets_branch_id') {
-    //             $field = 'Cabang';
-    //             // Get the branch name
-    //             $branchName = AssetsBranch::find($vals['new'])->name ?? 'Unknown Branch';
-    //             $vals['new'] = $branchName;
-    //             $branchOldName = AssetsBranch::find($vals['old'])->name ?? 'Unknown Branch';
-    //             $vals['old'] = $branchOldName;
-    //         }
-    //         if ($field == 'assets_location_id') {
-    //             $field = 'Lokasi';
-    //             // Get the location name
-    //             $locationName = AssetsBranch::find($vals['new'])->name ?? 'Unknown Location';
-    //             $vals['new'] = $locationName;
-    //             $locationOldName = AssetsBranch::find($vals['old'])->name ?? 'Unknown Location';
-    //             $vals['old'] = $locationOldName;
-    //         }
-    //         if ($field == 'asset_sales_cost') {
-    //             $field = 'Harga Jual';
-    //         }
-    //         if ($field == 'asset_purchase_cost') {
-    //             $field = 'Harga Beli';
-    //         }
-    //         if ($field == 'asset_unit_measure') {
-    //             $field = 'Ukuran Unit';
-    //         }
-    //         if ($field == 'assets_remark') {
-    //             $field = 'Catatan';
-    //         }
+        // Field name mapping for better readability
+        $fieldMappings = [
+            'name' => 'Nama',
+            'asset_type' => 'Tipe Aset',
+            'asset_category_id' => 'Kategori Aset',
+            'asset_tag_id' => 'Tag Aset',
+            'asset_stable_unit' => 'Unit Aset Tetap',
+            'asset_current_unit' => 'Unit Aset Sekarang',
+            'asset_purchase_cost' => 'Harga Beli',
+            'asset_sales_cost' => 'Harga Jual',
+            'asset_unit_measure' => 'Ukuran Unit',
+            'assets_remark' => 'Catatan',
+            'assets_branch_id' => 'Cabang',
+            'assets_location_id' => 'Lokasi',
+            'asset_description' => 'Deskripsi',
+            'asset_image' => 'Gambar'
+        ];
 
-    //         $descriptions[] = "{$field} dari '{$vals['old']}' menjadi '{$vals['new']}'";
-    //     }
+        foreach ($changes as $field => $vals) {
+            // Skip if old and new values are the same
+            if (isset($vals['old']) && isset($vals['new']) && $vals['old'] === $vals['new']) {
+                continue;
+            }
 
-    //     $detail = $descriptions
-    //         ? implode(', ', $descriptions)
-    //         : 'tanpa perubahan pada detail';
+            // Get the human-readable field name
+            $fieldName = $fieldMappings[$field] ?? $field;
 
-    //     $sentence = "$user $action Asset $running pada $time, $detail.";
+            // Handle special cases for related models
+            if ($field == 'asset_category_id') {
+                $vals['new'] = isset($vals['new']) ?
+                    AssetsCategory::find($vals['new'])->name ?? 'Unknown Category' : 'None';
+                $vals['old'] = isset($vals['old']) ?
+                    AssetsCategory::find($vals['old'])->name ?? 'Unknown Category' : 'None';
+            }
 
-    //     $logs = $this->assets_log ?? [];
-    //     $logs[] = $sentence;
+            if ($field == 'asset_tag_id') {
+                $vals['new'] = isset($vals['new']) ?
+                    AssetsTag::find($vals['new'])->name ?? 'Unknown Tag' : 'None';
+                $vals['old'] = isset($vals['old']) ?
+                    AssetsTag::find($vals['old'])->name ?? 'Unknown Tag' : 'None';
+            }
 
-    //     $this->assets_log = $logs;
-    //     $this->saveQuietly();
-    // }
+            if ($field == 'assets_branch_id') {
+                $vals['new'] = isset($vals['new']) ?
+                    AssetsBranch::find($vals['new'])->name ?? 'Unknown Branch' : 'None';
+                $vals['old'] = isset($vals['old']) ?
+                    AssetsBranch::find($vals['old'])->name ?? 'Unknown Branch' : 'None';
+            }
+
+            if ($field == 'assets_location_id') {
+                $vals['new'] = isset($vals['new']) ?
+                    AssetsBranch::find($vals['new'])->name ?? 'Unknown Location' : 'None';
+                $vals['old'] = isset($vals['old']) ?
+                    AssetsBranch::find($vals['old'])->name ?? 'Unknown Location' : 'None';
+            }
+
+            // Format numeric values
+            if (in_array($field, ['asset_purchase_cost', 'asset_sales_cost'])) {
+                $vals['new'] = isset($vals['new']) ? number_format($vals['new'], 2) : '0.00';
+                $vals['old'] = isset($vals['old']) ? number_format($vals['old'], 2) : '0.00';
+            }
+
+            // Handle image changes differently
+            if ($field == 'asset_image') {
+                $descriptions[] = "{$fieldName} telah diperbarui";
+                continue;
+            }
+
+            // Format the change description
+            $oldValue = $vals['old'] ?? 'None';
+            $newValue = $vals['new'] ?? 'None';
+
+            $descriptions[] = "{$fieldName} dari '{$oldValue}' menjadi '{$newValue}'";
+        }
+
+        // Create the log sentence
+        if (empty($descriptions)) {
+            $sentence = "$user $action Asset $running pada $time, tanpa perubahan pada detail.";
+        } else {
+            $detail = implode(', ', $descriptions);
+            $sentence = "$user $action Asset $running pada $time, $detail.";
+        }
+
+        // Get existing logs or initialize empty array
+        $logs = is_array($this->assets_log) ? $this->assets_log : (is_string($this->assets_log) ? json_decode($this->assets_log, true) : []);
+
+        // Add new log entry
+        $logs[] = $sentence;
+
+        // Update the model
+        $this->assets_log = $logs;
+
+        // Save without triggering events
+        $this->saveQuietly();
+    }
 }
