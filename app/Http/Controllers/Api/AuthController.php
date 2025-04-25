@@ -79,6 +79,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'access_level_id' => $request->access_level_id,
+            'branch_id' => $request->branch_id,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -120,6 +121,7 @@ class AuthController extends Controller
             ],
             'password' => 'sometimes|required|string|min:8|confirmed',
             'access_level_id' => 'sometimes|required|integer|exists:access_levels,id',
+            'branch_id' => 'sometimes|required|integer|exists:assets_branch,id',
         ]);
 
         if ($validator->fails()) {
@@ -137,6 +139,10 @@ class AuthController extends Controller
 
         if ($request->has('password')) {
             $user->password = Hash::make($request->password);
+        }
+
+        if ($request->has('branch_id')) {
+            $user->branch_id = $request->branch_id;
         }
 
         if ($request->has('access_level_id')) {

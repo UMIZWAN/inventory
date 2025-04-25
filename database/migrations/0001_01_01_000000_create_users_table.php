@@ -46,6 +46,12 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('assets_branch', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -53,6 +59,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->foreignId('access_level_id')->constrained('access_level');
+            $table->foreignId('branch_id')->constrained('assets_branch')->cascadeOnDelete();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -81,6 +88,7 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('assets_branch');
         Schema::dropIfExists('access_level');
     }
 };

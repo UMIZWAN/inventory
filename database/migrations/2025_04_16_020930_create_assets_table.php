@@ -23,12 +23,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('assets_branch', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
-
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -51,6 +45,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
             $table->foreignId('asset_branch_id')->constrained('assets_branch')->cascadeOnDelete();
+            $table->unique(['asset_id', 'asset_branch_id']);
             $table->foreignId('asset_location_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();
             $table->unsignedInteger('asset_current_unit')->default(0);
         });
@@ -65,6 +60,5 @@ return new class extends Migration
         Schema::dropIfExists('assets');
         Schema::dropIfExists('assets_tag');
         Schema::dropIfExists('assets_category');
-        Schema::dropIfExists('assets_branch');
     }
 };

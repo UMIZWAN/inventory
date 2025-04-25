@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
                 'name' => 'MOHD IZWAN BIN MANDA',
                 'email' => 'mohdizwanmanda@gmail.com',
                 'password' => bcrypt('12345678'),
+                'branch_id' => 1,
                 'access_level_id' => 2,
             ]
         );
@@ -26,6 +27,7 @@ class UserSeeder extends Seeder
                 'name' => 'KAMALEIAH BINTI HARUN',
                 'email' => 'kamal@gmail.com',
                 'password' => bcrypt('12345678'),
+                'branch_id' => 1,
                 'access_level_id' => 3,
             ]
         );
@@ -34,6 +36,7 @@ class UserSeeder extends Seeder
                 'name' => 'SABRINA BINTI MOHD YUSOF',
                 'email' => 'sabrina@gmail.com',
                 'password' => bcrypt('12345678'),
+                'branch_id' => 1,
                 'access_level_id' => 1,
             ]
         );
