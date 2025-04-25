@@ -21,7 +21,7 @@ class AssetsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'List of Assets',
-                'data' => $assets
+                'data' => AssetsResource::collection($assets)
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -31,15 +31,23 @@ class AssetsController extends Controller
         }
     }
 
+
     public function show($id)
     {
         try {
-            $asset = Assets::with(['category', 'tag'])->find($id);
+            $asset = Assets::with(['category', 'tag', 'branchValues'])->find($id);
+
+            if (!$asset) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset Not Found'
+                ], 404);
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Detail of Asset',
-                'data' => $asset
+                'message' => 'Asset Details',
+                'data' => new AssetsResource($asset)
             ], 200);
         } catch (Exception $e) {
             return response()->json([
