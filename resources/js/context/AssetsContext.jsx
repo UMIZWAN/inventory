@@ -14,6 +14,22 @@ export const AssetMetaProvider = ({ children }) => {
     api.get('/api/assets')
       .then(response => {
         if (response.data.success) {
+          console.log('Assets fetched:', response.data.data);
+          setAssets(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching assets:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const getOneAsset = (id) => {
+    api.get(`/api/assets/${id}`)
+      .then(response => {
+        if (response.data.success) {
           setAssets(response.data.data);
         }
       })
@@ -39,7 +55,12 @@ export const AssetMetaProvider = ({ children }) => {
     });
 
     try {
-      await api.post('/api/assets', formData);
+      await api.post('/api/assets', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
       fetchAssets(); // Refresh the list after update
     } catch (err) {
       console.error('Failed to update asset:', err);
@@ -48,8 +69,13 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   const updateAsset = async (id, updatedData) => {
+    console.log('Updating asset:', id, updatedData);
     try {
-      await api.put(`/api/assets/${id}`, updatedData);
+      await api.put(`/api/assets/${id}`, updatedData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       fetchAssets(); // Refresh the list after update
     } catch (err) {
       console.error('Failed to update asset:', err);

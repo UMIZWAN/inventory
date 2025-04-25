@@ -181,7 +181,14 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10">
-                                                        <img className="h-10 w-10 rounded" src={asset.image_url || placeholder} alt={asset.name} />
+                                                        <img className="h-10 w-10 rounded" 
+                                                        src={asset.asset_image ? `http://127.0.0.1:8000/storage/${asset.asset_image}` : placeholder} 
+                                                        alt={asset.name} 
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = placeholder;
+                                                          }}
+                                                        />
                                                     </div>
                                                     <div className="ml-4">
                                                         <div className="text-sm font-medium text-gray-900">{asset.name}</div>

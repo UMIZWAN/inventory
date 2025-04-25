@@ -18,14 +18,14 @@ class AssetsSeeder extends Seeder
      */
     public function run(): void
     {
-        AssetsBranch::factory()->create(['name' => 'UMKK1']);
-        AssetsBranch::factory()->create(['name' => 'UMKK2']);
-        AssetsBranch::factory()->create(['name' => 'UMTWU']);
-        AssetsCategory::factory()->create(['name' => 'Electronics']);
-        AssetsCategory::factory()->create(['name' => 'Furniture']);
-        AssetsCategory::factory()->create(['name' => 'Stationery']);
-        AssetsTag::factory()->create(['name' => 'Assembly']);
-        AssetsTag::factory()->create(['name' => 'Component']);
+        AssetsBranch::factory()->create(['name' => 'HQKK']);
+        AssetsBranch::factory()->create(['name' => 'HQKK']);
+        // AssetsBranch::factory()->create(['name' => 'UMTWU']);
+        AssetsCategory::factory()->create(['name' => 'Apparel']);
+        AssetsCategory::factory()->create(['name' => 'Gift']);
+        AssetsCategory::factory()->create(['name' => 'Flyer']);
+        AssetsTag::factory()->create(['name' => 'Delivery']);
+        AssetsTag::factory()->create(['name' => 'ERS']);
         Assets::factory()->create([
             'name' => 'Thinkpad',
             'asset_running_number' => 'E-0001',

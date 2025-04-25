@@ -17,7 +17,7 @@ function AddAsset({ setShowModal }) {
         asset_unit_measure: '',
         assets_location_id: '',
         assets_remark: '',
-        asset_image: null
+        asset_image: ''
     });
     const [imagePreview, setImagePreview] = useState(null);
 
@@ -56,7 +56,7 @@ function AddAsset({ setShowModal }) {
                 asset_unit_measure: '',
                 assets_location_id: '',
                 assets_remark: '',
-                asset_image: null
+                asset_image: ''
             });
             setImagePreview(null);
         } catch (error) {

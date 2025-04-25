@@ -60,15 +60,16 @@ class AssetsController extends Controller
                 'asset_tag_id'      => 'bail|required|integer|min:1|exists:assets_tag,id',
                 'asset_stable_value' => 'bail|required|integer|min:1',
                 // 'asset_current_value' => 'bail|required|integer|min:1',
-                'asset_purchase_cost' => 'bail|required|numeric|min:0',
+                'asset_purchase_cost' => 'bail|nullable|numeric|min:0',
                 'asset_sales_cost' => 'bail|nullable|numeric|min:0',
                 'asset_unit_measure' => 'bail|required|string',
                 'assets_branch_id' => 'bail|required|integer|min:1|exists:assets_branch,id',
                 'assets_location_id' => 'bail|required|integer|min:1|exists:assets_branch,id',
-                'asset_image' => 'nullable|string',
+                'asset_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'assets_remark' => 'nullable',
                 'assets_log' => 'nullable',
             ]);
+
 
             if ($validator->fails()) {
                 return response()->json([
@@ -78,12 +79,22 @@ class AssetsController extends Controller
                 ], 422);
             }
 
+            if ($request->hasFile('asset_image')) {
+                $path = $request->file('asset_image')->store('assets', 'public');
+                $validated['asset_image'] = $path;
+            }
+
             $username = Auth::user()->name ?? 'Unknown';
-            $message[] = $username . ' mencipta Asset dengan nomor ' . $request['asset_running_number'];
+            $validated = $validator->validated();
+            $validated['assets_log'] = [$username . ' mencipta Asset dengan nomor ' . $validated['asset_running_number']];
 
-            $request['assets_log'] = $message;
+            $assets = Assets::create($validated);
+            // $username = Auth::user()->name ?? 'Unknown';
+            // $message[] = $username . ' mencipta Asset dengan nomor ' . $request['asset_running_number'];
 
-            $assets = Assets::create($request->all());
+            // $request['assets_log'] = $message;
+
+            // $assets = Assets::create($request->all());
 
             return response()->json([
                 'success' => true,
@@ -107,8 +118,9 @@ class AssetsController extends Controller
             // 1️⃣ Validate input data
             $validator = Validator::make($request->all(), [
                 'name'                 => 'sometimes|string|max:255',
+                'asset_image'          => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'asset_running_number' => 'sometimes|string|max:255',
-                'asset_description'    => 'sometimes|string',
+                'asset_description'    => 'nullable|string',
                 'asset_type'           => 'sometimes|string|max:100',
                 'asset_category_id'    => 'sometimes|integer|exists:assets_category,id',
                 'asset_tag_id'         => 'sometimes|integer|exists:assets_tag,id',
@@ -133,6 +145,12 @@ class AssetsController extends Controller
             $changes = [];
             $requestData = $request->all();
 
+            // 🔄 If there's a new image, upload and update the image path
+            if ($request->hasFile('asset_image')) {
+                $path = $request->file('asset_image')->store('assets', 'public');
+                $requestData['asset_image'] = $path;
+            }
+
             // Only check fillable fields that are present in the request
             $fillableFields = $asset->getFillable();
             foreach ($fillableFields as $field) {
@@ -156,7 +174,7 @@ class AssetsController extends Controller
                 if ($oldValueStr !== $newValueStr) {
                     $changes[$field] = ['old' => $oldValueStr, 'new' => $newValueStr];
                 }
-            }
+            }      
 
             // 3️⃣ Apply changes
             $asset->fill($requestData);
