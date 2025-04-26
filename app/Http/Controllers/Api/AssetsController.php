@@ -245,4 +245,25 @@ class AssetsController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($id)
+    {
+        $asset = Assets::find($id);
+
+        if (!$asset) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Asset not found',
+                'data' => null
+            ], 404);
+        }
+
+        $asset->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asset deleted successfully',
+            'data' => null
+        ], 200);
+    }
 }

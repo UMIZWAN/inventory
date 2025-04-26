@@ -35,7 +35,7 @@ class PurchaseOrder extends Model
         'approved_at' => 'datetime',
     ];
 
-    public function items()
+    public function purchaseItem()
     {
         return $this->hasMany(AssetsTransactionItemList::class, 'purchase_order_id');
     }
@@ -47,7 +47,7 @@ class PurchaseOrder extends Model
 
     public function tax()
     {
-        return $this->belongsTo(Tax::class);
+        return $this->belongsTo(Tax::class, 'tax_id');
     }
 
     public function createdBy()
