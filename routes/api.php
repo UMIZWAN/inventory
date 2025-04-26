@@ -10,6 +10,9 @@ use App\Http\Controllers\Api\AssetsTagController;
 use App\Http\Controllers\Api\AssetsController;
 use App\Http\Controllers\Api\AssetsTransactionController;
 use App\Http\Controllers\Api\AssetsTransactionItemListController;
+use App\Http\Controllers\Api\SuppliersController;
+use App\Http\Controllers\Api\TaxController;
+use App\Http\Controllers\Api\PurchaseOrderController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -36,9 +39,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     // assets routes
     Route::apiResource('assets', AssetsController::class);
-});
 
+    // Route::apiResource('suppliers', SuppliersController::class);
+    // Route::apiResource('tax', TaxController::class);
+});
 Route::apiResource('assets-branch', AssetsBranchController::class);
+Route::apiResource('suppliers', SuppliersController::class);
+Route::apiResource('tax', TaxController::class);
+Route::apiResource('purchase-order', PurchaseOrderController::class);
+Route::apiResource('assets-transaction', AssetsTransactionController::class);
+
 
 Route::apiResource('assets-category', AssetsCategoryController::class);
 

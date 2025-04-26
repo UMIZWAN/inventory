@@ -215,7 +215,7 @@ class AssetsController extends Controller
                         $asset->appendLogSentence('mengemaskini cabang', $branchChanges);
                     }
                 }
-            }      
+            }
 
             $asset->load(['category', 'tag', 'branchValues']);
 
@@ -231,5 +231,26 @@ class AssetsController extends Controller
                 'data' => null
             ], 500);
         }
+    }
+
+    public function destroy($id)
+    {
+        $asset = Assets::find($id);
+
+        if (!$asset) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Asset not found',
+                'data' => null
+            ], 404);
+        }
+
+        $asset->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asset deleted successfully',
+            'data' => null
+        ], 200);
     }
 }

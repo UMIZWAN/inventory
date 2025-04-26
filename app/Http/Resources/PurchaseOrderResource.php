@@ -31,8 +31,8 @@ class PurchaseOrderResource extends JsonResource
             'updated_by' => $this->updated_by,
             'received_by' => $this->received_by,
             'approved_by' => $this->approved_by,
-            'purchase_order_item_list' => $this->whenLoaded('items', function () {
-                return AssetsTransactionItemListResource::collection($this->items);
+            'purchase_order_item_list' => $this->whenLoaded('purchaseItem', function () {
+                return AssetsTransactionItemListResource::collection($this->purchaseItem);
             }),
         ];
     }
