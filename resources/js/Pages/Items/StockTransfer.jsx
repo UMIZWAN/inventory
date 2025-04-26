@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Layout from "../../components/layout/Layout";
-import TransferForm from "../../components/TransferForm";
 import TransferList from "../../components/TransferList";
+import TransferListPage from "../../components/TransferListPage";
 
 const tabs = [
   { key: "list", label: "Transfer List" },
@@ -31,6 +31,7 @@ function StockTransfer() {
         </div>
 
         {activeTab === "list" && <TransferList />}
+        {activeTab === "receive" && <TransferListPage />}
       </div>
     </Layout>
   );

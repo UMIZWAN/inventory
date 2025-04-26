@@ -87,7 +87,7 @@ function ReceiveForm() {
             />
             <span>Specific Items</span>
           </label>
-          <label className="flex items-center gap-2">
+          {/* <label className="flex items-center gap-2">
             <input
               type="radio"
               name="receive_type"
@@ -95,7 +95,7 @@ function ReceiveForm() {
               onChange={() => setIsUsingPO(true)}
             />
             <span>Purchase Order</span>
-          </label>
+          </label> */}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

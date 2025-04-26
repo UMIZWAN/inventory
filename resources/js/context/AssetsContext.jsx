@@ -100,21 +100,20 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
-  const updateAsset = async (id, updatedData) => {
-    console.log('Updating asset:', id, updatedData);
+  const updateAsset = async (id, formData) => {
+    console.log('Updating asset:', id, formData);
     try {
-      await api.put(`/api/assets/${id}`, updatedData, {
+      await api.put(`/api/assets/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      fetchAssets(); // Refresh the list after update
+      fetchAssets();
     } catch (err) {
       console.error('Failed to update asset:', err);
       throw err;
     }
   };
-
   // --------------------------------------------------------------------------------
   // Branch functions
   // --------------------------------------------------------------------------------

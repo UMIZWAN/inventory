@@ -18,6 +18,9 @@ Route::get('/tags', function () {
 Route::get('/supplier', function () {
     return inertia('SupplierForm');
 });
+Route::get('/stock-out', function () {
+    return inertia('StockOutPage');
+});
 
 Route::prefix('items')->group(function () {
     Route::get('/item-list', fn () => Inertia::render('Items/Assets'));

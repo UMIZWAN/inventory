@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import { useAssetMeta } from '../context/AssetsContext';
 import placeholder from '../assets/image/placeholder.png';
+import { useAuth } from '../context/AuthContext';
 
 const ItemDetails = ({ asset, onClose }) => {
+    console.log('Asset Details:', asset);
+    const { user } = useAuth();
     const { updateAsset, categories, tags, branches } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
     const [form, setForm] = useState({
         ...asset,
         asset_category_id: asset.asset_category_id,
         asset_tag_id: asset.asset_tag_id,
-        assets_branch_id: asset.assets_branch_id,
-        assets_location_id: asset.assets_location_id,
+        // assets_branch_id: asset.assets_branch_id,
+        // assets_location_id: asset.assets_location_id,
     });
     const [imagePreview, setImagePreview] = useState(null);
-
-    const logs = asset.assets_log;
+    const [toast, setToast] = useState(null);
+    const logs = asset.assets_log || [];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -22,8 +25,8 @@ const ItemDetails = ({ asset, onClose }) => {
         const idFields = [
             'asset_category_id',
             'asset_tag_id',
-            'assets_branch_id',
-            'assets_location_id'
+            // 'assets_branch_id',
+            // 'assets_location_id'
         ];
 
         setForm((prev) => ({
@@ -32,17 +35,43 @@ const ItemDetails = ({ asset, onClose }) => {
         }));
     };
 
-    const [toast, setToast] = useState(null);
-
     const handleSubmit = async () => {
         try {
+
+            const formData = new FormData();
+
+            // Append all required fields
+            formData.append('name', form.name);
+            formData.append('asset_category_id', form.asset_category_id);
+            formData.append('asset_tag_id', form.asset_tag_id);
+            formData.append('asset_stable_unit', form.asset_stable_unit);
+            formData.append('asset_unit_measure', form.asset_unit_measure);
+
+            // Append optional fields if they exist
+            if (form.asset_description) formData.append('asset_description', form.asset_description);
+            if (form.asset_type) formData.append('asset_type', form.asset_type);
+            if (form.asset_purchase_cost) formData.append('asset_purchase_cost', form.asset_purchase_cost);
+            if (form.asset_sales_cost) formData.append('asset_sales_cost', form.asset_sales_cost);
+            if (form.assets_remark) formData.append('assets_remark', form.assets_remark);
+
+            // Append image file if it exists
+            if (form.asset_image instanceof File) {
+                formData.append('asset_image', form.asset_image);
+            }
+
             const {
                 asset_category_name,
                 asset_tag_name,
                 assets_branch_name,
                 assets_location_name,
+                assets_branch_id,
+                assets_location_id,
+                branch_values,
                 assets_remark,
                 assets_log,
+                created_at,
+                updated_at,
+                total_units,
                 ...cleanData
             } = form;
 
@@ -51,7 +80,7 @@ const ItemDetails = ({ asset, onClose }) => {
             setToast('Asset updated successfully!');
             setTimeout(() => setToast(null), 3000);
         } catch (err) {
-            alert('Update failed.');
+            alert('Update failed: ' + (err.response?.data?.message || err.message));
         }
     };
 
@@ -65,21 +94,20 @@ const ItemDetails = ({ asset, onClose }) => {
         }
     };
 
-    const isEditing = (field) => editMode ? (
-        <input
-            name={field}
-            value={form[field] || ''}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-        />
-    ) : (
-        <span>{asset[field] || '—'}</span>
-    );
+    const isEditing = (field) =>
+        editMode ? (
+            <input
+                name={field}
+                value={form[field] ?? ''}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+            />
+        ) : (
+            <span>{asset[field] ?? '—'}</span>
+        );
 
     return (
-
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/60">
-            {/* Toast Notification */}
             {toast && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white text-sm px-4 py-2 rounded shadow">
                     {toast}
@@ -87,7 +115,6 @@ const ItemDetails = ({ asset, onClose }) => {
             )}
 
             <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
-                {/* Close Button */}
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
@@ -96,7 +123,6 @@ const ItemDetails = ({ asset, onClose }) => {
                     &times;
                 </button>
 
-                {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">
                         {editMode ? 'Edit Asset' : 'Asset Details'}
@@ -113,7 +139,8 @@ const ItemDetails = ({ asset, onClose }) => {
                                 <button
                                     onClick={() => {
                                         setEditMode(false);
-                                        setForm(asset);
+                                        setForm({ ...asset, asset_image: null });
+                                        setImagePreview(null);
                                     }}
                                     className="px-4 py-1.5 text-sm font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
                                 >
@@ -131,26 +158,18 @@ const ItemDetails = ({ asset, onClose }) => {
                     </div>
                 </div>
 
-                {/* Asset Image + Name/Type/Description */}
                 <div className="flex flex-col sm:flex-row gap-6">
                     <div className="flex-shrink-0 relative">
-                        {imagePreview? (
-                            <img src={imagePreview} alt="Preview" className="w-40 h-40 object-cover border rounded-lg" />
-                        ) : (
-                            <img
-                            src={form.asset_image || placeholder}
+                        <img
+                            src={imagePreview || `http://127.0.0.1:8000/${form.asset_image}` || placeholder}
                             alt={form.name}
                             className="w-40 h-40 object-cover rounded-xl border border-gray-200"
                         />
-                        )}
-                        
                         {editMode && (
                             <input
                                 type="file"
                                 name="asset_image"
-                                // value={form.asset_image || ''}
                                 onChange={handleFileChange}
-                                placeholder="Image URL"
                                 className="mt-2 w-40 text-sm px-2 py-1 border rounded"
                             />
                         )}
@@ -171,7 +190,6 @@ const ItemDetails = ({ asset, onClose }) => {
                     </div>
                 </div>
 
-                {/* Grid Details */}
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
                     <Detail label="Code" value={isEditing('asset_running_number')} />
                     <Detail
@@ -179,7 +197,7 @@ const ItemDetails = ({ asset, onClose }) => {
                         value={editMode ? (
                             <select
                                 name="asset_category_id"
-                                value={form.asset_category_id || ''}
+                                value={form.asset_category_id ?? ''}
                                 onChange={handleChange}
                                 className="w-full border rounded px-2 py-1 text-sm"
                             >
@@ -188,16 +206,15 @@ const ItemDetails = ({ asset, onClose }) => {
                                 ))}
                             </select>
                         ) : (
-                            <span>{asset.asset_category_name || '—'}</span>
+                            <span>{asset.asset_category_name ?? '—'}</span>
                         )}
                     />
-
                     <Detail
                         label="Tag"
                         value={editMode ? (
                             <select
                                 name="asset_tag_id"
-                                value={form.asset_tag_id || ''}
+                                value={form.asset_tag_id ?? ''}
                                 onChange={handleChange}
                                 className="w-full border rounded px-2 py-1 text-sm"
                             >
@@ -206,45 +223,44 @@ const ItemDetails = ({ asset, onClose }) => {
                                 ))}
                             </select>
                         ) : (
-                            <span>{asset.asset_tag_name || '—'}</span>
+                            <span>{asset.asset_tag_name ?? '—'}</span>
                         )}
                     />
                     <Detail label="Unit" value={isEditing('asset_unit_measure')} />
                     <Detail label="Cost" value={isEditing('asset_purchase_cost')} />
-                    <Detail label="Price" value={isEditing(('asset_sales_cost'))} />
-                    <Detail label="Stable Quantity" value={isEditing('asset_stable_value')} />
-                    <Detail label="Current Quantity" value={isEditing('asset_current_value')} />
-                    <Detail
-                        label="Branch"
-                        value={editMode ? (
-                            <select
-                                name="assets_branch_id"
-                                value={form.assets_branch_id || ''}
-                                onChange={handleChange}
-                                className="w-full border rounded px-2 py-1 text-sm"
-                            >
-                                {branches.map((br) => (
-                                    <option key={br.id} value={br.id}>{br.name}</option>
-                                ))}
-                            </select>
-                        ) : (
-                            <span>{asset.assets_branch_name || '—'}</span>
-                        )}
-                    />
-                    <Detail label="Location" value={isEditing('assets_location_name')} />
+                    <Detail label="Price" value={isEditing('asset_sales_cost')} />
+                    <Detail label="Stable Quantity" value={isEditing('asset_stable_unit')} />
+                    {!editMode && (
+                        <>
+                            <Detail label="Current Quantity" value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'} />
+                            <Detail
+                                label="Branch"
+                                value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
+                            />
+                            <Detail
+                                label="Location"
+                                value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_location_name ?? '—'}
+                            />
+                        </>
+                    )}
                 </div>
 
-                {/* Remarks */}
-                {asset.assets_remark && !editMode && (
-                    <div className="mt-6">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Remarks:</h3>
-                        <p className="text-sm text-gray-700">{asset.assets_remark}</p>
-                    </div>
-                )}
+                <div className="mt-6">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Remarks:</h3>
+                    {editMode ? (
+                        <textarea
+                            name="assets_remark"
+                            value={form.assets_remark ?? ''}
+                            onChange={handleChange}
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                            rows={3}
+                        />
+                    ) : (
+                        <p className="text-sm text-gray-700">{asset.assets_remark ?? '—'}</p>
+                    )}
+                </div>
 
-
-                {/* Logs */}
-                {logs.length > 0 && !editMode && (
+                {Array.isArray(logs) && logs.length > 0 && !editMode && (
                     <Section title="Logs" items={logs} />
                 )}
             </div>

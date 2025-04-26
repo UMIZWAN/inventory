@@ -96,16 +96,16 @@ class AssetsController extends Controller
                 'asset_unit_measure',
                 'assets_remark'
             ]);
-    
+
             $data['assets_log'] = Auth::user()->name . ' menambahkan aset ' . $request->asset_running_number . ' pada ' . date('Y-m-d H:i:s');
-    
+
             if ($request->hasFile('asset_image')) {
                 $image = $request->file('asset_image');
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $image->move(public_path('storage/assets'), $imageName);
                 $data['asset_image'] = 'storage/assets/' . $imageName;
             }
-    
+
             $asset = Assets::create($data);
 
             // Automatically add an entry in assets_branch_values using the current user's branch
@@ -158,7 +158,7 @@ class AssetsController extends Controller
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
             'asset_unit_measure' => 'required|string|max:255',
-            'asset_image' => 'nullable|string',
+            'asset_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'assets_remark' => 'nullable|string'
         ]);
 
@@ -181,10 +181,40 @@ class AssetsController extends Controller
                 ], 404);
             }
 
+            $data = $request->except(['asset_image', 'asset_branch_values']);
             $original = $asset->getOriginal();
             $changes = [];
 
-            foreach ($request->all() as $key => $value) {
+            // Handle image upload if present
+            if ($request->hasFile('asset_image')) {
+                $image = $request->file('asset_image');
+
+                // Validate the image
+                if (!$image->isValid()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid image file',
+                        'data' => null
+                    ], 422);
+                }
+
+                // Delete old image if exists
+                if ($asset->asset_image && file_exists(public_path($asset->asset_image))) {
+                    unlink(public_path($asset->asset_image));
+                }
+
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('storage/assets'), $imageName);
+                $data['asset_image'] = 'storage/assets/' . $imageName;
+
+                $changes['asset_image'] = [
+                    'old' => $original['asset_image'] ?? null,
+                    'new' => $data['asset_image']
+                ];
+            }
+
+            // Track other changes
+            foreach ($data as $key => $value) {
                 if (array_key_exists($key, $original) && $original[$key] != $value) {
                     $changes[$key] = [
                         'old' => $original[$key],
@@ -193,8 +223,11 @@ class AssetsController extends Controller
                 }
             }
 
-            $asset->update($request->all());
-            $asset->appendLogSentence('mengemaskini', $changes);
+            $asset->update($data);
+
+            if (!empty($changes)) {
+                $asset->appendLogSentence('mengemaskini', $changes);
+            }
 
             if ($request->has('asset_branch_values') && is_array($request->asset_branch_values)) {
                 foreach ($request->asset_branch_values as $branchValue) {

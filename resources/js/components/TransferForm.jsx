@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Layout from "./layout/Layout";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 
@@ -12,7 +11,7 @@ function TransferForm({ setShowTransferForm }) {
     status: "Pending",
     fromBranch: "",
     toBranch: "",
-    items: [{ name: '', unitMeasure: '', quantity: 1, price: 0 }],
+    items: [{ name: '', category:'', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: [],
   });
@@ -26,6 +25,7 @@ function TransferForm({ setShowTransferForm }) {
       type: "select",
       options: assets.map((a) => ({ value: a.id, label: a.name })),
     },
+    { key: "category", label: "Category" },
     { key: "unitMeasure", label: "Unit of Measure" },
     { key: "quantity", label: "Quantity", type: "number", min: 1, align: "text-right" },
     { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right" },
@@ -49,6 +49,7 @@ function TransferForm({ setShowTransferForm }) {
 
       if (selectedAsset) {
         updated[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
+        updated[index].category = selectedAsset.asset_category_name || '';
         updated[index].unitMeasure = selectedAsset.asset_unit_measure || '';
       }
     } else {
@@ -89,7 +90,7 @@ function TransferForm({ setShowTransferForm }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-medium mb-1">Requested By</label>
+              <label className="block font-medium mb-1">Transfer By</label>
               <input
                 type="text"
                 name="requester"
@@ -124,7 +125,7 @@ function TransferForm({ setShowTransferForm }) {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block font-medium mb-1">Status</label>
               <select
                 name="status"
@@ -136,7 +137,7 @@ function TransferForm({ setShowTransferForm }) {
                 <option value="Approved">Approved</option>
                 <option value="Rejected">Rejected</option>
               </select>
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -71,9 +71,9 @@ export default function TransferList() {
                     <h1 className="text-2xl font-bold">Transfer List</h1>
                     <button
                         onClick={() => setShowTransferForm(true)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"
                     >
-                        + New Request
+                        + New Transfer
                     </button>
                 </div>
 
@@ -86,7 +86,7 @@ export default function TransferList() {
                         className="border rounded-lg px-4 py-2 w-full sm:w-72"
                     />
 
-                    <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
+                    {/* <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
                         {['All', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
                             <button
                                 key={status}
@@ -99,7 +99,7 @@ export default function TransferList() {
                                 {status}
                             </button>
                         ))}
-                    </div>
+                    </div> */}
                 </div>
 
                 <table className="min-w-full text-sm text-left border border-gray-200">
