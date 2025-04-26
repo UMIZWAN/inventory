@@ -5,8 +5,10 @@ import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import Layout from '../../components/layout/Layout';
 import { useAssetMeta } from '../../context/AssetsContext';
 import placeholder from '../../assets/image/placeholder.png';
+import { useAuth } from '../../context/AuthContext';
 
 const Assets = () => {
+    const { user } = useAuth();
     const { assets } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
@@ -23,7 +25,7 @@ const Assets = () => {
     const filteredAssets = assets.filter(asset => {
         const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             asset.asset_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            asset.asset_type?.toLowerCase().includes(searchTerm.toLowerCase()) ;
+            asset.asset_type?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesCategory = filters.category ? asset.asset_category_name === filters.category : true;
         const matchesTag = filters.tag ? asset.asset_tag_name === filters.tag : true;
@@ -47,12 +49,14 @@ const Assets = () => {
                 <div className="p-6 max-w-9xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold">Assets List</h1>
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                            + Add Item
-                        </button>
+                        {user?.add_edit_asset && (
+                            <button
+                                onClick={() => setShowModal(true)}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            >
+                                + Add Item
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
@@ -181,13 +185,14 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10">
-                                                        <img className="h-10 w-10 rounded" 
-                                                        src={asset.asset_image ? `http://127.0.0.1:8000/storage/${asset.asset_image}` : placeholder} 
-                                                        alt={asset.name} 
-                                                        onError={(e) => {
-                                                            e.target.onerror = null;
-                                                            e.target.src = placeholder;
-                                                          }}
+                                                        <img className="h-10 w-10 rounded"
+                                                            // src={asset.asset_image ? `http://127.0.0.1:8000/storage/${asset.asset_image}` : placeholder}
+                                                            src={asset.asset_image || placeholder}
+                                                            alt={asset.name}
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = placeholder;
+                                                            }}
                                                         />
                                                     </div>
                                                     <div className="ml-4">
@@ -209,18 +214,19 @@ const Assets = () => {
                                                 {asset.asset_tag_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.assets_branch_name || '—'}
+                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.asset_current_value}
+                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'}
                                             </td>
+
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.assets_location_name || '—'}
+                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_location_name ?? '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {(() => {
-                                                    const current = Number(asset.asset_current_value);
-                                                    const stable = Number(asset.asset_stable_value);
+                                                    const current = Number(asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit);
+                                                    const stable = Number(asset.asset_stable_unit);
                                                     let badgeClass = 'px-4.5 bg-green-100 text-green-800';
                                                     let label = 'Normal';
 
