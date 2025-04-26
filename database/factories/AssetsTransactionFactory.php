@@ -29,10 +29,9 @@ class AssetsTransactionFactory extends Factory
             'assets_from_branch_id' => AssetsBranch::factory(),
             'assets_to_branch_id' => AssetsBranch::factory(),
             'assets_transaction_remark' => $this->faker->sentence(),
-            'assets_transaction_log' => json_encode([
-                'created' => $this->faker->dateTime()->format('Y-m-d H:i:s'),
-                'updated' => $this->faker->dateTime()->format('Y-m-d H:i:s'),
-            ]),
+            'assets_transaction_log' => [
+                "Created by " . $this->faker->name()
+            ],
             'created_by' => User::factory(),
             'updated_by' => User::factory(),
             'received_by' => $this->faker->boolean(70) ? User::factory() : null,
