@@ -70,7 +70,7 @@ class AssetsController extends Controller
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
             'asset_unit_measure' => 'required|string|max:255',
-            'asset_image' => 'nullable|string',
+            'asset_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'assets_remark' => 'nullable|string',
         ]);
 
@@ -83,10 +83,30 @@ class AssetsController extends Controller
         }
 
         try {
-            $request['assets_log'] = Auth::user()->name . ' menambahkan aset ' . $request->asset_running_number . ' pada ' . date('Y-m-d H:i:s');
-
-            // Create the asset
-            $asset = Assets::create($request->all());
+            $data = $request->only([
+                'name',
+                'asset_running_number',
+                'asset_description',
+                'asset_type',
+                'asset_category_id',
+                'asset_tag_id',
+                'asset_stable_unit',
+                'asset_purchase_cost',
+                'asset_sales_cost',
+                'asset_unit_measure',
+                'assets_remark'
+            ]);
+    
+            $data['assets_log'] = Auth::user()->name . ' menambahkan aset ' . $request->asset_running_number . ' pada ' . date('Y-m-d H:i:s');
+    
+            if ($request->hasFile('asset_image')) {
+                $image = $request->file('asset_image');
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('storage/assets'), $imageName);
+                $data['asset_image'] = 'storage/assets/' . $imageName;
+            }
+    
+            $asset = Assets::create($data);
 
             // Automatically add an entry in assets_branch_values using the current user's branch
             AssetsBranchValues::create([

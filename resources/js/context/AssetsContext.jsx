@@ -41,8 +41,6 @@ export const AssetMetaProvider = ({ children }) => {
         if (response.data.success) {
           const allAssets = response.data.data;
 
-          console.log('All assets:', allAssets);
-
           // Filter assets that have at least one branch_value for the current user's branch
           const userBranchAssets = allAssets.filter(asset =>
             asset.branch_values?.some(bv => bv.asset_branch_id === user?.branch_id)
