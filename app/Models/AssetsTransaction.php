@@ -10,7 +10,7 @@ class AssetsTransaction extends Model
     use HasFactory;
 
     public const TYPES = ['ASSET IN', 'ASSET OUT'];
-    public const STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
+    public const STATUSES = ['DRAFT', 'IN-TRANSFER', 'RECEIVED'];
     public const PURPOSES = ['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST'];
 
     protected $table = 'assets_transaction';
@@ -36,6 +36,7 @@ class AssetsTransaction extends Model
     ];
 
     protected $casts = [
+        'assets_transaction_purpose' => 'array',
         'assets_transaction_log' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

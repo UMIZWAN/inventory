@@ -1,17 +1,20 @@
 import { useState } from "react";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
+import { useAuth } from "../context/AuthContext";
 
 function TransferForm({ setShowTransferForm }) {
-  const { assets, branches } = useAssetMeta();
+  const { user } = useAuth()
+  const { assets, branches, createTransfer } = useAssetMeta();
   const [form, setForm] = useState({
-    requester: "",
+    requester: user?.id || "",
     department: "",
-    date: "",
-    status: "Pending",
-    fromBranch: "",
+    date: new Date().toISOString().slice(0, 10),
+  status: "DRAFT",
+    transaction_type: "ASSET_TRANSFER",
+    fromBranch: user?.branch_id || "",
     toBranch: "",
-    items: [{ name: '', category:'', unitMeasure: '', quantity: 1, price: 0 }],
+    items: [{ name: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: [],
   });
@@ -75,10 +78,15 @@ function TransferForm({ setShowTransferForm }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Stock Transfer Request Submitted:", form);
-    // TODO: send to API
+    try {
+      await createTransfer(form);
+      alert("Stock Transfer Request Submitted Successfully!");
+      setShowTransferForm(false); // close the form
+    } catch (error) {
+      alert("Failed to submit transfer request. Please try again.");
+    }
   };
 
   return (
@@ -90,25 +98,24 @@ function TransferForm({ setShowTransferForm }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-medium mb-1">Transfer By</label>
+              <label className="block font-medium mb-1">From Branch</label>
               <input
-                type="text"
-                name="requester"
-                value={form.requester}
-                onChange={handleChange}
+                name="fromBranch"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                required
+                value={user?.branch_name}
+                readOnly
               />
             </div>
 
             <div>
-              <label className="block font-medium mb-1">Department</label>
+              <label className="block font-medium mb-1">Transfer By</label>
               <input
                 type="text"
-                name="department"
-                value={form.department}
+                name="requester"
+                value={user?.name}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                readOnly
               />
             </div>
           </div>
@@ -125,7 +132,7 @@ function TransferForm({ setShowTransferForm }) {
               />
             </div>
 
-            {/* <div>
+            <div>
               <label className="block font-medium mb-1">Status</label>
               <select
                 name="status"
@@ -133,29 +140,14 @@ function TransferForm({ setShowTransferForm }) {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
               >
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
+                <option value="Draft">Draft</option>
+                <option value="In-Transfer">In-Transfer</option>
+                <option value="Received">Received</option>
               </select>
-            </div> */}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">From Branch</label>
-              <select
-                name="fromBranch"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                value={form.fromBranch}
-                onChange={handleChange}
-              >
-                <option value="">[Select Branch]</option>
-                {branches.map((br) => (
-                  <option key={br.id} value={br.id}>{br.name}</option>
-                ))}
-              </select>
-            </div>
-
             <div>
               <label className="block font-medium mb-1">To Branch</label>
               <select
@@ -170,6 +162,17 @@ function TransferForm({ setShowTransferForm }) {
                 ))}
               </select>
             </div>
+
+            {/* <div>
+              <label className="block font-medium mb-1">Department</label>
+              <input
+                type="text"
+                name="department"
+                value={form.department}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              />
+            </div> */}
           </div>
 
           {/* Purposes checkboxes */}

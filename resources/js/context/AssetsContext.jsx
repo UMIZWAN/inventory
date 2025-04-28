@@ -193,6 +193,45 @@ export const AssetMetaProvider = ({ children }) => {
     fetchTags();
   };
 
+  // --------------------------------------------------------------------------------
+  // Asset Transaction functions
+  // --------------------------------------------------------------------------------
+
+  const createTransfer = async (form) => {
+    try {
+      const payload = {
+        assets_transaction_running_number: generateRunningNumber(), // we'll create this below
+        assets_transaction_type: 'ASSET TRANSFER',
+        assets_transaction_status: form.status.toUpperCase(), // make sure it's uppercase
+        assets_from_branch_id: parseInt(form.fromBranch),
+        assets_to_branch_id: parseInt(form.toBranch),
+        created_by: user?.id, // ⚡ assume you have user from context
+        created_at: form.date,
+        assets_transaction_remark: form.remarks,
+        assets_transaction_item_list: form.items.map((item) => ({
+          asset_id: parseInt(item.item),
+          asset_unit: parseInt(item.quantity),
+          status: null,
+        })),
+      };
+  
+      const res = await api.post("api/assets-transaction", payload);
+  
+      console.log("Transfer created:", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Failed to create transfer:", error);
+      throw error;
+    }
+  };
+  
+  // Optional simple running number generator (for frontend demo only)
+  const generateRunningNumber = () => {
+    const now = new Date();
+    return `AST-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}-${Math.floor(Math.random() * 9000 + 1000)}`;
+  };
+  
+
   useEffect(() => {
     fetchBranches();
     fetchTags();
@@ -217,6 +256,8 @@ export const AssetMetaProvider = ({ children }) => {
         deleteTag,
         branches,
         loading,
+
+        createTransfer
       }}
     >
 

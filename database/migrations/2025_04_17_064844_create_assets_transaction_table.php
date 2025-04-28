@@ -11,7 +11,6 @@ return new class extends Migration
    */
   public function up(): void
   {
-
     Schema::create('assets_transaction', function (Blueprint $table) {
       $table->id();
       $table->string('assets_transaction_running_number')->unique();
@@ -19,8 +18,12 @@ return new class extends Migration
       $table->foreign('purchase_order_id')->references('id')->on('purchase_order')->nullOnDelete();
 
       $table->enum('assets_transaction_type', ['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER']);
-      $table->enum('assets_transaction_status', ['PENDING', 'APPROVED', 'REJECTED'])->default('PENDING');
-      $table->enum('assets_transaction_purpose', ['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST', 'ASSET IN', 'ASSET OUT', 'ASSET TRANSFER'])->nullable();
+      
+      // STATUS only relevant for ASSET TRANSFER
+      $table->enum('assets_transaction_status', ['DRAFT', 'IN-TRANSFER', 'RECEIVED'])->nullable();
+
+      // PURPOSE: allow multiple purposes (JSON)
+      $table->json('assets_transaction_purpose')->nullable();
 
       $table->foreignId('assets_from_branch_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();
       $table->foreignId('assets_to_branch_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();

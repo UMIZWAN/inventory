@@ -15,17 +15,20 @@ class AssetsTransactionFactory extends Factory
 
     public function definition(): array
     {
-        $transactionType = $this->faker->randomElement(['ASSET IN', 'ASSET OUT']);
-        $transactionPurpose = $transactionType === 'ASSET IN'
-            ? 'ASSET IN'
-            : $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']);
+        $transactionType = $this->faker->randomElement(['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER']);
+
+        // Set status depending on type
+        $status = null;
+        if ($transactionType === 'ASSET TRANSFER') {
+            $status = $this->faker->randomElement(['DRAFT', 'IN-TRANSFER', 'RECEIVED']);
+        }
 
         return [
             'assets_transaction_running_number' => 'TRX-' . $this->faker->unique()->numerify('######'),
             'purchase_order_id' => $transactionType === 'ASSET IN' ? PurchaseOrder::factory() : null,
             'assets_transaction_type' => $transactionType,
-            'assets_transaction_status' => $this->faker->randomElement(['PENDING', 'APPROVED', 'REJECTED']),
-            'assets_transaction_purpose' => $transactionPurpose,
+            'assets_transaction_status' => $status,
+            'assets_transaction_purpose' => $this->getRandomPurposes(),
             'assets_from_branch_id' => AssetsBranch::factory(),
             'assets_to_branch_id' => AssetsBranch::factory(),
             'assets_transaction_remark' => $this->faker->sentence(),
@@ -41,26 +44,25 @@ class AssetsTransactionFactory extends Factory
             'received_at' => $this->faker->boolean(70) ? $this->faker->dateTimeBetween('-4 months', 'now') : null,
             'approved_at' => $this->faker->boolean(60) ? $this->faker->dateTimeBetween('-3 months', 'now') : null,
         ];
+    }
 
-        // return [
-        //     'assets_transaction_running_number' => $transactionNumber,
-        //     'users_id' => $user->id,
-        //     'assets_transaction_type' => $this->faker->randomElement($types),
-        //     'assets_transaction_status' => $this->faker->randomElement($statuses),
-        //     'assets_transaction_purpose' => $this->faker->randomElement(['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST']),
-        //     'assets_from_branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
-        //     'assets_to_branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
-        //     'assets_transaction_remark' => $this->faker->optional()->sentence(),
-        //     'assets_transaction_log' => null,
-        //     'created_by' => $user->id,
-        //     'created_at' => now(),
-        //     'updated_by' => null,
-        //     'updated_at' => null,
-        //     'received_by' => null,
-        //     'received_at' => null,
-        //     'approved_by' => null,
-        //     'approved_at' => null,
-        // ];
+    private function getRandomPurposes()
+    {
+        $possiblePurposes = [
+            'INSURANCE',
+            'CSI',
+            'EVENT/ROADSHOW',
+            'SPECIAL REQUEST',
+            'ASSET IN',
+            'ASSET OUT',
+            'ASSET TRANSFER',
+        ];
+
+        return collect($possiblePurposes)
+            ->shuffle()
+            ->take(rand(1, 3))
+            ->values()
+            ->toArray();
     }
 
     // public function configure()

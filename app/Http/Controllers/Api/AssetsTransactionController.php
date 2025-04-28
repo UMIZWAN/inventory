@@ -23,7 +23,7 @@ class AssetsTransactionController extends Controller
                 'fromBranch',
                 'toBranch',
                 'createdBy',
-            ])->paginate($request->per_page ?? 2);
+            ])->paginate($request->per_page ?? 10);
 
             return response()->json([
                 'success' => true,
@@ -228,16 +228,17 @@ class AssetsTransactionController extends Controller
                 $validator = Validator::make($request->all(), [
                     'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
+                    'assets_transaction_status' => 'required|string|in:DRAFT,IN-TRANSFER,RECEIVED',
                     'assets_from_branch_id' => 'required|integer',
                     'assets_to_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
                     'created_at' => 'nullable|date',
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
-                    'assets_transaction_item_list.*.status' => 'required|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
+                    'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
                     'assets_transaction_item_list.*.asset_unit' => 'required|integer'
                 ]);
-
+            
                 if ($validator->fails()) {
                     return response()->json([
                         'success' => false,
@@ -245,18 +246,20 @@ class AssetsTransactionController extends Controller
                         'errors' => $validator->errors()
                     ], 422);
                 }
-
+            
                 DB::beginTransaction();
-
-                $transaction = AssetsTransaction::create($request->only([
-                    'assets_transaction_running_number',
-                    'assets_transaction_type',
-                    'assets_transaction_remark',
-                    'assets_from_branch_id',
-                    'created_by',
-                    'created_at'
-                ]));
-
+            
+                $transaction = AssetsTransaction::create([
+                    'assets_transaction_running_number' => $request->assets_transaction_running_number,
+                    'assets_transaction_type' => $request->assets_transaction_type,
+                    'assets_transaction_status' => $request->assets_transaction_status,
+                    'assets_transaction_remark' => $request->assets_transaction_remark,
+                    'assets_from_branch_id' => $request->assets_from_branch_id,
+                    'assets_to_branch_id' => $request->assets_to_branch_id,
+                    'created_by' => $request->created_by,
+                    'created_at' => $request->created_at,
+                ]);
+            
                 foreach ($request->assets_transaction_item_list as $item) {
                     AssetsTransactionItemList::create([
                         'asset_transaction_id' => $transaction->id,
@@ -265,39 +268,45 @@ class AssetsTransactionController extends Controller
                         'asset_unit' => $item['asset_unit']
                     ]);
                 }
-
-                // Deduct the current unit from the from branch
-                foreach ($request->assets_transaction_item_list as $item) {
-                    $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
-                        ->where('asset_id', $item['asset_id'])
-                        ->first();
-
-                    if ($assetBranchFromValue) {
-                        $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
+            
+                // only do quantity update based on transaction status
+                if ($request->assets_transaction_status == 'IN-TRANSFER') {
+                    // Deduct from source branch
+                    foreach ($request->assets_transaction_item_list as $item) {
+                        $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
+                            ->where('asset_id', $item['asset_id'])
+                            ->first();
+            
+                        if ($assetBranchFromValue) {
+                            $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
+                        }
                     }
                 }
-
-                // Add the current unit to the to branch
-                foreach ($request->assets_transaction_item_list as $item) {
-                    $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $request->assets_to_branch_id)
-                        ->where('asset_id', $item['asset_id'])
-                        ->first();
-
-                    if ($assetBranchToValue) {
-                        $assetBranchToValue->increment('asset_current_unit', $item['asset_unit']);
+            
+                if ($request->assets_transaction_status == 'RECEIVED') {
+                    // Add to destination branch
+                    foreach ($request->assets_transaction_item_list as $item) {
+                        $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $request->assets_to_branch_id)
+                            ->where('asset_id', $item['asset_id'])
+                            ->first();
+            
+                        if ($assetBranchToValue) {
+                            $assetBranchToValue->increment('asset_current_unit', $item['asset_unit']);
+                        }
                     }
                 }
-
+            
+                // DRAFT -> do nothing to quantities
+            
                 DB::commit();
-
-                // deduct asset current unit from assetbranchvalue where branchid = from brancid,then add asset current unit frp, assetbranchvalue where branch id = to branch id
-
+            
                 return response()->json([
                     'success' => true,
-                    'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' created successfully',
+                    'message' => 'Asset transfer ' . $transaction->assets_transaction_running_number . ' created successfully',
                     'data' => $transaction->load('transactionItems')
                 ], 201);
             }
+            
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\AssetsTransaction;
 use App\Models\AssetsTransactionItemList;
@@ -17,7 +16,16 @@ class AssetsTransactionSeeder extends Seeder
     {
         // Create 40 asset transactions
         AssetsTransaction::factory(40)->create()->each(function ($transaction) {
-            // For each transaction, create between 1 and 5 transaction items
+            $newStatus = null;
+            if ($transaction->assets_transaction_type === 'ASSET TRANSFER') {
+                $newStatus = $this->getRandomStatusForTransfer();
+            }
+
+            $transaction->update([
+                'assets_transaction_status' => $newStatus,
+                'assets_transaction_purpose' => json_encode($this->getRandomPurposes()),
+            ]);
+
             $assets = Assets::inRandomOrder()->take(rand(1, 5))->get();
 
             foreach ($assets as $asset) {
@@ -25,21 +33,46 @@ class AssetsTransactionSeeder extends Seeder
                     'asset_transaction_id' => $transaction->id,
                     'purchase_order_id' => $transaction->purchase_order_id,
                     'asset_id' => $asset->id,
-                    'status' => $transaction->assets_transaction_type === 'ASSET IN' ?
-                        $this->getRandomStatusForIn() : $this->getRandomStatusForOut(),
+                    'status' => $this->getItemStatus($transaction->assets_transaction_type),
                     'asset_unit' => rand(1, 10),
                 ]);
             }
         });
     }
 
-    private function getRandomStatusForIn()
+    private function getRandomStatusForTransfer()
     {
-        return fake()->randomElement(['DELIVERED', 'RECEIVED']);
+        return fake()->randomElement(['DRAFT', 'IN-TRANSFER', 'RECEIVED']);
     }
 
-    private function getRandomStatusForOut()
+    private function getRandomPurposes()
     {
-        return fake()->randomElement(['ON HOLD', 'FROZEN', 'RETURNED', 'DISPOSED']);
+        $possiblePurposes = [
+            'INSURANCE',
+            'CSI',
+            'EVENT/ROADSHOW',
+            'SPECIAL REQUEST',
+            'ASSET IN',
+            'ASSET OUT',
+            'ASSET TRANSFER'
+        ];
+
+        return collect($possiblePurposes)
+            ->shuffle()
+            ->take(rand(1, 3))
+            ->values()
+            ->toArray();
+    }
+
+    private function getItemStatus($transactionType)
+    {
+        if ($transactionType === 'ASSET IN') {
+            return fake()->randomElement(['DELIVERED', 'RECEIVED']);
+        } else if ($transactionType === 'ASSET OUT') {
+            return fake()->randomElement(['ON HOLD', 'FROZEN', 'RETURNED', 'DISPOSED']);
+        } else {
+            // ASSET TRANSFER
+            return fake()->randomElement(['DELIVERED', 'RECEIVED']);
+        }
     }
 }
