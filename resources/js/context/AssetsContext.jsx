@@ -10,6 +10,9 @@ export const AssetMetaProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [assetIn, setAssetIn] = useState([]);
+  const [assetOut, setAssetOut] = useState([]);
+  const [assetTransfer, setAssetTransfer] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // const fetchAssets = () => {
@@ -196,6 +199,28 @@ export const AssetMetaProvider = ({ children }) => {
   // --------------------------------------------------------------------------------
   // Asset Transaction functions
   // --------------------------------------------------------------------------------
+  const fetchAssetTransaction = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/api/assets-transaction');
+      const transactions = res.data.data;
+
+      // Separate transactions by type
+      const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN');
+      const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
+      const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
+
+      // Update your states accordingly
+      setAssetIn(assetIn);
+      setAssetOut(assetOut);
+      setAssetTransfer(assetTransfer);
+
+    } catch (error) {
+      console.error('Error fetching asset transactions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const createTransfer = async (form) => {
     try {
@@ -205,18 +230,19 @@ export const AssetMetaProvider = ({ children }) => {
         assets_transaction_status: form.status.toUpperCase(), // make sure it's uppercase
         assets_from_branch_id: parseInt(form.fromBranch),
         assets_to_branch_id: parseInt(form.toBranch),
-        created_by: user?.id, // ⚡ assume you have user from context
+        created_by: user?.id, 
         created_at: form.date,
         assets_transaction_remark: form.remarks,
+        assets_transaction_purpose: form.purpose,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
           asset_unit: parseInt(item.quantity),
           status: null,
         })),
       };
-  
+
       const res = await api.post("api/assets-transaction", payload);
-  
+
       console.log("Transfer created:", res.data);
       return res.data;
     } catch (error) {
@@ -224,19 +250,47 @@ export const AssetMetaProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
   // Optional simple running number generator (for frontend demo only)
   const generateRunningNumber = () => {
     const now = new Date();
     return `AST-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}-${Math.floor(Math.random() * 9000 + 1000)}`;
   };
+
+  const createStockOut = async (form) => {
+    try {
+      const payload = {
+        assets_transaction_running_number: generateRunningNumber(), 
+        assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
+        assets_from_branch_id: user?.branch_id,
+        // assets_to_branch_id: parseInt(form.branch),
+        created_by: user?.id,
+        created_at: form.date,
+        assets_transaction_remark: form.remarks,
+        assets_transaction_purpose: form.purpose,
+        assets_transaction_item_list: form.items.map((item) => ({
+          asset_id: parseInt(item.item),
+          asset_unit: parseFloat(item.quantity),
+          status: null,
+        })),
+      };
   
+      const res = await api.post("/api/assets-transaction", payload);
+  
+      console.log("Stock out created:", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Failed to create stock out:", error);
+      throw error;
+    }
+  };  
 
   useEffect(() => {
     fetchBranches();
     fetchTags();
     fetchCategories();
     fetchAssets();
+    fetchAssetTransaction();
   }, []);
 
   return (
@@ -256,8 +310,11 @@ export const AssetMetaProvider = ({ children }) => {
         deleteTag,
         branches,
         loading,
-
-        createTransfer
+        assetTransfer,
+        assetIn,
+        assetOut,
+        createTransfer,
+        createStockOut,
       }}
     >
 

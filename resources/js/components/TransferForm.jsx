@@ -1,23 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 
-function TransferForm({ setShowTransferForm }) {
-  const { user } = useAuth()
-  const { assets, branches, createTransfer } = useAssetMeta();
+function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
+  const { user } = useAuth();
+  const { assets, branches } = useAssetMeta();
   const [form, setForm] = useState({
     requester: user?.id || "",
     department: "",
     date: new Date().toISOString().slice(0, 10),
-  status: "DRAFT",
+    status: "DRAFT",
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: "",
-    items: [{ name: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
+    items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: [],
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        requester: user?.id || "",
+        department: "",
+        date: initialData.date || new Date().toISOString().slice(0, 10),
+        status: initialData.status || "DRAFT",
+        transaction_type: "ASSET_TRANSFER",
+        fromBranch: initialData.fromBranch || user?.branch_id || "",
+        toBranch: initialData.toBranch || "",
+        items: initialData.items || [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
+        remarks: initialData.remarks || "",
+        purpose: initialData.purpose || [],
+      });
+    }
+  }, [initialData, user]);
 
   const purposes = ["CSI", "Insurance", "Event & Roadshow", "Special RQ"];
 
@@ -26,16 +43,16 @@ function TransferForm({ setShowTransferForm }) {
       key: "item",
       label: "Item",
       type: "select",
-      options: assets.map((a) => ({ value: a.id, label: a.name })),
+      options: assets.map((a) => ({ value: a.id, label: a.asset_name })),
     },
-    { key: "category", label: "Category" },
-    { key: "unitMeasure", label: "Unit of Measure" },
+    { key: "category", label: "Category", readOnly: true },
+    { key: "unitMeasure", label: "Unit of Measure", readOnly: true },
     { key: "quantity", label: "Quantity", type: "number", min: 1, align: "text-right" },
-    { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right" },
+    { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right", readOnly: true },
   ];
 
   const addItem = () => {
-    setForm({ ...form, items: [...form.items, { name: '', quantity: 1, price: 0 }] });
+    setForm({ ...form, items: [...form.items, { item: '', quantity: 1, price: 0 }] });
   };
 
   const removeItem = (index) => {
@@ -44,25 +61,25 @@ function TransferForm({ setShowTransferForm }) {
   };
 
   const handleItemChange = (index, field, value) => {
-    const updated = [...form.items];
+    const updatedItems = [...form.items];
 
     if (field === 'item') {
-      const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
-      updated[index].item = value;
+      const selectedAsset = assets.find(a => a.id === Number(value));
+      updatedItems[index].item = value;
 
       if (selectedAsset) {
-        updated[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
-        updated[index].category = selectedAsset.asset_category_name || '';
-        updated[index].unitMeasure = selectedAsset.asset_unit_measure || '';
+        updatedItems[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
+        updatedItems[index].category = selectedAsset.asset_category_name || '';
+        updatedItems[index].unitMeasure = selectedAsset.asset_unit_measure || '';
       }
     } else {
-      updated[index][field] =
-        field === 'quantity' || field === 'price' || field === 'unitMeasure'
+      updatedItems[index][field] =
+        field === 'quantity' || field === 'price'
           ? parseFloat(value)
           : value;
     }
 
-    setForm({ ...form, updated });
+    setForm({ ...form, items: updatedItems });
   };
 
   const handleChange = (e) => {
@@ -74,26 +91,26 @@ function TransferForm({ setShowTransferForm }) {
         : form.purpose.filter((p) => p !== value);
       setForm({ ...form, purpose: updatedPurpose });
     } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+      setForm(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createTransfer(form);
-      alert("Stock Transfer Request Submitted Successfully!");
-      setShowTransferForm(false); // close the form
+      await onSubmit(form);
+      setShowTransferForm(false);
     } catch (error) {
-      alert("Failed to submit transfer request. Please try again.");
+      console.error("Submission failed:", error);
     }
   };
 
   return (
-
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-white shadow-md rounded-xl">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Stock Transfer Request</h2>
+      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-semibold mb-4 text-center">
+          {isEditMode ? "Edit Transfer Request" : "Stock Transfer Request"}
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="grid grid-cols-2 gap-4">
@@ -164,15 +181,15 @@ function TransferForm({ setShowTransferForm }) {
             </div>
 
             {/* <div>
-              <label className="block font-medium mb-1">Department</label>
-              <input
-                type="text"
-                name="department"
-                value={form.department}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              />
-            </div> */}
+                <label className="block font-medium mb-1">Department</label>
+                <input
+                  type="text"
+                  name="department"
+                  value={form.department}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                />
+              </div> */}
           </div>
 
           {/* Purposes checkboxes */}
@@ -216,13 +233,23 @@ function TransferForm({ setShowTransferForm }) {
           </div>
 
           <div className="flex justify-end gap-4 mt-4">
-            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Submit</button>
-            <button type="button" onClick={() => setShowTransferForm(false)} className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg">Cancel</button>
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              {isEditMode ? "Update" : "Submit"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowTransferForm(false)}
+              className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
     </div>
-
   );
 }
 

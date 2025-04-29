@@ -25,7 +25,7 @@ class AssetsSeeder extends Seeder
             ->each(fn($name) => AssetsTag::create(['name' => $name]));
 
         // Create branches
-        $branches = collect(['UMKK1', 'UMKK2', 'UMTWU', 'UMKGU', 'UMLD'])
+        $branches = collect(['HQKK', 'HQTWU'])
             ->map(fn($name) => AssetsBranch::create(['name' => $name]));
 
         // Create 50 assets with branch values

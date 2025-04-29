@@ -11,7 +11,7 @@ const Sidebar = () => {
                 'Item List',
                 // 'View Transfers',
                 'Transfer Stock',
-                'Import Items from CSV',
+                // 'Import Items from CSV',
             ],
         },
         {
@@ -31,8 +31,8 @@ const Sidebar = () => {
             title: 'Sell',
             prefix: 'sell',
             items: [
-                'Sell Stock',
-                'View Sales History',
+                'Item checkout',
+                'View Checkout History',
             ],
         },
         // {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Exception;
 use App\Models\AssetsCategory;
+use App\Models\Assets;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -103,6 +104,10 @@ class AssetsCategoryController extends Controller
         $assetsCategory = AssetsCategory::find($id);
 
         if ($assetsCategory) {
+
+            // Set asset_category_id to null for all assets that have this category
+            Assets::where('asset_category_id', $id)->update(['asset_category_id' => null]);
+
             $assetsCategory->delete();
 
             // return new AssetsBranchResource(true, 'Data Assets Category Berhasil Dihapus!', null);

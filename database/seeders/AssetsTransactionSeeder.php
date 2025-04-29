@@ -15,7 +15,7 @@ class AssetsTransactionSeeder extends Seeder
     public function run()
     {
         // Create 40 asset transactions
-        AssetsTransaction::factory(40)->create()->each(function ($transaction) {
+        AssetsTransaction::factory(10)->create()->each(function ($transaction) {
             $newStatus = null;
             if ($transaction->assets_transaction_type === 'ASSET TRANSFER') {
                 $newStatus = $this->getRandomStatusForTransfer();

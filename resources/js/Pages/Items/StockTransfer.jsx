@@ -1,15 +1,17 @@
 import { useState } from "react";
 import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
-import TransferListPage from "../../components/TransferListPage";
 
 const tabs = [
-  { key: "list", label: "Transfer List" },
-  { key: "receive", label: "To Receive" },
+  { key: "draft", label: "Draft", status: "DRAFT" },
+  { key: "in_transfer", label: "In Transfer", status: "IN-TRANSFER" },
+  { key: "received", label: "Received", status: "RECEIVED" },
 ];
 
 function StockTransfer() {
-  const [activeTab, setActiveTab] = useState("list");
+  const [activeTab, setActiveTab] = useState(tabs[0].key);
+
+  const currentTab = tabs.find((tab) => tab.key === activeTab);
 
   return (
     <Layout>
@@ -30,8 +32,7 @@ function StockTransfer() {
           ))}
         </div>
 
-        {activeTab === "list" && <TransferList />}
-        {activeTab === "receive" && <TransferListPage />}
+        {currentTab && <TransferList status={currentTab.status} />}
       </div>
     </Layout>
   );

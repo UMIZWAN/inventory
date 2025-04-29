@@ -1,150 +1,224 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../api/api";
 import { Dialog } from "@headlessui/react";
 import TransferForm from "./TransferForm";
 import TransferDetailModal from "./TransferDetailModal";
+import { useAssetMeta } from "../context/AssetsContext";
 
+export default function TransferList({ status }) {
+  const { assetTransfer, createTransfer } = useAssetMeta();
+  const [selected, setSelected] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [showTransferForm, setShowTransferForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
-export default function TransferList() {
-    const [requests, setRequests] = useState([]);
-    const [selected, setSelected] = useState(null);
-    const [isOpen, setIsOpen] = useState(false);
-    const [showTransferForm, setShowTransferForm] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('All');
+  const openModal = (txn) => {
+    if (status === "DRAFT") {
+      // For draft items, show in edit mode
+      setSelected({
+        ...txn,
+        items: txn.assets_transaction_item_list.map(item => ({
+          item: item.asset_id,
+          quantity: item.asset_unit,
+          price: 0, // You might need to fetch this from asset data
+          category: "", // You might need to fetch this from asset data
+          unitMeasure: "" // You might need to fetch this from asset data
+        })),
+        purpose: txn.assets_transaction_purpose ? [txn.assets_transaction_purpose] : [],
+        remarks: txn.assets_transaction_remark || "",
+        date: txn.created_at.slice(0, 10),
+        fromBranch: txn.assets_from_branch_id,
+        toBranch: txn.assets_to_branch_id,
+        status: txn.assets_transaction_status
+      });
+      setIsEditing(true);
+    } else {
+      // For non-draft items, show in view mode
+      setSelected(txn);
+      setIsOpen(true);
+    }
+  };
 
-    useEffect(() => {
-        api.get("/api/assets-transaction")
-            .then((res) => {
-                if (res.data.success) setRequests(res.data.data);
-            })
-            .catch((err) => console.error("Fetch error:", err));
-    }, []);
+  const closeModal = () => {
+    setIsOpen(false);
+    setIsEditing(false);
+    setSelected(null);
+  };
 
-    const filteredTransfers = requests.filter((req) => {
-        const matchesStatus =
-            statusFilter === 'All' || req.assets_transaction_status === statusFilter;
-        const matchesSearch =
-            req.assets_transaction_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            req.assets_transaction_item_list?.some((item) =>
-                item.asset_name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        return matchesStatus && matchesSearch;
+  const handleUpdateDraft = async (updatedForm) => {
+    try {
+      const payload = {
+        ...selected,
+        assets_transaction_status: updatedForm.status,
+        assets_from_branch_id: updatedForm.fromBranch,
+        assets_to_branch_id: updatedForm.toBranch,
+        created_at: updatedForm.date,
+        assets_transaction_remark: updatedForm.remarks,
+        assets_transaction_purpose: updatedForm.purpose.join(", "),
+        assets_transaction_item_list: updatedForm.items.map((item) => ({
+          asset_id: parseInt(item.item),
+          asset_unit: parseInt(item.quantity),
+          status: null,
+        })),
+      };
+
+      await api.put(`/api/assets-transaction/${selected.id}`, payload);
+      closeModal();
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
+  };
+
+  const handleAction = (newStatus) => {
+    api.put(`/api/assets-transaction/${selected.id}`, {
+      ...selected,
+      assets_transaction_status: newStatus,
+    }).then(() => {
+      closeModal();
+    }).catch((err) => {
+      console.error("Update failed:", err);
     });
+  };
 
+  // Filter based on status prop and searchTerm
+  const filteredTransfers = assetTransfer.filter((txn) => {
+    const matchesStatus = !status || txn.assets_transaction_status === status;
+    const matchesSearch = txn.assets_transaction_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      txn.assets_transaction_item_list.some(item =>
+        item.status?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    return matchesStatus && matchesSearch;
+  });
 
-    const openModal = (txn) => {
-        setSelected({ ...txn });
-        setIsOpen(true);
-    };
+  // Determine which buttons to show based on status
+  const getModalButtons = () => {
+    if (!selected) return null;
+    
+    switch (selected.assets_transaction_status) {
+      case "DRAFT":
+        return {
+          primary: {
+            label: "Start Transfer",
+            action: () => handleAction("IN-TRANSFER"),
+            color: "bg-blue-600 hover:bg-blue-700"
+          }
+        };
+      case "IN-TRANSFER":
+        return {
+          primary: {
+            label: "Mark as Received",
+            action: () => handleAction("RECEIVED"),
+            color: "bg-green-600 hover:bg-green-700"
+          }
+        };
+      default:
+        return null;
+    }
+  };
 
-    const closeModal = () => {
-        setIsOpen(false);
-        setSelected(null);
-    };
+  const modalButtons = getModalButtons();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setSelected((prev) => ({ ...prev, [name]: value }));
-    };
+  return (
+    <>
+      {showTransferForm && (
+        <TransferForm 
+          setShowTransferForm={setShowTransferForm} 
+          initialData={null}
+          onSubmit={createTransfer}
+        />
+      )}
 
-    const handleAction = (status) => {
-        axios.put(`/api/assets-transaction/${selected.id}`, {
-            ...selected,
-            assets_transaction_status: status,
-        }).then(() => {
-            closeModal();
-            // Optionally refresh table
-        }).catch((err) => {
-            console.error("Update failed:", err);
-        });
-    };
+      {isEditing && selected && (
+        <TransferForm 
+          setShowTransferForm={setIsEditing} 
+          initialData={selected}
+          onSubmit={handleUpdateDraft}
+          isEditMode={true}
+        />
+      )}
 
-    return (
-        <>
-            {showTransferForm && (
-                <TransferForm setShowTransferForm={setShowTransferForm} />
+      <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Transfer List</h1>
+          {status === "DRAFT" && (
+            <button
+              onClick={() => setShowTransferForm(true)}
+              className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"
+            >
+              + New Transfer
+            </button>
+          )}
+        </div>
+
+        {/* Search */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <input
+            type="text"
+            placeholder="Search by running number or item status..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border rounded-lg px-4 py-2 w-full sm:w-72"
+          />
+        </div>
+
+        {/* Table */}
+        <table className="min-w-full text-sm text-left border border-gray-200">
+          <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+            <tr>
+              <th className="px-4 py-2 border">Running No</th>
+              <th className="px-4 py-2 border">Type</th>
+              <th className="px-4 py-2 border">From ➔ To Branch</th>
+              <th className="px-4 py-2 border">Created By</th>
+              <th className="px-4 py-2 border">Created At</th>
+              <th className="px-4 py-2 border">Status</th>
+            </tr>
+          </thead>
+          <tbody className="text-gray-800">
+            {filteredTransfers.length > 0 ? (
+              filteredTransfers.map((txn) => (
+                <tr key={txn.id} className="hover:bg-gray-50">
+                  <td
+                    className="px-4 py-2 border hover:underline font-medium cursor-pointer"
+                    onClick={() => openModal(txn)}
+                  >
+                    {txn.assets_transaction_running_number}
+                  </td>
+                  <td className="px-4 py-2 border">{txn.assets_transaction_type}</td>
+                  <td className="px-4 py-2 border">
+                    {txn.assets_from_branch_name} ➔ {txn.assets_to_branch_name}
+                  </td>
+                  <td className="px-4 py-2 border">{txn.created_by_name}</td>
+                  <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-2 border">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      txn.assets_transaction_status === "DRAFT" ? "bg-yellow-100 text-yellow-800" :
+                      txn.assets_transaction_status === "IN-TRANSFER" ? "bg-blue-100 text-blue-800" :
+                      "bg-green-100 text-green-800"
+                    }`}>
+                      {txn.assets_transaction_status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="px-4 py-6 text-center text-gray-400">
+                  No transfer records found.
+                </td>
+              </tr>
             )}
+          </tbody>
+        </table>
+      </div>
 
-            <div className="overflow-x-auto bg-white shadow rounded-lg p-3">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold">Transfer List</h1>
-                    <button
-                        onClick={() => setShowTransferForm(true)}
-                        className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"
-                    >
-                        + New Transfer
-                    </button>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                    <input
-                        type="text"
-                        placeholder="Search by asset name or running number..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="border rounded-lg px-4 py-2 w-full sm:w-72"
-                    />
-
-                    {/* <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
-                        {['All', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => setStatusFilter(status)}
-                                className={`px-3 py-1 rounded-lg border ${statusFilter === status
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white text-gray-800 hover:bg-gray-100'
-                                    }`}
-                            >
-                                {status}
-                            </button>
-                        ))}
-                    </div> */}
-                </div>
-
-                <table className="min-w-full text-sm text-left border border-gray-200">
-                    <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-                        <tr>
-                            <th className="px-4 py-2 border">Running No</th>
-                            <th className="px-4 py-2 border">Purpose</th>
-                            <th className="px-4 py-2 border">Status</th>
-                            <th className="px-4 py-2 border">Approved By</th>
-                            <th className="px-4 py-2 border">Approved At</th>
-                            <th className="px-4 py-2 border">Items</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-gray-800">
-                        {filteredTransfers.map((txn) => (
-                            <tr key={txn.id} >
-                                <td className="px-4 py-2 border hover:underline font-medium" onClick={() => openModal(txn)} >{txn.assets_transaction_running_number}</td>
-                                <td className="px-4 py-2 border">{txn.assets_transaction_purpose}</td>
-                                <td className="px-4 py-2 border">{txn.assets_transaction_status}</td>
-                                <td className="px-4 py-2 border">{txn.approved_by_name}</td>
-                                <td className="px-4 py-2 border">{txn.approved_at}</td>
-                                <td className="px-4 py-2 border">
-                                    <ul className="list-disc ml-5">
-                                        {txn.assets_transaction_item_list.map((item) => (
-                                            <li key={item.id}>
-                                                {item.asset_name} ({item.asset_running_number}) - {item.asset_branch_name}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Modal */}
-            <TransferDetailModal
-                isOpen={isOpen}
-                onClose={closeModal}
-                data={selected}
-                onApprove={() => handleAction("APPROVED")}
-                onReject={() => handleAction("REJECTED")}
-            />
-
-        </>
-    );
+      {/* Modal for non-draft items */}
+      <TransferDetailModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        data={selected}
+        buttons={modalButtons}
+      />
+    </>
+  );
 }
