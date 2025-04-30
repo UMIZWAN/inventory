@@ -10,6 +10,8 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AssetsController extends Controller
 {
@@ -147,6 +149,7 @@ class AssetsController extends Controller
 
     public function update(Request $request, $id)
     {
+        Log::info($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             // 'asset_running_number' => 'required|string|max:255|unique:assets,asset_running_number,' . $id,
@@ -163,6 +166,7 @@ class AssetsController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::info('Validation failed: ', $validator->errors()->toArray());
             return response()->json([
                 'success' => false,
                 'message' => 'Validation Error',
