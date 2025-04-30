@@ -145,7 +145,7 @@ export default function StockOutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {type === "sold" && (
             <div>
-              <label className="block mb-1 font-medium">Customer/Recipient Name</label>
+              <label className="block mb-1 font-medium">Recipient Name</label>
               <input
                 type="text"
                 className="w-full border border-gray-300 rounded px-3 py-2"
