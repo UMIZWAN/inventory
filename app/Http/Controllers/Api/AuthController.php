@@ -63,16 +63,16 @@ class AuthController extends Controller
 
     public function addUser(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'access_level_id' => 'required|integer|exists:access_levels,id',
-        ]);
+        // $validator = Validator::make($request->all(), [
+        //     'name' => 'required|string|max:255',
+        //     'email' => 'required|string|email|max:255|unique:users',
+        //     'password' => 'required|string|min:8|confirmed',
+        //     'access_level_id' => 'required|integer|exists:access_levels,id',
+        // ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        // if ($validator->fails()) {
+        //     return response()->json(['errors' => $validator->errors()], 422);
+        // }
 
         $user = User::create([
             'name' => $request->name,
@@ -109,24 +109,24 @@ class AuthController extends Controller
         // }
 
         // Validate the input
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => [
-                'sometimes',
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'password' => 'sometimes|required|string|min:8|confirmed',
-            'access_level_id' => 'sometimes|required|integer|exists:access_levels,id',
-            'branch_id' => 'sometimes|required|integer|exists:assets_branch,id',
-        ]);
+        // $validator = Validator::make($request->all(), [
+        //     'name' => 'sometimes|required|string|max:255',
+        //     'email' => [
+        //         'sometimes',
+        //         'required',
+        //         'string',
+        //         'email',
+        //         'max:255',
+        //         Rule::unique('users')->ignore($user->id),
+        //     ],
+        //     'password' => 'sometimes|required|string|min:8|confirmed',
+        //     'access_level_id' => 'sometimes|required|integer|exists:access_levels,id',
+        //     'branch_id' => 'sometimes|required|integer|exists:assets_branch,id',
+        // ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        // if ($validator->fails()) {
+        //     return response()->json(['errors' => $validator->errors()], 422);
+        // }
 
         // Update user attributes if they're present in the request
         if ($request->has('name')) {

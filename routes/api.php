@@ -31,11 +31,13 @@ Route::get('/user', function (Request $request) {
 
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/users', [AuthController::class, 'addUser']);
+Route::put('/users/{id}', [AuthController::class, 'updateUser']);
 
 Route::get('/users-list', [AuthController::class, 'getAllUsers']);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/users', [AuthController::class, 'addUser']);
-    Route::put('/users/{id}', [AuthController::class, 'updateUser']);
+    
+    
     Route::get('/profile', [AuthController::class, 'profile']);
     // Route::get('/users', [AuthController::class, 'getAllUsers']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -59,10 +61,10 @@ Route::apiResource('assets-tag', AssetsTagController::class);
 // Route::apiResource('assets', AssetsController::class);
 
 // Route::apiResource('assets-transaction', AssetsTransactionController::class);
-
+Route::apiResource('access-levels', AccessLevelController::class);
 // Access Level Routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('access-levels', AccessLevelController::class);
+    
     Route::get('access-levels/{id}/users', [AccessLevelController::class, 'getWithUsers']);
     Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
 });
