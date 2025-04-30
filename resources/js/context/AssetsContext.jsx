@@ -222,7 +222,7 @@ export const AssetMetaProvider = ({ children }) => {
       const assetIn = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET IN');
       const assetOut = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
       const assetTransfer = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
-      const transferTo = assetTransfer.filter(tx => tx.assets_from_branch_id === user?.branch_id );
+      // const transferTo = assetTransfer.filter(tx => tx.assets_from_branch_id === user?.branch_id );
 
       // Update your states accordingly
       setAssetIn(assetIn);
