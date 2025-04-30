@@ -323,7 +323,7 @@ class AssetsTransactionController extends Controller
             ], 500);
         }
     }
-    
+
     public function update(Request $request, $id)
     {
         try {
@@ -359,6 +359,18 @@ class AssetsTransactionController extends Controller
 
                         if ($assetBranchToValue) {
                             $assetBranchToValue->increment('asset_current_unit', $item->asset_unit);
+                        } else {
+                            // Create new branch asset value record
+                            AssetsBranchValues::create([
+                                'asset_branch_id' => $transaction->assets_to_branch_id,
+                                'asset_location_id' => $transaction->assets_to_branch_id,
+                                'asset_id' => $item->asset_id,
+                                'asset_current_unit' => $item->asset_unit,
+                                // Optionally, set default values for other required fields
+                                'asset_min_unit' => 0,
+                                'asset_max_unit' => 0,
+                                'created_by' => Auth::user()->id,
+                            ]);
                         }
                     }
                 }
