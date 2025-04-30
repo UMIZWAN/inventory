@@ -162,4 +162,55 @@ class AuthController extends Controller
             'data' => new UserResource($user)
         ]);
     }
+
+    public function getAllUsers(Request $request)
+    {
+        try {
+            $query = User::with('accessLevel', 'branch');
+
+            // Filter by name
+            if ($request->has('name')) {
+                $query->where('name', 'like', '%' . $request->name . '%');
+            }
+
+            // Filter by email
+            if ($request->has('email')) {
+                $query->where('email', 'like', '%' . $request->email . '%');
+            }
+
+            // Filter by access level
+            if ($request->has('access_level_id')) {
+                $query->where('access_level_id', $request->access_level_id);
+            }
+
+            // Filter by branch
+            if ($request->has('branch_id')) {
+                $query->where('branch_id', $request->branch_id);
+            }
+
+            // Paginate results
+            $perPage = $request->input('per_page', 10);
+            $users = $query->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Users retrieved successfully',
+                'data' => UserResource::collection($users),
+                'pagination' => [
+                    'total' => $users->total(),
+                    'per_page' => $users->perPage(),
+                    'current_page' => $users->currentPage(),
+                    'last_page' => $users->lastPage(),
+                    'from' => $users->firstItem(),
+                    'to' => $users->lastItem()
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve users',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -32,10 +32,12 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/users-list', [AuthController::class, 'getAllUsers']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/users', [AuthController::class, 'addUser']);
     Route::put('/users/{id}', [AuthController::class, 'updateUser']);
     Route::get('/profile', [AuthController::class, 'profile']);
+    // Route::get('/users', [AuthController::class, 'getAllUsers']);
     Route::post('/logout', [AuthController::class, 'logout']);
     // assets routes
     Route::apiResource('assets', AssetsController::class);
