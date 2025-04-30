@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useAssetMeta } from '../context/AssetsContext';
+import { useAuth } from '../context/AuthContext';
 import Layout from '../components/layout/Layout';
 
 const CategoryPage = () => {
+  const { user } = useAuth();
   const {
     categories,
     loading,
@@ -42,79 +44,83 @@ const CategoryPage = () => {
 
   return (
     <Layout>
-    <div className="max-w-3xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Asset Categories</h1>
+      <div className="max-w-3xl mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-4">Asset Categories</h1>
 
-      <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
-        <input
-          type="text"
-          placeholder="Category name"
-          className="border border-gray-300 rounded px-3 py-2 w-full"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          required
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {isEditing ? 'Update' : 'Add'}
-        </button>
-        {isEditing && (
-          <button
-            type="button"
-            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-            onClick={() => {
-              setForm({ name: '', id: null });
-              setIsEditing(false);
-            }}
-          >
-            Cancel
-          </button>
+        {user?.add_edit_supplier && (
+          <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
+            <input
+              type="text"
+              placeholder="Category name"
+              className="border border-gray-300 rounded px-3 py-2 w-full"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              {isEditing ? 'Update' : 'Add'}
+            </button>
+            {isEditing && (
+              <button
+                type="button"
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                onClick={() => {
+                  setForm({ name: '', id: null });
+                  setIsEditing(false);
+                }}
+              >
+                Cancel
+              </button>
+            )}
+          </form>
         )}
-      </form>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100 text-left">
-            <tr>
-              <th className="border px-3 py-2">Name</th>
-              <th className="border px-3 py-2 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((cat) => (
-              <tr key={cat.id} className="hover:bg-gray-50">
-                <td className="border px-3 py-2">{cat.name}</td>
-                <td className="border px-3 py-2 text-center space-x-2">
-                  <button
-                    onClick={() => handleEdit(cat)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  {/* <button
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <table className="w-full border text-sm">
+            <thead className="bg-gray-100 text-left">
+              <tr>
+                <th className="border px-3 py-2">Name</th>
+                <th className="border px-3 py-2 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map((cat) => (
+                <tr key={cat.id} className="hover:bg-gray-50">
+                  <td className="border px-3 py-2">{cat.name}</td>
+                  {user?.add_edit_supplier && (
+                    <td className="border px-3 py-2 text-center space-x-2">
+                      <button
+                        onClick={() => handleEdit(cat)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </button>
+                      {/* <button
                     onClick={() => handleDelete(cat.id)}
                     className="text-red-600 hover:underline"
                   >
                     Delete
                   </button> */}
-                </td>
-              </tr>
-            ))}
-            {categories.length === 0 && (
-              <tr>
-                <td colSpan="3" className="text-center py-4">
-                  No categories found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      )}
-    </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              {categories.length === 0 && (
+                <tr>
+                  <td colSpan="3" className="text-center py-4">
+                    No categories found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
     </Layout>
   );
 };
