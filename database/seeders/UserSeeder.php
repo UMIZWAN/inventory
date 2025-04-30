@@ -2,9 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\AssetsBranch;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -13,32 +14,35 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create(
-            [
-                'name' => 'MOHD IZWAN BIN MANDA',
-                'email' => 'mohdizwanmanda@gmail.com',
-                'password' => bcrypt('12345678'),
-                'branch_id' => 1,
-                'access_level_id' => 2,
-            ]
-        );
-        User::factory()->create(
-            [
-                'name' => 'KAMALEIAH BINTI HARUN',
-                'email' => 'kamal@gmail.com',
-                'password' => bcrypt('12345678'),
-                'branch_id' => 1,
-                'access_level_id' => 3,
-            ]
-        );
-        User::factory()->create(
-            [
-                'name' => 'SABRINA BINTI MOHD YUSOF',
-                'email' => 'sabrina@gmail.com',
-                'password' => bcrypt('12345678'),
-                'branch_id' => 1,
-                'access_level_id' => 1,
-            ]
-        );
+        AssetsBranch::factory(3)->create();
+        // Create your 3 specific users
+        User::create([
+            'name' => 'MOHD IZWAN BIN MANDA',
+            'email' => 'mohdizwanmanda@gmail.com',
+            'password' => Hash::make('12345678'),
+            'branch_id' => 1,
+            'access_level_id' => 2,
+        ]);
+
+        User::create([
+            'name' => 'KAMALEIAH BINTI HARUN',
+            'email' => 'kamal@gmail.com',
+            'password' => Hash::make('12345678'),
+            'branch_id' => 1,
+            'access_level_id' => 3,
+        ]);
+
+        User::create([
+            'name' => 'SABRINA BINTI MOHD YUSOF',
+            'email' => 'sabrina@gmail.com',
+            'password' => Hash::make('12345678'),
+            'branch_id' => 1,
+            'access_level_id' => 1,
+        ]);
+
+        // Create 7 more random users to make a total of 10
+        User::factory(7)->create();
+
+        
     }
 }

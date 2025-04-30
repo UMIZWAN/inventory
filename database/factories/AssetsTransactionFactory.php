@@ -31,6 +31,7 @@ class AssetsTransactionFactory extends Factory
             'assets_transaction_purpose' => $this->getRandomPurposes(),
             'assets_from_branch_id' => AssetsBranch::factory(),
             'assets_to_branch_id' => AssetsBranch::factory(),
+            'assets_transaction_total_cost' => $this->faker->randomFloat(2, 1000, 100000),
             'assets_transaction_remark' => $this->faker->sentence(),
             'assets_transaction_log' => [
                 "Created by " . $this->faker->name()

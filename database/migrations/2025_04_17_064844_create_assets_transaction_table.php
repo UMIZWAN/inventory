@@ -29,6 +29,7 @@ return new class extends Migration
       $table->foreignId('assets_to_branch_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();
       $table->text('assets_transaction_remark')->nullable();
       $table->json('assets_transaction_log')->nullable();
+      $table->decimal('assets_transaction_total_cost', 12, 2)->nullable();
 
       // Trackers
       $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

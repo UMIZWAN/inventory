@@ -232,6 +232,7 @@ class AssetsTransactionController extends Controller
                     // 'assets_transaction_status' => 'required|string|in:DRAFT,IN-TRANSFER,RECEIVED',
                     'assets_from_branch_id' => 'required|integer',
                     'assets_to_branch_id' => 'required|integer',
+                    'assets_transaction_total_cost' => 'required|numeric',
                     'created_by' => 'required|integer|exists:users,id',
                     'created_at' => 'nullable|date',
                     'assets_transaction_purpose' => 'nullable|array',
@@ -260,6 +261,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_remark' => $request->assets_transaction_remark,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
                     'assets_to_branch_id' => $request->assets_to_branch_id,
+                    'assets_transaction_total_cost' => $request->assets_transaction_total_cost,
                     'created_by' => $request->created_by,
                     'created_at' => $request->created_at,
                 ]);

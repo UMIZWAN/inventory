@@ -26,6 +26,7 @@ class AssetsTransaction extends Model
         'assets_to_branch_id',
         'assets_transaction_remark',
         'assets_transaction_log',
+        'assets_transaction_total_cost',
         'created_by',
         'updated_by',
         'received_by',

@@ -31,8 +31,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'branch_id' => AssetsBranch::inRandomOrder()->first()?->id ?? AssetsBranch::factory(),
-            'access_level_id' => AccessLevel::inRandomOrder()->first()?->id ?? AccessLevel::factory(),
+            'branch_id' => AssetsBranch::factory(),
+            'access_level_id' => AccessLevel::factory(),
         ];
     }
 

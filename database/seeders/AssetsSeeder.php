@@ -29,7 +29,7 @@ class AssetsSeeder extends Seeder
             ->map(fn($name) => AssetsBranch::create(['name' => $name]));
 
         // Create 50 assets with branch values
-        Assets::factory(50)->create()->each(function ($asset) use ($branches) {
+        Assets::factory(20)->create()->each(function ($asset) use ($branches) {
             // Pick random unique branches for each asset (1–3)
             $selectedBranches = $branches->random(rand(1, 2));
 
