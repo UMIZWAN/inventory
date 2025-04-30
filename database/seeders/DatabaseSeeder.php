@@ -13,12 +13,13 @@ class DatabaseSeeder extends Seeder
     {
         // Run AccessLevelSeeder first since UserSeeder depends on it
         $this->call(AccessLevelSeeder::class);
-        
+        $this->call(AssetsBranchSeeder::class);
         // Run UserSeeder next to create exactly 10 users
         $this->call(UserSeeder::class);
         
         // Run the rest of your seeders
         $this->call([
+            
             AssetsSeeder::class,
             SuppliersSeeder::class,
             TaxSeeder::class,

@@ -23,6 +23,10 @@ class PurchaseOrderFactory extends Factory
 
     public function definition(): array
     {
+        $createdByUser = User::inRandomOrder()->first();
+        $updatedByUser = User::inRandomOrder()->first();
+        $receivedByUser = User::inRandomOrder()->first();
+        $approvedByUser = User::inRandomOrder()->first();
         return [
             'supplier_id' => Suppliers::factory(),
             'expected_receipt_date' => $this->faker->dateTimeBetween('now', '+3 months'),
@@ -33,10 +37,10 @@ class PurchaseOrderFactory extends Factory
             'purchase_order_notes' => $this->faker->text(),
             'purchase_internal_notes' => $this->faker->text(),
             'purchase_order_running_number' => 'PO-' . $this->faker->unique()->numerify('######'),
-            'created_by' => User::factory(),
-            'updated_by' => User::factory(),
-            'received_by' => $this->faker->boolean(70) ? User::factory() : null,
-            'approved_by' => $this->faker->boolean(60) ? User::factory() : null,
+            'created_by' => $createdByUser->id,
+            'updated_by' => $updatedByUser->id,
+            'received_by' => $this->faker->boolean(70) ? $receivedByUser->id : null,
+            'approved_by' => $this->faker->boolean(60) ? $approvedByUser->id : null,
             'created_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
             'updated_at' => $this->faker->dateTimeBetween('-5 months', 'now'),
             'received_at' => $this->faker->boolean(70) ? $this->faker->dateTimeBetween('-4 months', 'now') : null,

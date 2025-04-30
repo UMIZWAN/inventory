@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\AssetsBranch;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +13,6 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        AssetsBranch::factory(3)->create();
         // Create your 3 specific users
         User::create([
             'name' => 'MOHD IZWAN BIN MANDA',
@@ -41,7 +39,6 @@ class UserSeeder extends Seeder
         ]);
 
         // Create 7 more random users to make a total of 10
-        User::factory(7)->create();
 
         
     }

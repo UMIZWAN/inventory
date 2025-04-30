@@ -24,23 +24,29 @@ class AssetsSeeder extends Seeder
         collect(['High Value', 'Low Value', 'Consumable', 'Depreciated', 'New'])
             ->each(fn($name) => AssetsTag::create(['name' => $name]));
 
-        // Create branches
-        $branches = collect(['HQKK', 'HQTWU'])
-            ->map(fn($name) => AssetsBranch::create(['name' => $name]));
+        // Get existing branches
+        $branches = AssetsBranch::all();
+        
+        if ($branches->isEmpty()) {
+            $this->command->error('No branches found. Please run AssetsBranchSeeder first.');
+            return;
+        }
 
-        // Create 50 assets with branch values
-        Assets::factory(20)->create()->each(function ($asset) use ($branches) {
-            // Pick random unique branches for each asset (1–3)
-            $selectedBranches = $branches->random(rand(1, 2));
-
-            foreach ($selectedBranches as $branch) {
+        // Create 20 assets
+        $assets = Assets::factory(20)->create();
+        
+        // Create branch values for EACH asset in EACH branch
+        foreach ($assets as $asset) {
+            foreach ($branches as $branch) {
                 AssetsBranchValues::create([
                     'asset_id' => $asset->id,
                     'asset_branch_id' => $branch->id,
-                    'asset_location_id' => $branches->random()->id,
+                    'asset_location_id' => $branch->id, // Same branch as location
                     'asset_current_unit' => rand(1, 20),
                 ]);
             }
-        });
+        }
+        
+        $this->command->info('Created ' . Assets::count() . ' assets with branch values for all ' . $branches->count() . ' branches');
     }
 }

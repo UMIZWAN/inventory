@@ -29,8 +29,5 @@ class TaxSeeder extends Seeder
             'tax_name' => 'Sales Tax',
             'tax_percentage' => 6,
         ]);
-
-        // Add some random tax rates
-        Tax::factory(3)->create();
     }
 }
