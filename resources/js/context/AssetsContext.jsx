@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import api from '../api/api';
 import { useAuth } from './AuthContext';
+import { all } from 'axios';
 
 const AssetsContext = createContext();
 
 export const AssetMetaProvider = ({ children }) => {
   const { user } = useAuth();
   const [assets, setAssets] = useState([]);
+  const [allAssets, setAllAssets] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -35,6 +37,7 @@ export const AssetMetaProvider = ({ children }) => {
     if (user?.branch_id) {
       console.log("User branch ID:", user.branch_id);
       fetchAssets(user.branch_id);
+      fetchAssetTransaction();
     }
   }, [user]);
 
@@ -48,7 +51,7 @@ export const AssetMetaProvider = ({ children }) => {
           const userBranchAssets = allAssets.filter(asset =>
             asset.branch_values?.some(bv => bv.asset_branch_id === user?.branch_id)
           );
-
+          setAllAssets(allAssets); // Store all assets for later use
           console.log('Filtered assets for user branch:', userBranchAssets);
           setAssets(userBranchAssets);
         }
@@ -204,11 +207,22 @@ export const AssetMetaProvider = ({ children }) => {
     try {
       const res = await api.get('/api/assets-transaction');
       const transactions = res.data.data;
+      console.log('Asset transactions fetched:', transactions);
+      // Separate transactions by type
+      // const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN');
+      // const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
+      // const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
+
+      // Filter by selected branch ID
+      const filteredByBranch = transactions.filter(
+        tx => tx.assets_from_branch_id === user?.branch_id || tx.assets_to_branch_id === user?.branch_id
+      );
 
       // Separate transactions by type
-      const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN');
-      const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
-      const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
+      const assetIn = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET IN');
+      const assetOut = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
+      const assetTransfer = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
+      const transferTo = assetTransfer.filter(tx => tx.assets_from_branch_id === user?.branch_id );
 
       // Update your states accordingly
       setAssetIn(assetIn);
@@ -230,7 +244,7 @@ export const AssetMetaProvider = ({ children }) => {
         assets_transaction_status: form.status.toUpperCase(), // make sure it's uppercase
         assets_from_branch_id: parseInt(form.fromBranch),
         assets_to_branch_id: parseInt(form.toBranch),
-        created_by: user?.id, 
+        created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
         assets_transaction_purpose: form.purpose,
@@ -260,7 +274,7 @@ export const AssetMetaProvider = ({ children }) => {
   const createStockOut = async (form) => {
     try {
       const payload = {
-        assets_transaction_running_number: generateRunningNumber(), 
+        assets_transaction_running_number: generateRunningNumber(),
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
         assets_from_branch_id: user?.branch_id,
         // assets_to_branch_id: parseInt(form.branch),
@@ -274,16 +288,16 @@ export const AssetMetaProvider = ({ children }) => {
           status: null,
         })),
       };
-  
+
       const res = await api.post("/api/assets-transaction", payload);
-  
+
       console.log("Stock out created:", res.data);
       return res.data;
     } catch (error) {
       console.error("Failed to create stock out:", error);
       throw error;
     }
-  };  
+  };
 
   useEffect(() => {
     fetchBranches();
@@ -315,6 +329,7 @@ export const AssetMetaProvider = ({ children }) => {
         assetOut,
         createTransfer,
         createStockOut,
+        allAssets,
       }}
     >
 

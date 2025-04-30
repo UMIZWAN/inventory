@@ -7,7 +7,7 @@ function ItemsTable({ columns, items, onChange, onAdd, onRemove, showAddRemove =
           <thead className="bg-gray-100 text-left">
             <tr>
               {columns.map((col) => (
-                <th key={col.key} className={`border px-3 py-2 ${col.align || "text-left"}`}>
+                <th key={col.key} className={`${col.width || ""} border px-3 py-2 ${col.align || "text-left"}`}>
                   {col.label}
                 </th>
               ))}

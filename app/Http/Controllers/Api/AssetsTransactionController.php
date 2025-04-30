@@ -24,7 +24,7 @@ class AssetsTransactionController extends Controller
                 'fromBranch',
                 'toBranch',
                 'createdBy',
-            ])->paginate($request->per_page ?? 20);
+            ])->latest()->get(); //->paginate($request->per_page ?? 50);
 
             return response()->json([
                 'success' => true,
