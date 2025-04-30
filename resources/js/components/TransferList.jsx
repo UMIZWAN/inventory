@@ -141,7 +141,7 @@ export default function TransferList({ status }) {
       <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Transfer List</h1>
-          {status === "DRAFT" && (
+          {status === "IN-TRANSFER" && (
             <button
               onClick={() => setShowTransferForm(true)}
               className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"

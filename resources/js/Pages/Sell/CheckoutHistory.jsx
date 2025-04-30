@@ -21,6 +21,7 @@ function CheckoutHistory() {
                             <th className="px-4 py-2 border">Purpose</th>
                             <th className="px-4 py-2 border">Transaction Type</th>
                             <th className="px-4 py-2 border">Created By</th>
+                            <th className="px-4 py-2 border">Created At</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,6 +40,7 @@ function CheckoutHistory() {
                                 </td>
                                 <td className="px-4 py-2 border">{transaction.assets_transaction_type}</td>
                                 <td className="px-4 py-2 border">{transaction.created_by_name}</td>
+                                <td className="px-4 py-2 border">{new Date(transaction.created_at).toLocaleDateString()}</td>
                             </tr>
                         ))}
                     </tbody>

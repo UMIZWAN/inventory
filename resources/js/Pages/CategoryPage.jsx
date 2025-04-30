@@ -95,12 +95,12 @@ const CategoryPage = () => {
                   >
                     Edit
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => handleDelete(cat.id)}
                     className="text-red-600 hover:underline"
                   >
                     Delete
-                  </button>
+                  </button> */}
                 </td>
               </tr>
             ))}

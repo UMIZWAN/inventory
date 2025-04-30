@@ -89,12 +89,12 @@ const TagPage = () => {
                                             >
                                                 Edit
                                             </button>
-                                            <button
+                                            {/* <button
                                                 onClick={() => handleDelete(tag.id)}
                                                 className="text-red-600 hover:underline"
                                             >
                                                 Delete
-                                            </button>
+                                            </button> */}
                                         </td>
                                     </tr>
                                 ))

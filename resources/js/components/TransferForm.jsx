@@ -10,7 +10,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     requester: user?.id || "",
     department: "",
     date: new Date().toISOString().slice(0, 10),
-    status: "DRAFT",
+    status: "IN-TRANSFER",
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: "",
@@ -25,7 +25,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         requester: user?.id || "",
         department: "",
         date: initialData.date || new Date().toISOString().slice(0, 10),
-        status: initialData.status || "DRAFT",
+        status: initialData.status || "IN-TRANSFER",
         transaction_type: "ASSET_TRANSFER",
         fromBranch: initialData.fromBranch || user?.branch_id || "",
         toBranch: initialData.toBranch || "",
@@ -43,7 +43,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       key: "item",
       label: "Item",
       type: "select",
-      options: assets.map((a) => ({ value: a.id, label: a.asset_name })),
+      options: assets.map((a) => ({ value: a.id, label: a.name })),
       width: "w-64"
     },
     { key: "category", label: "Category", readOnly: true },
@@ -96,10 +96,17 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     }
   };
 
+  const totalAmount = (form.items).reduce((sum, item) => {
+    const qty = parseFloat(item.quantity) || 0;
+    const cost = parseFloat(item.price) || 0;
+    return sum + qty * cost;
+  }, 0);
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await onSubmit(form);
+      await onSubmit(form, totalAmount);
       setShowTransferForm(false);
     } catch (error) {
       console.error("Submission failed:", error);
@@ -110,7 +117,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-semibold mb-4 text-center">
-          {isEditMode ? "Edit Transfer Request" : "Stock Transfer Request"}
+          {isEditMode ? "Edit Transfer " : "Stock Transfer "}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -152,16 +159,13 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
             <div>
               <label className="block font-medium mb-1">Status</label>
-              <select
+              <input
                 name="status"
                 value={form.status}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              >
-                <option value="Draft">Draft</option>
-                <option value="In-Transfer">In-Transfer</option>
-                {/* <option value="Received">Received</option> */}
-              </select>
+                readOnly
+              />
             </div>
           </div>
 
@@ -173,6 +177,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
                 value={form.toBranch}
                 onChange={handleChange}
+                required
               >
                 <option value="">[Select Branch]</option>
                 {branches.map((br) => (
@@ -221,6 +226,18 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
             onAdd={addItem}
             onRemove={removeItem}
           />
+
+          <div className="flex justify-end-safe">
+            <div>
+              <label className="block text-sm font-medium">Total Amount (RM)</label>
+              <input
+                type="text"
+                className="w-full border rounded p-2 mt-1 text-right bg-gray-100"
+                value={totalAmount.toFixed(2)}
+                readOnly
+              />
+            </div>
+          </div>
 
           <div>
             <label className="block font-medium mb-1">Remarks</label>

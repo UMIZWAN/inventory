@@ -84,7 +84,7 @@ const Assets = () => {
                                 ))}
                             </select>
 
-                            <select
+                            {/* <select
                                 value={filters.tag}
                                 onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
                                 className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -93,7 +93,7 @@ const Assets = () => {
                                 {[...new Set(assets.map(a => a.asset_tag_name).filter(Boolean))].map(tag => (
                                     <option key={tag} value={tag}>{tag}</option>
                                 ))}
-                            </select>
+                            </select> */}
 
                             <select
                                 value={filters.location}
@@ -106,7 +106,7 @@ const Assets = () => {
                                 ))}
                             </select>
 
-                            <select
+                            {/* <select
                                 value={filters.status}
                                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                                 className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -116,7 +116,7 @@ const Assets = () => {
                                 <option value="Low">Low</option>
                                 <option value="Very Low">Very Low</option>
                                 <option value="Critical">Critical</option>
-                            </select>
+                            </select> */}
                         </div>
                     </div>
 
@@ -148,9 +148,9 @@ const Assets = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Price
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Tag
-                                        </th>
+                                        </th> */}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Branch
                                         </th>
@@ -162,6 +162,9 @@ const Assets = () => {
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Date Created
                                         </th>
                                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Action
@@ -210,9 +213,9 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {Number(asset.asset_sales_cost).toFixed(2) || '—'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_tag_name || '—'}
-                                            </td>
+                                            </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
                                             </td>
@@ -248,6 +251,9 @@ const Assets = () => {
                                                         </span>
                                                     );
                                                 })()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(asset.created_at).toLocaleDateString()}
                                             </td>
                                             {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex space-x-2">

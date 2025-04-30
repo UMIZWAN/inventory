@@ -1,22 +1,27 @@
 import React, { useState } from "react";
+import { router } from "@inertiajs/react";
 import Layout from "../../components/layout/Layout";
 import ItemsTable from "../../components/ItemsTable";
 import { useAssetMeta } from "../../context/AssetsContext";
+import { useSuppliers } from "../../context/SuppliersContext";
+import { useAuth } from "../../context/AuthContext";
 
 function ReceiveForm() {
-
-  const { assets, branches } = useAssetMeta();
+  const { user } = useAuth();
+  const { assets, branches, createAssetIn } = useAssetMeta();
+  const { suppliers } = useSuppliers();
   const [isUsingPO, setIsUsingPO] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
   const [referenceNo, setReferenceNo] = useState("");
-  const [branch, setBranch] = useState("");
+  const [supplierId, setSupplierId] = useState("");
+  const [note, setNote] = useState("");
+  const [branch, setBranch] = useState(user?.branch_id || "");
   const [items, setItems] = useState([
     {
       item: '',
       unitMeasure: '',
-      recvQty: 0,
+      recvQty: 1,
       unitCost: 0,
-      stockQty: 0,
     },
   ]);
 
@@ -41,7 +46,7 @@ function ReceiveForm() {
       updated[index].item = value;
 
       if (selectedAsset) {
-        updated[index].unitCost = parseFloat(selectedAsset.asset_sales_cost || 0);
+        updated[index].unitCost = parseFloat(selectedAsset.asset_purchase_cost || 0);
         updated[index].unitMeasure = selectedAsset.asset_unit_measure || '';
       }
     } else {
@@ -62,7 +67,6 @@ function ReceiveForm() {
         unitMeasure: '',
         recvQty: 0,
         unitCost: 0,
-        stockQty: 0,
       },
     ]);
   };
@@ -73,13 +77,32 @@ function ReceiveForm() {
     return sum + qty * cost;
   }, 0);
 
+  const handleSubmit = async () => {
+    try {
+      await createAssetIn({
+        date: receiveDate,
+        supplierId,
+        referenceNo,
+        branch,
+        userId: user.id,
+        note,
+        items,
+        totalAmount
+      });
+      alert("Stock received successfully.");
+      router.visit("/items/item-list");
+    } catch (err) {
+      alert("Failed to receive stock.");
+    }
+  };
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-4">
         <h2 className="text-2xl font-semibold mb-4">Receive Stock</h2>
 
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2">
+          {/* <label className="flex items-center gap-2">
             <input
               type="radio"
               name="receive_type"
@@ -87,7 +110,7 @@ function ReceiveForm() {
               onChange={() => setIsUsingPO(false)}
             />
             <span>Specific Items</span>
-          </label>
+          </label> */}
           {/* <label className="flex items-center gap-2">
             <input
               type="radio"
@@ -102,8 +125,15 @@ function ReceiveForm() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium">Supplier</label>
-            <select className="w-full border rounded p-2 mt-1">
+            <select
+              className="w-full border rounded p-2 mt-1"
+              value={supplierId}
+              onChange={(e) => setSupplierId(e.target.value)}
+            >
               <option value="">[Select Supplier]</option>
+              {suppliers.map((s) => (
+                <option key={s.id} value={s.id}>{s.supplier_name}</option>
+              ))}
             </select>
           </div>
           {isUsingPO && (
@@ -129,16 +159,12 @@ function ReceiveForm() {
 
           <div>
             <label className="block text-sm font-medium">Branch</label>
-            <select
+            <input
+              name="branch"
+              readOnly
               className="w-full border rounded p-2 mt-1"
-              value={branch}
-              onChange={(e) => setBranch(e.target.value)}
-            >
-              <option value="">[Select Branch]</option>
-              {branches.map((br) => (
-                <option key={br.id} value={br.id}>{br.name}</option>
-              ))}
-            </select>
+              value={user?.branch_name}
+            />
           </div>
         </div>
 
@@ -167,7 +193,7 @@ function ReceiveForm() {
           }}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex justify-end-safe">
           <div>
             <label className="block text-sm font-medium">Total Amount (RM)</label>
             <input
@@ -181,7 +207,11 @@ function ReceiveForm() {
 
         <div>
           <label className="block text-sm font-medium">Note:</label>
-          <textarea className="w-full border rounded p-2 mt-1 h-24"></textarea>
+          <textarea
+            className="w-full border rounded p-2 mt-1 h-24"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
         </div>
 
         {/* <div className="flex items-center gap-2">
@@ -190,8 +220,14 @@ function ReceiveForm() {
         </div> */}
 
         <div className="flex justify-end gap-3 pt-4">
-          <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded">Cancel</button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">Receive</button>
+          {/* <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded">Cancel</button> */}
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            onClick={handleSubmit}
+          >
+            Receive
+          </button>
+
         </div>
       </div>
     </Layout>

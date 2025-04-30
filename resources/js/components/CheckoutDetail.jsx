@@ -28,7 +28,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     <Text style={styles.value}>{transaction.assets_transaction_running_number}</Text>
 
                     <Text style={styles.label}>Branch:</Text>
-                    <Text style={styles.value}>{transaction.assets_to_branch_name}</Text>
+                    <Text style={styles.value}>{transaction.assets_from_branch_name}</Text>
 
                     <Text style={styles.label}>Purpose:</Text>
                     <Text style={styles.value}>
@@ -47,7 +47,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     <View style={styles.table}>
                         {/* Table Header */}
                         <View style={{ ...styles.tableRow, ...styles.tableHeader }}>
-                            <Text style={styles.tableCell}>#</Text>
+                            {/* <Text style={styles.tableCell}>#</Text> */}
                             <Text style={styles.tableCell}>Asset Name</Text>
                             <Text style={styles.tableCell}>Quantity</Text>
                             <Text style={styles.tableCell}>Price (Each)</Text>
@@ -63,7 +63,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 
                             return (
                                 <View key={index} style={styles.tableRow}>
-                                    <Text style={styles.tableCell}>{index + 1}</Text>
+                                    {/* <Text style={styles.tableCell}>{index + 1}</Text> */}
                                     <Text style={styles.tableCell}>{name}</Text>
                                     <Text style={styles.tableCell}>{quantity}</Text>
                                     <Text style={styles.tableCell}>RM {Number(price).toFixed(2)}</Text>
@@ -118,7 +118,7 @@ function CheckoutDetail({ transaction, onClose }) {
                     {/* Same content as the PDF for preview purposes */}
                     <div className="mb-6 space-y-1">
                         <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
-                        <p><strong>Branch:</strong> {transaction.assets_to_branch_name}</p>
+                        <p><strong>Branch:</strong> {transaction.assets_from_branch_name}</p>
                         <p><strong>Purpose:</strong> {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}</p>
                         <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
                         <p><strong>Created By:</strong> {transaction.created_by_name}</p>

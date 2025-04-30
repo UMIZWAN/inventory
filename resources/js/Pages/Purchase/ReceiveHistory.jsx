@@ -17,9 +17,10 @@ function ReceiveHistory() {
             <tr className="bg-gray-200">
               <th className="px-4 py-2 border">Branch</th>
               {/* <th className="px-4 py-2 border">Asset Details</th> */}
-              <th className="px-4 py-2 border">Remarks</th>
-              <th className="px-4 py-2 border">Running Number</th>
+              {/* <th className="px-4 py-2 border">Remarks</th> */}
+              <th className="px-4 py-2 border">Reference Number</th>
               <th className="px-4 py-2 border">Transaction Type</th>
+              <th className="px-4 py-2 border">Total Amount</th>
               <th className="px-4 py-2 border">Received By</th>
               {/* <th className="px-4 py-2 border">Received At</th> */}
             </tr>
@@ -27,7 +28,7 @@ function ReceiveHistory() {
           <tbody>
             {assetIn.map((transaction) => (
               <tr key={transaction.id}>
-                <td className="px-4 py-2 border">{transaction.assets_to_branch_name}</td>
+                <td className="px-4 py-2 border">{transaction.assets_from_branch_name}</td>
                 {/* <td className="px-4 py-2 border">
                   {transaction.assets_transaction_item_list.map((item, index) => (
                     <div key={index}>
@@ -35,10 +36,11 @@ function ReceiveHistory() {
                     </div>
                   ))}
                 </td> */}
-                <td className="px-4 py-2 border">{transaction.assets_transaction_remark}</td>
+                {/* <td className="px-4 py-2 border">{transaction.assets_transaction_remark}</td> */}
                 <td className="px-4 py-2 border">{transaction.assets_transaction_running_number}</td>
                 <td className="px-4 py-2 border">{transaction.assets_transaction_type}</td>
-                <td className="px-4 py-2 border">{transaction.received_by_name}</td>
+                <td className="px-4 py-2 border">{transaction.assets_transaction_total_cost}</td>
+                <td className="px-4 py-2 border">{transaction.created_by_name}</td>
                 {/* <td className="px-4 py-2 border">{new Date(transaction.received_at).toLocaleString()}</td> */}
               </tr>
             ))}
