@@ -26,6 +26,7 @@ function ReceiveForm() {
       label: "Item",
       type: "select",
       options: assets.map((a) => ({ value: a.id, label: a.name })),
+      width: "w-80"
     },
     { key: "unitMeasure", label: "Unit of Measure" },
     { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-right" },

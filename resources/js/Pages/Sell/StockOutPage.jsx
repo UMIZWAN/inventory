@@ -73,6 +73,7 @@ export default function StockOutPage() {
       label: "Item",
       type: "select",
       options: assets.map((a) => ({ value: a.id, label: a.name })),
+      width: "w-80",
     },
     { key: "quantity", label: "Qty", type: "number", placeholder: "1" },
     { key: "unit", label: "Unit", type: "readonly" },
@@ -105,7 +106,7 @@ export default function StockOutPage() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-6 max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Stock Out Form</h1>
 
         <div className="bg-white shadow-md rounded-lg p-6 space-y-6">
@@ -173,7 +174,6 @@ export default function StockOutPage() {
               <input
                 type="text"
                 className="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="e.g. INV-202504"
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
               />

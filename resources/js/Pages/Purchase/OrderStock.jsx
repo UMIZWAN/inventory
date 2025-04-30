@@ -20,6 +20,7 @@ function OrderStock() {
             label: "Item",
             type: "select",
             options: assets.map((a) => ({ value: a.id, label: a.name })),
+            width: "w-80",
         },
         { key: "unitMeasure", label: "Unit of Measure" },
         { key: "quantity", label: "Quantity", type: "number", min: 1, align: "text-right" },
@@ -42,18 +43,18 @@ function OrderStock() {
         if (field === 'item') {
             const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
             updated[index].item = value;
-        
+
             if (selectedAsset) {
-              updated[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
-              updated[index].unitMeasure = selectedAsset.asset_unit_measure || '' ;
+                updated[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
+                updated[index].unitMeasure = selectedAsset.asset_unit_measure || '';
             }
-          } else {
+        } else {
             updated[index][field] =
-              field === 'quantity' || field === 'price' || field === 'unitMeasure'
-                ? parseFloat(value)
-                : value;
-          }
-        
+                field === 'quantity' || field === 'price' || field === 'unitMeasure'
+                    ? parseFloat(value)
+                    : value;
+        }
+
         setForm({ ...form, updated });
     };
 
@@ -71,92 +72,94 @@ function OrderStock() {
 
     return (
         <Layout>
-            <h1 className="text-2xl font-bold mb-4">New Purchase Order</h1>
+            <div className="max-w-7xl mx-auto p-6 space-y-4">
+                <h1 className="text-2xl font-bold mb-4">New Purchase Order</h1>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded shadow-md">
+                <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded shadow-md">
 
-                {/* Basic Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block font-medium text-gray-700">PO No</label>
-                        <input
-                            type="text"
-                            value={form.poNumber}
-                            onChange={(e) => setForm({ ...form, poNumber: e.target.value })}
-                            className="w-full mt-1 p-2 border rounded"
-                            required
-                        />
+                    {/* Basic Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block font-medium text-gray-700">PO No</label>
+                            <input
+                                type="text"
+                                value={form.poNumber}
+                                onChange={(e) => setForm({ ...form, poNumber: e.target.value })}
+                                className="w-full mt-1 p-2 border rounded"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block font-medium text-gray-700">Branch</label>
+                            <input
+                                type="text"
+                                value={form.branch}
+                                onChange={(e) => setForm({ ...form, branch: e.target.value })}
+                                className="w-full mt-1 p-2 border rounded"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block font-medium text-gray-700">Supplier</label>
+                            <select
+                                type="text"
+                                value={form.supplier}
+                                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+                                className="w-full mt-1 p-2 border rounded"
+                                required
+                            >
+                                <option value="">[Select Supplier]</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block font-medium text-gray-700">Order Date</label>
+                            <input
+                                type="date"
+                                value={form.orderDate}
+                                onChange={(e) => setForm({ ...form, orderDate: e.target.value })}
+                                className="w-full mt-1 p-2 border rounded"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block font-medium text-gray-700">Status</label>
+                            <select
+                                value={form.status}
+                                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                                className="w-full mt-1 p-2 border rounded"
+                            >
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block font-medium text-gray-700">Branch</label>
-                        <input
-                            type="text"
-                            value={form.branch}
-                            onChange={(e) => setForm({ ...form, branch: e.target.value })}
-                            className="w-full mt-1 p-2 border rounded"
-                            required
-                        />
-                    </div>
+                    {/* Items Table */}
+                    <ItemsTable
+                        columns={columns.filter(col => col.key !== "amount")} // omit amount if calculated outside
+                        items={form.items}
+                        onChange={handleItemChange}
+                        onAdd={addItem}
+                        onRemove={removeItem}
+                    />
 
+                    {/* Submit */}
                     <div>
-                        <label className="block font-medium text-gray-700">Supplier</label>
-                        <select
-                            type="text"
-                            value={form.supplier}
-                            onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                            className="w-full mt-1 p-2 border rounded"
-                            required
+                        <button
+                            type="submit"
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                         >
-                            <option value="">[Select Supplier]</option>
-                        </select>
+                            Submit Order
+                        </button>
                     </div>
-
-                    <div>
-                        <label className="block font-medium text-gray-700">Order Date</label>
-                        <input
-                            type="date"
-                            value={form.orderDate}
-                            onChange={(e) => setForm({ ...form, orderDate: e.target.value })}
-                            className="w-full mt-1 p-2 border rounded"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block font-medium text-gray-700">Status</label>
-                        <select
-                            value={form.status}
-                            onChange={(e) => setForm({ ...form, status: e.target.value })}
-                            className="w-full mt-1 p-2 border rounded"
-                        >
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Items Table */}
-                <ItemsTable
-                    columns={columns.filter(col => col.key !== "amount")} // omit amount if calculated outside
-                    items={form.items}
-                    onChange={handleItemChange}
-                    onAdd={addItem}
-                    onRemove={removeItem}
-                />
-
-                {/* Submit */}
-                <div>
-                    <button
-                        type="submit"
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                        Submit Order
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </Layout>
     );
 }

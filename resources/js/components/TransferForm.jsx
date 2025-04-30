@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
-  const { assets, branches } = useAssetMeta();
+  const { allAssets, assets, branches } = useAssetMeta();
   const [form, setForm] = useState({
     requester: user?.id || "",
     department: "",
@@ -44,6 +44,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       label: "Item",
       type: "select",
       options: assets.map((a) => ({ value: a.id, label: a.asset_name })),
+      width: "w-64"
     },
     { key: "category", label: "Category", readOnly: true },
     { key: "unitMeasure", label: "Unit of Measure", readOnly: true },
@@ -159,7 +160,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
               >
                 <option value="Draft">Draft</option>
                 <option value="In-Transfer">In-Transfer</option>
-                <option value="Received">Received</option>
+                {/* <option value="Received">Received</option> */}
               </select>
             </div>
           </div>
