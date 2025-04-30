@@ -324,7 +324,7 @@ class AssetsTransactionController extends Controller
             $transaction = AssetsTransaction::findOrFail($id);
 
             // Validate based on transaction type
-            if ($transaction->assets_transaction_type == 'ASSET TRANSFER') {
+            if ($transaction->assets_transaction_type == 'ASSET TRANSFER' && $transaction->assets_transaction_status == 'IN-TRANSFER') {
                 DB::beginTransaction();
 
                 // Update transaction status
@@ -367,7 +367,8 @@ class AssetsTransactionController extends Controller
             }
             return response()->json([
                 'success' => false,
-                'message' => 'Unsupported transaction type for update'
+                'message' => 'Unsupported transaction type for update',
+                'status' => $transaction->assets_transaction_status,
             ], 422);
         } catch (Exception $e) {
             DB::rollBack();
