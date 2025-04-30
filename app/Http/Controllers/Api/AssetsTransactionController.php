@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AssetsTransactionResource;
 use App\Models\AssetsTransaction;
 use App\Models\AssetsTransactionItemList;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -228,7 +229,7 @@ class AssetsTransactionController extends Controller
                 $validator = Validator::make($request->all(), [
                     'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
-                    'assets_transaction_status' => 'required|string|in:DRAFT,IN-TRANSFER,RECEIVED',
+                    // 'assets_transaction_status' => 'required|string|in:DRAFT,IN-TRANSFER,RECEIVED',
                     'assets_from_branch_id' => 'required|integer',
                     'assets_to_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
@@ -254,7 +255,7 @@ class AssetsTransactionController extends Controller
                 $transaction = AssetsTransaction::create([
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
-                    'assets_transaction_status' => $request->assets_transaction_status,
+                    'assets_transaction_status' => 'IN-TRANSFER',
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
@@ -286,18 +287,18 @@ class AssetsTransactionController extends Controller
                     }
                 }
 
-                if ($request->assets_transaction_status == 'RECEIVED') {
-                    // Add to destination branch
-                    foreach ($request->assets_transaction_item_list as $item) {
-                        $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $request->assets_to_branch_id)
-                            ->where('asset_id', $item['asset_id'])
-                            ->first();
+                // if ($request->assets_transaction_status == 'RECEIVED') {
+                //     // Add to destination branch
+                //     foreach ($request->assets_transaction_item_list as $item) {
+                //         $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $request->assets_to_branch_id)
+                //             ->where('asset_id', $item['asset_id'])
+                //             ->first();
 
-                        if ($assetBranchToValue) {
-                            $assetBranchToValue->increment('asset_current_unit', $item['asset_unit']);
-                        }
-                    }
-                }
+                //         if ($assetBranchToValue) {
+                //             $assetBranchToValue->increment('asset_current_unit', $item['asset_unit']);
+                //         }
+                //     }
+                // }
 
                 // DRAFT -> do nothing to quantities
 
@@ -309,6 +310,65 @@ class AssetsTransactionController extends Controller
                     'data' => $transaction->load('transactionItems')
                 ], 201);
             }
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function update(Request $request, $id)
+    {
+        try {
+            $transaction = AssetsTransaction::findOrFail($id);
+
+            // Validate based on transaction type
+            if ($transaction->assets_transaction_type == 'ASSET TRANSFER') {
+                DB::beginTransaction();
+
+                // Update transaction status
+                $oldStatus = $transaction->assets_transaction_status;
+                $newStatus = 'RECEIVED';
+
+                $transaction->update([
+                    'assets_transaction_status' => $newStatus,
+                    'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                    'received_by' => Auth::user()->id,
+                    'received_at' => Carbon::now()
+                ]);
+
+                if ($oldStatus == 'IN-TRANSFER' && $newStatus == 'RECEIVED') {
+                    // Add to destination branch when receiving
+                    $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+
+                    foreach ($transactionItems as $item) {
+                        // Update item status
+                        $item->update(['status' => 'RECEIVED']);
+
+                        // Add to destination branch inventory
+                        $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_to_branch_id)
+                            ->where('asset_id', $item->asset_id)
+                            ->first();
+
+                        if ($assetBranchToValue) {
+                            $assetBranchToValue->increment('asset_current_unit', $item->asset_unit);
+                        }
+                    }
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' updated successfully',
+                    'data' => $transaction->fresh()->load('transactionItems')
+                ]);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Unsupported transaction type for update'
+            ], 422);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([

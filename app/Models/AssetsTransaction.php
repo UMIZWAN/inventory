@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 
 class AssetsTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens;
 
     public const TYPES = ['ASSET IN', 'ASSET OUT'];
     public const STATUSES = ['DRAFT', 'IN-TRANSFER', 'RECEIVED'];

@@ -42,12 +42,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Route::apiResource('suppliers', SuppliersController::class);
     // Route::apiResource('tax', TaxController::class);
+    Route::apiResource('assets-transaction', AssetsTransactionController::class);
 });
 Route::apiResource('assets-branch', AssetsBranchController::class);
 Route::apiResource('suppliers', SuppliersController::class);
 Route::apiResource('tax', TaxController::class);
 Route::apiResource('purchase-order', PurchaseOrderController::class);
-Route::apiResource('assets-transaction', AssetsTransactionController::class);
+
 
 
 Route::apiResource('assets-category', AssetsCategoryController::class);
