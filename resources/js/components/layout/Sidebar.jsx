@@ -81,11 +81,11 @@ const Sidebar = () => {
                             <span>Categories</span>
                         </li>
                     </Link>
-                    <Link href="/tags" >
+                    {/* <Link href="/tags" >
                         <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
                             <span>Tag</span>
                         </li>
-                    </Link>
+                    </Link> */}
                     <Link href="/supplier" >
                         <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
                             <span>Suppliers</span>

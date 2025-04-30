@@ -9,73 +9,63 @@ const ItemDetails = ({ asset, onClose }) => {
     const { updateAsset, categories, tags, branches } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
     const [form, setForm] = useState({
-        ...asset,
-        asset_category_id: asset.asset_category_id,
-        asset_tag_id: asset.asset_tag_id,
-        // assets_branch_id: asset.assets_branch_id,
-        // assets_location_id: asset.assets_location_id,
+        name: asset.name || '',
+        asset_category_id: asset.asset_category_id || '',
+        asset_tag_id: asset.asset_tag_id || '',
+        asset_stable_unit: asset.asset_stable_unit || '',
+        asset_unit_measure: asset.asset_unit_measure || '',
+        asset_description: asset.asset_description || '',
+        asset_type: asset.asset_type || '',
+        asset_purchase_cost: asset.asset_purchase_cost || '',
+        asset_sales_cost: asset.asset_sales_cost || '',
+        assets_remark: asset.assets_remark || '',
+        asset_running_number: asset.asset_running_number || '',
+        asset_image: asset.asset_image || null,
     });
+
     const [imagePreview, setImagePreview] = useState(null);
     const [toast, setToast] = useState(null);
     const logs = asset.assets_log || [];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        const idFields = [
-            'asset_category_id',
-            'asset_tag_id',
-            // 'assets_branch_id',
-            // 'assets_location_id'
-        ];
-
-        setForm((prev) => ({
+        setForm(prev => ({
             ...prev,
-            [name]: idFields.includes(name) ? parseInt(value, 10) : value,
+            [name]: value,
         }));
     };
 
     const handleSubmit = async () => {
         try {
+            // Create a clean payload with all required fields
+            const payload = {
+                name: form.name,
+                asset_category_id: form.asset_category_id,
+                asset_tag_id: form.asset_tag_id,
+                asset_stable_unit: form.asset_stable_unit,
+                asset_unit_measure: form.asset_unit_measure,
+                asset_description: form.asset_description || null,
+                asset_type: form.asset_type || null,
+                asset_purchase_cost: form.asset_purchase_cost || null,
+                asset_sales_cost: form.asset_sales_cost || null,
+                assets_remark: form.assets_remark || null,
+                asset_running_number: form.asset_running_number || null,
+            };
 
-            const formData = new FormData();
-
-            // Append all required fields
-            formData.append('name', form.name);
-            formData.append('asset_category_id', form.asset_category_id);
-            formData.append('asset_tag_id', form.asset_tag_id);
-            formData.append('asset_stable_unit', form.asset_stable_unit);
-            formData.append('asset_unit_measure', form.asset_unit_measure);
-
-            // Append optional fields if they exist
-            if (form.asset_description) formData.append('asset_description', form.asset_description);
-            if (form.asset_type) formData.append('asset_type', form.asset_type);
-            if (form.asset_purchase_cost) formData.append('asset_purchase_cost', form.asset_purchase_cost);
-            if (form.asset_sales_cost) formData.append('asset_sales_cost', form.asset_sales_cost);
-            if (form.assets_remark) formData.append('assets_remark', form.assets_remark);
-
-            // Append image file if it exists
+            // If there's a new image file, use FormData
             if (form.asset_image instanceof File) {
+                const formData = new FormData();
+                Object.entries(payload).forEach(([key, value]) => {
+                    formData.append(key, value);
+                });
                 formData.append('asset_image', form.asset_image);
+
+                await updateAsset(asset.id, formData);
+            } else {
+                // Otherwise, send as regular JSON
+                await updateAsset(asset.id, payload);
             }
-
-            const {
-                asset_category_name,
-                asset_tag_name,
-                assets_branch_name,
-                assets_location_name,
-                assets_branch_id,
-                assets_location_id,
-                branch_values,
-                assets_remark,
-                assets_log,
-                created_at,
-                updated_at,
-                total_units,
-                ...cleanData
-            } = form;
-
-            await updateAsset(asset.id, cleanData);
+            console.log('Submitting form data:', payload); // or formData
             setEditMode(false);
             setToast('Asset updated successfully!');
             setTimeout(() => setToast(null), 3000);

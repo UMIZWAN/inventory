@@ -106,20 +106,34 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
-  const updateAsset = async (id, formData) => {
-    console.log('Updating asset:', id, formData);
+  const updateAsset = async (id, data) => {
+    console.log('Updating asset:', id, data);
     try {
-      await api.put(`/api/assets/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      fetchAssets();
+      let config = {};
+
+      // Set headers based on whether we're sending FormData or JSON
+      if (data instanceof FormData) {
+        config = {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        };
+      } else {
+        config = {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        };
+      }
+
+      await api.post(`/api/assets/${id}/upload`, data, config);
+      fetchAssets(user?.branch_id);
     } catch (err) {
       console.error('Failed to update asset:', err);
       throw err;
     }
   };
+
   // --------------------------------------------------------------------------------
   // Branch functions
   // --------------------------------------------------------------------------------
@@ -258,7 +272,7 @@ export const AssetMetaProvider = ({ children }) => {
 
       const res = await api.post("api/assets-transaction", payload);
 
-      fetchAssetTransaction(); 
+      fetchAssetTransaction();
       return res.data;
     } catch (error) {
       console.error("Failed to create transfer:", error);
@@ -323,7 +337,7 @@ export const AssetMetaProvider = ({ children }) => {
           status: null,
         })),
       };
-  
+
       const res = await api.post("/api/assets-transaction", payload);
       fetchAssetTransaction(); // Refresh the list after update
       fetchAssets(user.branch_id); // Refresh the assets list
@@ -332,7 +346,7 @@ export const AssetMetaProvider = ({ children }) => {
       console.error("Failed to create asset in transaction:", error);
       throw error;
     }
-  };  
+  };
 
   useEffect(() => {
     fetchBranches();
