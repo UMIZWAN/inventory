@@ -3,6 +3,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { AuthProvider } from './context/AuthContext';
 import { AssetMetaProvider } from './context/AssetsContext';
+import { SuppliersProvider } from './context/SuppliersContext';
 
 createInertiaApp({
   resolve: name => {
@@ -13,7 +14,9 @@ createInertiaApp({
     createRoot(el).render(
       <AuthProvider>
         <AssetMetaProvider>
-          <App {...props} />
+          <SuppliersProvider>
+            <App {...props} />
+          </SuppliersProvider>
         </AssetMetaProvider>
       </AuthProvider>
     )

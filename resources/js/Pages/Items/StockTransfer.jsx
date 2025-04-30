@@ -3,8 +3,8 @@ import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
 
 const tabs = [
-  { key: "draft", label: "Draft", status: "DRAFT" },
-  { key: "in_transfer", label: "In Transfer", status: "IN-TRANSFER" },
+  { key: "in_transfer", label: "Transfer", status: "IN-TRANSFER", mode: "outgoing" },
+  { key: "to_receive", label: "To Receive", status: "IN-TRANSFER", mode: "incoming" },
   { key: "received", label: "Received", status: "RECEIVED" },
 ];
 
@@ -32,7 +32,7 @@ function StockTransfer() {
           ))}
         </div>
 
-        {currentTab && <TransferList status={currentTab.status} />}
+        {currentTab && <TransferList status={currentTab.status} mode={currentTab.mode} />}
       </div>
     </Layout>
   );

@@ -113,6 +113,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_remark' => $request->assets_transaction_remark,
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
+                    'assets_transaction_total_cost' => $request->assets_transaction_total_cost,
                     'created_by' => $request->created_by,
                     'created_at' => $request->created_at,
                 ]);
@@ -153,9 +154,10 @@ class AssetsTransactionController extends Controller
                     'assets_from_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
                     'created_at' => 'nullable|date',
+                    'assets_transaction_total_cost' => 'required|numeric',
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
-                    'assets_transaction_item_list.*.status' => 'required|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
+                    'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
                     'assets_transaction_item_list.*.asset_unit' => 'required|integer'
                 ]);
 
@@ -174,6 +176,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_type',
                     'assets_transaction_remark',
                     'assets_from_branch_id',
+                    'assets_transaction_total_cost',
                     'created_by',
                     'created_at'
                 ]));
@@ -320,6 +323,7 @@ class AssetsTransactionController extends Controller
             ], 500);
         }
     }
+
     public function update(Request $request, $id)
     {
         try {
@@ -355,6 +359,18 @@ class AssetsTransactionController extends Controller
 
                         if ($assetBranchToValue) {
                             $assetBranchToValue->increment('asset_current_unit', $item->asset_unit);
+                        } else {
+                            // Create new branch asset value record
+                            AssetsBranchValues::create([
+                                'asset_branch_id' => $transaction->assets_to_branch_id,
+                                'asset_location_id' => $transaction->assets_to_branch_id,
+                                'asset_id' => $item->asset_id,
+                                'asset_current_unit' => $item->asset_unit,
+                                // Optionally, set default values for other required fields
+                                'asset_min_unit' => 0,
+                                'asset_max_unit' => 0,
+                                'created_by' => Auth::user()->id,
+                            ]);
                         }
                     }
                 }

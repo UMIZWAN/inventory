@@ -222,7 +222,7 @@ export const AssetMetaProvider = ({ children }) => {
       const assetIn = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET IN');
       const assetOut = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
       const assetTransfer = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
-      const transferTo = assetTransfer.filter(tx => tx.assets_from_branch_id === user?.branch_id );
+      // const transferTo = assetTransfer.filter(tx => tx.assets_from_branch_id === user?.branch_id );
 
       // Update your states accordingly
       setAssetIn(assetIn);
@@ -236,7 +236,7 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
-  const createTransfer = async (form) => {
+  const createTransfer = async (form, totalAmount) => {
     try {
       const payload = {
         assets_transaction_running_number: generateRunningNumber(), // we'll create this below
@@ -248,6 +248,7 @@ export const AssetMetaProvider = ({ children }) => {
         created_at: form.date,
         assets_transaction_remark: form.remarks,
         assets_transaction_purpose: form.purpose,
+        assets_transaction_total_cost: totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
           asset_unit: parseInt(item.quantity),
@@ -257,7 +258,7 @@ export const AssetMetaProvider = ({ children }) => {
 
       const res = await api.post("api/assets-transaction", payload);
 
-      console.log("Transfer created:", res.data);
+      fetchAssetTransaction(); 
       return res.data;
     } catch (error) {
       console.error("Failed to create transfer:", error);
@@ -282,6 +283,7 @@ export const AssetMetaProvider = ({ children }) => {
         created_at: form.date,
         assets_transaction_remark: form.remarks,
         assets_transaction_purpose: form.purpose,
+        assets_transaction_total_cost: form.totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
           asset_unit: parseFloat(item.quantity),
@@ -291,13 +293,46 @@ export const AssetMetaProvider = ({ children }) => {
 
       const res = await api.post("/api/assets-transaction", payload);
 
-      console.log("Stock out created:", res.data);
+      fetchAssetTransaction(); // Refresh the list after update
+      fetchAssets(user.branch_id); // Refresh the assets list
       return res.data;
     } catch (error) {
       console.error("Failed to create stock out:", error);
       throw error;
     }
   };
+
+  const createAssetIn = async (form) => {
+    try {
+      const payload = {
+        assets_transaction_running_number: form.referenceNo,
+        assets_transaction_type: 'ASSET IN',
+        assets_from_branch_id: user?.branch_id,
+        created_by: user?.id,
+        created_at: form.date,
+        // received_by: user?.id,
+        // received_at: form.date,
+        assets_transaction_remark: form.note,
+        assets_transaction_purpose: "RECEIVE STOCK",
+        assets_supplier_id: parseInt(form.supplierId),
+        assets_transaction_total_cost: form.totalAmount,
+        assets_transaction_item_list: form.items.map((item) => ({
+          asset_id: parseInt(item.item),
+          asset_unit: parseFloat(item.recvQty),
+          // asset_unit_cost: parseFloat(item.unitCost),
+          status: null,
+        })),
+      };
+  
+      const res = await api.post("/api/assets-transaction", payload);
+      fetchAssetTransaction(); // Refresh the list after update
+      fetchAssets(user.branch_id); // Refresh the assets list
+      return res.data;
+    } catch (error) {
+      console.error("Failed to create asset in transaction:", error);
+      throw error;
+    }
+  };  
 
   useEffect(() => {
     fetchBranches();
@@ -329,6 +364,7 @@ export const AssetMetaProvider = ({ children }) => {
         assetOut,
         createTransfer,
         createStockOut,
+        createAssetIn,
         allAssets,
       }}
     >

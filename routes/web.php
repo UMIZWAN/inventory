@@ -16,7 +16,7 @@ Route::get('/tags', function () {
 });
 
 Route::get('/supplier', function () {
-    return inertia('SupplierForm');
+    return inertia('SuppliersPage');
 });
 // Route::get('/stock-out', function () {
 //     return inertia('StockOutPage');

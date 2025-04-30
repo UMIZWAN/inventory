@@ -4,8 +4,10 @@ import { Dialog } from "@headlessui/react";
 import TransferForm from "./TransferForm";
 import TransferDetailModal from "./TransferDetailModal";
 import { useAssetMeta } from "../context/AssetsContext";
+import { useAuth } from "../context/AuthContext";
 
-export default function TransferList({ status }) {
+export default function TransferList({ status, mode }) {
+  const { user } = useAuth();
   const { assetTransfer, createTransfer } = useAssetMeta();
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -84,17 +86,27 @@ export default function TransferList({ status }) {
   // Filter based on status prop and searchTerm
   const filteredTransfers = assetTransfer.filter((txn) => {
     const matchesStatus = !status || txn.assets_transaction_status === status;
+
+    // Check if the transfer matches the mode
+    let matchesMode = true;
+    if (mode === "outgoing") {
+      matchesMode = txn.assets_from_branch_id === user?.branch_id;
+    } else if (mode === "incoming") {
+      matchesMode = txn.assets_to_branch_id === user?.branch_id;
+    }
+
     const matchesSearch = txn.assets_transaction_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       txn.assets_transaction_item_list.some(item =>
         item.status?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    return matchesStatus && matchesSearch;
+
+    return matchesStatus && matchesMode && matchesSearch;
   });
 
   // Determine which buttons to show based on status
   const getModalButtons = () => {
     if (!selected) return null;
-    
+
     switch (selected.assets_transaction_status) {
       case "DRAFT":
         return {
@@ -122,16 +134,16 @@ export default function TransferList({ status }) {
   return (
     <>
       {showTransferForm && (
-        <TransferForm 
-          setShowTransferForm={setShowTransferForm} 
+        <TransferForm
+          setShowTransferForm={setShowTransferForm}
           initialData={null}
           onSubmit={createTransfer}
         />
       )}
 
       {isEditing && selected && (
-        <TransferForm 
-          setShowTransferForm={setIsEditing} 
+        <TransferForm
+          setShowTransferForm={setIsEditing}
           initialData={selected}
           onSubmit={handleUpdateDraft}
           isEditMode={true}
@@ -141,7 +153,7 @@ export default function TransferList({ status }) {
       <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Transfer List</h1>
-          {status === "DRAFT" && (
+          {status === "IN-TRANSFER" && (
             <button
               onClick={() => setShowTransferForm(true)}
               className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"
@@ -191,11 +203,10 @@ export default function TransferList({ status }) {
                   <td className="px-4 py-2 border">{txn.created_by_name}</td>
                   <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-2 border">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      txn.assets_transaction_status === "DRAFT" ? "bg-yellow-100 text-yellow-800" :
-                      txn.assets_transaction_status === "IN-TRANSFER" ? "bg-blue-100 text-blue-800" :
-                      "bg-green-100 text-green-800"
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs ${txn.assets_transaction_status === "DRAFT" ? "bg-yellow-100 text-yellow-800" :
+                        txn.assets_transaction_status === "IN-TRANSFER" ? "bg-blue-100 text-blue-800" :
+                          "bg-green-100 text-green-800"
+                      }`}>
                       {txn.assets_transaction_status}
                     </span>
                   </td>
@@ -218,6 +229,7 @@ export default function TransferList({ status }) {
         onClose={closeModal}
         data={selected}
         buttons={modalButtons}
+        mode={mode}  // Add this line
       />
     </>
   );

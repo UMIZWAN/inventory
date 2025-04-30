@@ -93,6 +93,7 @@ export default function StockOutPage() {
         type,
         purpose: type === "sold" ? ["SELL"] : Object.keys(purposes).filter(key => purposes[key]),
         items,
+        totalAmount,
       };
 
       await createStockOut(form);
@@ -142,14 +143,16 @@ export default function StockOutPage() {
 
           {/* Form Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* <div>
-              <label className="block mb-1 font-medium">Customer/Recipient Name</label>
+          {type === "sold" && (
+            <div>
+              <label className="block mb-1 font-medium">Recipient Name</label>
               <input
                 type="text"
                 className="w-full border border-gray-300 rounded px-3 py-2"
                 placeholder="Enter name"
               />
-            </div> */}
+            </div>
+          )}
             <div>
               <label className="block mb-1 font-medium">Branch</label>
               <input
@@ -169,7 +172,7 @@ export default function StockOutPage() {
                 onChange={(e) => setDate(e.target.value)}
               />
             </div>
-            <div>
+            {/* <div>
               <label className="block mb-1 font-medium">Reference Number</label>
               <input
                 type="text"
@@ -177,7 +180,7 @@ export default function StockOutPage() {
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Purposes (for normal checkout) */}
