@@ -189,8 +189,11 @@ class AssetsController extends Controller
             $original = $asset->getOriginal();
             $changes = [];
 
+            Log::info($request->file('asset_image'));
             // Handle image upload if present
             if ($request->hasFile('asset_image')) {
+                Log::info('Image detected');
+                Log::info($request->file('asset_image'));
                 $image = $request->file('asset_image');
 
                 // Validate the image
