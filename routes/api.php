@@ -64,7 +64,7 @@ Route::apiResource('assets-tag', AssetsTagController::class);
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('access-levels', AccessLevelController::class);
     Route::get('access-levels/{id}/users', [AccessLevelController::class, 'getWithUsers']);
-    // Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
+    Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
 });
 
 
