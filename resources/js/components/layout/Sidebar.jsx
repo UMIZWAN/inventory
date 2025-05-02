@@ -88,7 +88,7 @@ const Sidebar = () => {
     return (
         <div className="w-64 bg-gray-200 p-2 shadow-md h-full overflow-y-auto">
             {/* Branch Selector */}
-            <div className="mb-4">
+            {/* <div className="mb-4">
                 <label htmlFor="branch-select" className="block text-sm font-medium text-gray-700 mb-1">
                     View Branch Assets
                 </label>
@@ -105,7 +105,7 @@ const Sidebar = () => {
                         </option>
                     ))}
                 </select>
-            </div>
+            </div> */}
             <div className="mb-2 rounded">
                 <ul>
                     {user?.view_supplier && (
