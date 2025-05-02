@@ -19,7 +19,7 @@ class AssetsTransactionFactory extends Factory
         // Set status depending on type
         $status = null;
         if ($transactionType === 'ASSET TRANSFER') {
-            $status = $this->faker->randomElement(['DRAFT', 'IN-TRANSFER', 'RECEIVED']);
+            $status = $this->faker->randomElement(['DRAFT', 'IN-TRANSIT', 'RECEIVED']);
         }
         
         // Get random existing records
