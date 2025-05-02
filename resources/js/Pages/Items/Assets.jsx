@@ -9,7 +9,8 @@ import { useAuth } from '../../context/AuthContext';
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets } = useAssetMeta();
+    const { assets, fetchAssets, branches, loading } = useAssetMeta();
+    const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +22,14 @@ const Assets = () => {
     });
 
     const handleView = (asset) => setSelectedAsset(asset);
+
+    // Handle branch change
+    const handleBranchChange = (e) => {
+        const branchId = e.target.value;
+        console.log("Changing to branch:", branchId);
+        setSelectedBranch(branchId);
+        fetchAssets(branchId === "all" ? null : branchId);
+    };
 
     const filteredAssets = assets.filter(asset => {
         const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,6 +82,21 @@ const Assets = () => {
 
                         {/* Filters */}
                         <div className="flex flex-wrap gap-4">
+
+                            <select
+                                id="branch-select"
+                                value={selectedBranch || ''}
+                                onChange={handleBranchChange}
+                                disabled={loading}
+                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                {branches.map((branch) => (
+                                    <option key={branch.id} value={branch.id.toString()}>
+                                        {branch.name}
+                                    </option>
+                                ))}
+                            </select>
+
                             <select
                                 value={filters.category}
                                 onChange={(e) => setFilters({ ...filters, category: e.target.value })}
@@ -217,14 +241,14 @@ const Assets = () => {
                                                 {asset.asset_tag_name || '—'}
                                             </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
+                                                {asset.branch_values[0].asset_branch_name ?? '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'}
+                                                {asset.branch_values[0].asset_current_unit ?? '—'}
                                             </td>
 
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_location_name ?? '—'}
+                                                {asset.branch_values[0].asset_location_name ?? '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {(() => {

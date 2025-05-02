@@ -36,24 +36,52 @@ export const AssetMetaProvider = ({ children }) => {
   useEffect(() => {
     if (user?.branch_id) {
       console.log("User branch ID:", user.branch_id);
-      fetchAssets(user.branch_id);
+      fetchAssets();
       fetchAssetTransaction();
     }
   }, [user]);
 
   const fetchAssets = (branchId) => {
+    setLoading(true);
     api.get('/api/assets')
       .then(response => {
         if (response.data.success) {
           const allAssets = response.data.data;
-
-          // Filter assets that have at least one branch_value for the current user's branch
-          const userBranchAssets = allAssets.filter(asset =>
-            asset.branch_values?.some(bv => bv.asset_branch_id === user?.branch_id)
-          );
-          setAllAssets(allAssets); // Store all assets for later use
-          console.log('Filtered assets for user branch:', userBranchAssets);
-          setAssets(userBranchAssets);
+  
+          const processedAssets = branchId 
+            ? allAssets
+                // Filter assets that exist in this branch
+                .filter(asset => 
+                  asset.branch_values?.some(bv => 
+                    bv.asset_branch_id === parseInt(branchId)
+                  )
+                )
+                // Transform to show only the selected branch's data
+                .map(asset => {
+                  const branchData = asset.branch_values.find(
+                    bv => bv.asset_branch_id === parseInt(branchId)
+                  );
+                  return {
+                    ...asset,
+                    // Override asset-wide properties with branch-specific ones
+                    asset_current_unit: branchData.asset_current_unit,
+                    asset_location_id: branchData.asset_location_id,
+                    asset_location_name: branchData.asset_location_name,
+                    // Keep only the selected branch's data
+                    branch_values: [branchData]
+                  };
+                })
+            : allAssets;
+  
+          setAllAssets(allAssets);
+          setAssets(processedAssets);
+          
+          console.log('Processed assets:', {
+            selectedBranch: branchId,
+            totalAssets: allAssets.length,
+            filteredAssets: processedAssets.length,
+            sampleAsset: processedAssets[0]
+          });
         }
       })
       .catch(error => {
@@ -221,7 +249,6 @@ export const AssetMetaProvider = ({ children }) => {
     try {
       const res = await api.get('/api/assets-transaction');
       const transactions = res.data.data;
-      console.log('Asset transactions fetched:', transactions);
       // Separate transactions by type
       // const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN');
       // const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
@@ -273,6 +300,7 @@ export const AssetMetaProvider = ({ children }) => {
       const res = await api.post("api/assets-transaction", payload);
 
       fetchAssetTransaction();
+      fetchAssets();
       return res.data;
     } catch (error) {
       console.error("Failed to create transfer:", error);
@@ -308,7 +336,7 @@ export const AssetMetaProvider = ({ children }) => {
       const res = await api.post("/api/assets-transaction", payload);
 
       fetchAssetTransaction(); // Refresh the list after update
-      fetchAssets(user.branch_id); // Refresh the assets list
+      fetchAssets(); // Refresh the assets list
       return res.data;
     } catch (error) {
       console.error("Failed to create stock out:", error);
@@ -340,7 +368,7 @@ export const AssetMetaProvider = ({ children }) => {
 
       const res = await api.post("/api/assets-transaction", payload);
       fetchAssetTransaction(); // Refresh the list after update
-      fetchAssets(user.branch_id); // Refresh the assets list
+      fetchAssets(); // Refresh the assets list
       return res.data;
     } catch (error) {
       console.error("Failed to create asset in transaction:", error);
@@ -360,6 +388,7 @@ export const AssetMetaProvider = ({ children }) => {
     <AssetsContext.Provider
       value={{
         assets,
+        fetchAssets,
         addAsset,
         updateAsset,
         categories,
