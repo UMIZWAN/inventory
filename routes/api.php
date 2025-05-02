@@ -31,42 +31,47 @@ Route::get('/user', function (Request $request) {
 
 
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/users', [AuthController::class, 'addUser']);
-Route::put('/users/{id}', [AuthController::class, 'updateUser']);
 
-Route::get('/users-list', [AuthController::class, 'getAllUsers']);
+
+
+
 Route::middleware('auth:sanctum')->group(function () {
-    
-    
+    // User API
+    Route::get('/users-list', [AuthController::class, 'getAllUsers']);
+    Route::post('/users', [AuthController::class, 'addUser']);
+    Route::put('/users/{id}', [AuthController::class, 'updateUser']);
     Route::get('/profile', [AuthController::class, 'profile']);
-    // Route::get('/users', [AuthController::class, 'getAllUsers']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    // assets routes
+    // Access Level Routes
+    Route::apiResource('access-levels', AccessLevelController::class);
+    // Supplier Routes
+    Route::apiResource('suppliers', SuppliersController::class);
+    // Tax Routes
+    Route::apiResource('tax', TaxController::class);
+    // Branch
+    Route::apiResource('assets-branch', AssetsBranchController::class);
+    // Category Routes
+    Route::apiResource('assets-category', AssetsCategoryController::class);
+    // Tag Routes
+    Route::apiResource('assets-tag', AssetsTagController::class);
+    // Assets Routes
     Route::apiResource('assets', AssetsController::class);
 
-    // Route::apiResource('suppliers', SuppliersController::class);
-    // Route::apiResource('tax', TaxController::class);
     Route::apiResource('assets-transaction', AssetsTransactionController::class);
-});
-Route::apiResource('assets-branch', AssetsBranchController::class);
-Route::apiResource('suppliers', SuppliersController::class);
-Route::apiResource('tax', TaxController::class);
-Route::apiResource('purchase-order', PurchaseOrderController::class);
-
-
-
-Route::apiResource('assets-category', AssetsCategoryController::class);
-
-Route::apiResource('assets-tag', AssetsTagController::class);
-// Route::apiResource('assets', AssetsController::class);
-
-// Route::apiResource('assets-transaction', AssetsTransactionController::class);
-Route::apiResource('access-levels', AccessLevelController::class);
-// Access Level Routes
-Route::middleware('auth:sanctum')->group(function () {
-    
+    Route::apiResource('purchase-order', PurchaseOrderController::class);
     Route::get('access-levels/{id}/users', [AccessLevelController::class, 'getWithUsers']);
     Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
 });
 
 
+
+
+// Route::apiResource('assets', AssetsController::class);
+
+// Route::apiResource('assets-transaction', AssetsTransactionController::class);
+
+// Access Level Routes
+Route::middleware('auth:sanctum')->group(function () {
+
+    
+});

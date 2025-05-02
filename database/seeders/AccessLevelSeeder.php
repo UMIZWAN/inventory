@@ -17,7 +17,7 @@ class AccessLevelSeeder extends Seeder
     {
         // Public - no access
         AccessLevel::factory()->create([
-            'name' => 'Admin',
+            'name' => 'Vendor',
             // Role
             'add_edit_role' => false,
             'view_role' => false,
