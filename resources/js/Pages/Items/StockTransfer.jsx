@@ -1,11 +1,11 @@
 import { useState } from "react";
 import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
+import CheckoutList from "../../components/CheckoutList";
 
 const tabs = [
-  { key: "in_transfer", label: "Transfer", status: "IN-TRANSIT", mode: "outgoing" },
-  { key: "to_receive", label: "To Receive", status: "IN-TRANSIT", mode: "incoming" },
-  { key: "received", label: "Received", status: "RECEIVED" },
+  { key: "asset_transfer", label: "Asset Transfer" },
+  { key: "asset_out", label: "Asset Out" }, // placeholder
 ];
 
 function StockTransfer() {
@@ -20,11 +20,10 @@ function StockTransfer() {
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              className={`px-4 py-2 font-medium ${
-                activeTab === tab.key
+              className={`px-4 py-2 font-medium ${activeTab === tab.key
                   ? "border-b-2 border-blue-600 text-blue-600"
                   : "text-gray-600 hover:text-blue-600"
-              }`}
+                }`}
               onClick={() => setActiveTab(tab.key)}
             >
               {tab.label}
@@ -32,7 +31,13 @@ function StockTransfer() {
           ))}
         </div>
 
-        {currentTab && <TransferList status={currentTab.status} mode={currentTab.mode} />}
+        {activeTab === "asset_transfer" && (
+          <TransferList status={null} mode="both" />
+        )}
+
+        {activeTab === "asset_out" && (
+          <CheckoutList />
+        )}
       </div>
     </Layout>
   );
