@@ -20,7 +20,7 @@ return new class extends Migration
       $table->enum('assets_transaction_type', ['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER']);
       
       // STATUS only relevant for ASSET TRANSFER
-      $table->enum('assets_transaction_status', ['DRAFT', 'IN-TRANSFER', 'RECEIVED'])->nullable();
+      $table->enum('assets_transaction_status', ['DRAFT', 'IN-TRANSIT', 'RECEIVED'])->nullable();
 
       // PURPOSE: allow multiple purposes (JSON)
       $table->json('assets_transaction_purpose')->nullable();

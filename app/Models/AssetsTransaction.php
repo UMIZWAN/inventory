@@ -11,7 +11,7 @@ class AssetsTransaction extends Model
     use HasFactory, HasApiTokens;
 
     public const TYPES = ['ASSET IN', 'ASSET OUT'];
-    public const STATUSES = ['DRAFT', 'IN-TRANSFER', 'RECEIVED'];
+    public const STATUSES = ['DRAFT', 'IN-TRANSIT', 'RECEIVED'];
     public const PURPOSES = ['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST'];
 
     protected $table = 'assets_transaction';

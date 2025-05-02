@@ -3,8 +3,8 @@ import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
 
 const tabs = [
-  { key: "in_transfer", label: "Transfer", status: "IN-TRANSFER", mode: "outgoing" },
-  { key: "to_receive", label: "To Receive", status: "IN-TRANSFER", mode: "incoming" },
+  { key: "in_transfer", label: "Transfer", status: "IN-TRANSIT", mode: "outgoing" },
+  { key: "to_receive", label: "To Receive", status: "IN-TRANSIT", mode: "incoming" },
   { key: "received", label: "Received", status: "RECEIVED" },
 ];
 

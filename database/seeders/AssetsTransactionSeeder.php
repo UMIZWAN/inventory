@@ -42,7 +42,7 @@ class AssetsTransactionSeeder extends Seeder
 
     private function getRandomStatusForTransfer()
     {
-        return fake()->randomElement(['DRAFT', 'IN-TRANSFER', 'RECEIVED']);
+        return fake()->randomElement(['DRAFT', 'IN-TRANSIT', 'RECEIVED']);
     }
 
     private function getRandomPurposes()

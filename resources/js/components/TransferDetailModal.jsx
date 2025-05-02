@@ -20,9 +20,9 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
 
   // Only show receive button if:
   // 1. We're in incoming mode (to branch is user's branch)
-  // 2. The transfer status is IN-TRANSFER
+  // 2. The transfer status is IN-TRANSIT
   const shouldShowReceiveButton = mode === 'incoming' && 
-                                data?.assets_transaction_status === 'IN-TRANSFER' &&
+                                data?.assets_transaction_status === 'IN-TRANSIT' &&
                                 data?.assets_to_branch_id === user?.branch_id;
 
   return (

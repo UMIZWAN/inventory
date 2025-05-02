@@ -232,7 +232,7 @@ class AssetsTransactionController extends Controller
                 $validator = Validator::make($request->all(), [
                     'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
-                    // 'assets_transaction_status' => 'required|string|in:DRAFT,IN-TRANSFER,RECEIVED',
+                    // 'assets_transaction_status' => 'required|string|in:DRAFT,IN-TRANSIT,RECEIVED',
                     'assets_from_branch_id' => 'required|integer',
                     'assets_to_branch_id' => 'required|integer',
                     'assets_transaction_total_cost' => 'required|numeric',
@@ -259,7 +259,7 @@ class AssetsTransactionController extends Controller
                 $transaction = AssetsTransaction::create([
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
-                    'assets_transaction_status' => 'IN-TRANSFER',
+                    'assets_transaction_status' => 'IN-TRANSIT',
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
@@ -279,7 +279,7 @@ class AssetsTransactionController extends Controller
                 }
 
                 // only do quantity update based on transaction status
-                if ($request->assets_transaction_status == 'IN-TRANSFER') {
+                if ($request->assets_transaction_status == 'IN-TRANSIT') {
                     // Deduct from source branch
                     foreach ($request->assets_transaction_item_list as $item) {
                         $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
@@ -330,7 +330,7 @@ class AssetsTransactionController extends Controller
             $transaction = AssetsTransaction::findOrFail($id);
 
             // Validate based on transaction type
-            if ($transaction->assets_transaction_type == 'ASSET TRANSFER' && $transaction->assets_transaction_status == 'IN-TRANSFER') {
+            if ($transaction->assets_transaction_type == 'ASSET TRANSFER' && $transaction->assets_transaction_status == 'IN-TRANSIT') {
                 DB::beginTransaction();
 
                 // Update transaction status
@@ -344,7 +344,7 @@ class AssetsTransactionController extends Controller
                     'received_at' => Carbon::now()
                 ]);
 
-                if ($oldStatus == 'IN-TRANSFER' && $newStatus == 'RECEIVED') {
+                if ($oldStatus == 'IN-TRANSIT' && $newStatus == 'RECEIVED') {
                     // Add to destination branch when receiving
                     $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
 

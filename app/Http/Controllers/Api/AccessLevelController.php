@@ -7,7 +7,6 @@ use App\Models\AccessLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Exception;
-use Illuminate\Support\Facades\Log;
 
 class AccessLevelController extends Controller
 {
@@ -155,15 +154,12 @@ class AccessLevelController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // Log::info('Validation failed:', $validator->errors()->toArray());
-        
             return response()->json([
                 'success' => false,
                 'message' => 'Validation Error',
                 'data' => $validator->errors()
             ], 422);
         }
-        
 
         try {
             $accessLevel = AccessLevel::find($id);
