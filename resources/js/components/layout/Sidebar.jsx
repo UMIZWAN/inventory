@@ -2,9 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { Link } from '@inertiajs/react';
 import { useAuth } from '../../context/AuthContext';
+import { useAssetMeta } from '../../context/AssetsContext';
 
 const Sidebar = () => {
     const { user } = useAuth();
+    const { branches, fetchAssets, loading } = useAssetMeta(); // Get branches and fetchAssets from context
+    const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
     const menu = [
         {
             title: 'Items',
@@ -67,6 +70,14 @@ const Sidebar = () => {
         localStorage.setItem('sidebarOpenSections', JSON.stringify(openSections));
     }, [openSections]);
 
+    // Handle branch change
+    const handleBranchChange = (e) => {
+        const branchId = e.target.value;
+        console.log("Changing to branch:", branchId);
+        setSelectedBranch(branchId);
+        fetchAssets(branchId === "all" ? null : branchId);
+    };
+
     const toggleSection = (title) => {
         setOpenSections((prev) => ({
             ...prev,
@@ -76,6 +87,25 @@ const Sidebar = () => {
 
     return (
         <div className="w-64 bg-gray-200 p-2 shadow-md h-full overflow-y-auto">
+            {/* Branch Selector */}
+            <div className="mb-4">
+                <label htmlFor="branch-select" className="block text-sm font-medium text-gray-700 mb-1">
+                    View Branch Assets
+                </label>
+                <select
+                    id="branch-select"
+                    value={selectedBranch || ''}
+                    onChange={handleBranchChange}
+                    disabled={loading}
+                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    {branches.map((branch) => (
+                        <option key={branch.id} value={branch.id.toString()}>
+                            {branch.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
             <div className="mb-2 rounded">
                 <ul>
                     {user?.view_supplier && (
