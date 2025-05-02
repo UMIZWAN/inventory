@@ -1,11 +1,10 @@
 import { useState } from "react";
-import api from "../api/api";
-import { Dialog } from "@headlessui/react";
 import CheckoutForm from "./CheckoutForm";
 import CheckoutDetail from "./CheckoutDetail";
 import TransactionFilter from "./TransactionFilter";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
+import ExportButton from "./ExportButton";
 
 export default function CheckoutList({ status, type }) {
     const { user } = useAuth();
@@ -97,6 +96,26 @@ export default function CheckoutList({ status, type }) {
                 <TransactionFilter
                     filterType="checkout"
                     onFilterChange={(f) => setFilters(f)}
+                />
+
+                <ExportButton
+                    data={filteredList.map((txn) => ({
+                        "Running No": txn.assets_transaction_running_number,
+                        "Type": txn.assets_transaction_type,
+                        "Branch": txn.assets_from_branch_name,
+                        "Items": txn.assets_transaction_item_list
+                            .map(item => {
+                                const asset = allAssets.find(a => a.id === item.asset_id);
+                                return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
+                            })
+                            .join(", "),
+                        "Purpose": txn.assets_transaction_purpose
+                            ? JSON.parse(txn.assets_transaction_purpose).join(", ")
+                            : "-",
+                        "Date": new Date(txn.created_at).toLocaleDateString(),
+                    }))}
+                    filename="AssetOut"
+                    sheetName="Checkout"
                 />
 
                 <table className="min-w-full text-sm text-left border border-gray-200">

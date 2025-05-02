@@ -5,6 +5,7 @@ import TransferDetailModal from "./TransferDetailModal";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import TransactionFilter from "./TransactionFilter";
+import ExportButton from "./ExportButton";
 
 export default function TransferList({ status, mode }) {
   const { user } = useAuth();
@@ -216,6 +217,24 @@ export default function TransferList({ status, mode }) {
           onFilterChange={(f) => setFilters(f)}
         />
 
+        <ExportButton
+          data={filteredTransfers.map((txn) => ({
+            "Running No": txn.assets_transaction_running_number,
+            "Type": txn.assets_transaction_type,
+            "From Branch": txn.assets_from_branch_name,
+            "To Branch": txn.assets_to_branch_name,
+            "Items": txn.assets_transaction_item_list
+              .map(item => {
+                const asset = allAssets.find(a => a.id === item.asset_id);
+                return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
+              })
+              .join(", "),
+            "Status": txn.assets_transaction_status,
+            "Date": new Date(txn.created_at).toLocaleDateString(),
+          }))}
+          filename="AssetTransfers"
+          sheetName="Transfers"
+        />
 
         <table className="min-w-full text-sm text-left border border-gray-200">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -258,8 +277,8 @@ export default function TransferList({ status, mode }) {
                   <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-2 border">
                     <span className={`px-2 py-1 rounded-full text-xs ${txn.assets_transaction_status === "DRAFT" ? "bg-yellow-100 text-yellow-800" :
-                        txn.assets_transaction_status === "IN-TRANSIT" ? "bg-blue-100 text-blue-800" :
-                          "bg-green-100 text-green-800"
+                      txn.assets_transaction_status === "IN-TRANSIT" ? "bg-blue-100 text-blue-800" :
+                        "bg-green-100 text-green-800"
                       }`}>
                       {txn.assets_transaction_status}
                     </span>
