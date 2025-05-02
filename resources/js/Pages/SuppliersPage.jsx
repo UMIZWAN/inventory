@@ -2,8 +2,10 @@ import { useState } from "react";
 import Layout from "../components/layout/Layout";
 import { useSuppliers } from "../context/SuppliersContext";
 import AddSupplierModal from "../components/AddSupplierModal";
+import { useAuth } from "../context/AuthContext";
 
 const SuppliersPage = () => {
+    const { user } = useAuth();
     const { suppliers, loading } = useSuppliers();
     const [openModal, setOpenModal] = useState(false);
 
@@ -12,12 +14,14 @@ const SuppliersPage = () => {
             <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-xl font-bold">Suppliers</h1>
+                    {user?.add_edit_supplier && (
                     <button
                         className="bg-blue-600 text-white px-4 py-2 rounded"
                         onClick={() => setOpenModal(true)}
                     >
                         Add Supplier
                     </button>
+                    )}
                 </div>
 
                 {loading ? (

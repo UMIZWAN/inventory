@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { Link } from '@inertiajs/react';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
+    const { user } = useAuth();
     const menu = [
         {
             title: 'Items',
@@ -76,31 +78,32 @@ const Sidebar = () => {
         <div className="w-64 bg-gray-200 p-2 shadow-md h-full overflow-y-auto">
             <div className="mb-2 rounded">
                 <ul>
-                    <Link href="/categories" >
-                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                            <span>Categories</span>
-                        </li>
-                    </Link>
+                    {user?.view_supplier && (
+                        <Link href="/categories" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Categories</span>
+                            </li>
+                        </Link>
+                    )}
                     {/* <Link href="/tags" >
                         <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
                             <span>Tag</span>
                         </li>
                     </Link> */}
-                    <Link href="/supplier" >
-                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                            <span>Suppliers</span>
-                        </li>
-                    </Link>
-                    <Link href="/users" >
-                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                            <span>Users</span>
-                        </li>
-                    </Link>
-                    <Link href="/access-levels">
-                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                            <span>Access Levels</span>
-                        </li>
-                    </Link>
+                    {user?.view_supplier && (
+                        <Link href="/supplier" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Suppliers</span>
+                            </li>
+                        </Link>
+                    )}
+                    {user?.view_user && (
+                        <Link href="/users" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Users</span>
+                            </li>
+                        </Link>
+                    )}
                 </ul>
             </div>
             {menu.map((section, index) => {
