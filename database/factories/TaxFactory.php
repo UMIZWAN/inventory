@@ -21,8 +21,8 @@ class TaxFactory extends Factory
     public function definition(): array
     {
         return [
-            'tax_name' => $this->faker->randomElement(['GST', 'VAT', 'Sales Tax']),
-            'tax_percentage' => $this->faker->randomFloat(2, 0, 20),
+            // 'tax_name' => $this->faker->name(),
+            // 'tax_percentage' => 10.00,  // Fixed value of 10%
         ];
     }
 }

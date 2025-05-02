@@ -16,13 +16,15 @@ class DatabaseSeeder extends Seeder
         $this->call(AssetsBranchSeeder::class);
         // Run UserSeeder next to create exactly 10 users
         $this->call(UserSeeder::class);
-        
+
+        $this->call(TaxSeeder::class);
+        $this->call(AssetsCategorySeeder::class);
+        $this->call(AssetsTagSeeder::class);
         // Run the rest of your seeders
         $this->call([
             
             AssetsSeeder::class,
             SuppliersSeeder::class,
-            TaxSeeder::class,
             PurchaseOrderSeeder::class,
             AssetsTransactionSeeder::class,
         ]);

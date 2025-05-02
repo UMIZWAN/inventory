@@ -22,6 +22,7 @@ class AccessLevel extends Model
         // Asset
         'add_edit_asset',
         'view_asset',
+        'view_asset_masterlist',
         // Branch
         'add_edit_branch',
         'view_branch',

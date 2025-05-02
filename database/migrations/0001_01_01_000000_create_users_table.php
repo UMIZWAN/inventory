@@ -23,6 +23,7 @@ return new class extends Migration
             // Asset
             $table->boolean('add_edit_asset')->default(false);
             $table->boolean('view_asset')->default(false);
+            $table->boolean('view_asset_masterlist')->default(false);
             // Branch
             $table->boolean('add_edit_branch')->default(false);
             $table->boolean('view_branch')->default(false);

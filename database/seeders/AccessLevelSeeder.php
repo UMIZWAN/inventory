@@ -27,6 +27,7 @@ class AccessLevelSeeder extends Seeder
             // Asset
             'add_edit_asset' => false,
             'view_asset' => false,
+            'view_asset_masterlist' => true,
             // Branch
             'add_edit_branch' => false,
             'view_branch' => false,
@@ -46,7 +47,7 @@ class AccessLevelSeeder extends Seeder
             'view_tax' => false,
             // Reports
             'view_reports' => true,
-            'download_reports' => false,
+            'download_reports' => true,
         ]);
 
         AccessLevel::factory()->create([
@@ -60,6 +61,7 @@ class AccessLevelSeeder extends Seeder
             // Asset
             'add_edit_asset' => true,
             'view_asset' => true,
+            'view_asset_masterlist' => true,
             // Branch
             'add_edit_branch' => true,
             'view_branch' => true,
@@ -94,6 +96,7 @@ class AccessLevelSeeder extends Seeder
             // Asset
             'add_edit_asset' => true,
             'view_asset' => true,
+            'view_asset_masterlist' => true,
             // Branch
             'add_edit_branch' => true,
             'view_branch' => true,
@@ -128,6 +131,7 @@ class AccessLevelSeeder extends Seeder
             // Asset
             'add_edit_asset' => false,
             'view_asset' => true,
+            'view_asset_masterlist' => false,
             // Branch
             'add_edit_branch' => false,
             'view_branch' => true,
