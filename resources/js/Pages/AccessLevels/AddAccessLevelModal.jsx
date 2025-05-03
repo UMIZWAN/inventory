@@ -10,6 +10,7 @@ const AddAccessLevelModal = ({ isOpen, onClose, onAccessLevelAdded }) => {
         view_user: false,
         add_edit_asset: false,
         view_asset: false,
+        view_asset_masterlist: false,
         add_edit_branch: false,
         view_branch: false,
         add_edit_transaction: false,
@@ -61,6 +62,7 @@ const AddAccessLevelModal = ({ isOpen, onClose, onAccessLevelAdded }) => {
                     view_user: false,
                     add_edit_asset: false,
                     view_asset: false,
+                    view_asset_masterlist: false,
                     add_edit_branch: false,
                     view_branch: false,
                     add_edit_transaction: false,
@@ -211,7 +213,7 @@ const AddAccessLevelModal = ({ isOpen, onClose, onAccessLevelAdded }) => {
                                     Add/Edit Asset
                                 </label>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center mb-2">
                                 <input
                                     type="checkbox"
                                     id="view_asset"
@@ -222,6 +224,19 @@ const AddAccessLevelModal = ({ isOpen, onClose, onAccessLevelAdded }) => {
                                 />
                                 <label htmlFor="view_asset" className="text-gray-700 text-sm">
                                     View Asset
+                                </label>
+                            </div>
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="view_asset_masterlist"
+                                    name="view_asset_masterlist"
+                                    checked={formData.view_asset_masterlist}
+                                    onChange={handleChange}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="view_asset_masterlist" className="text-gray-700 text-sm">
+                                    View Asset Masterlist
                                 </label>
                             </div>
                         </div>

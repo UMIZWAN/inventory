@@ -10,6 +10,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
         view_user: false,
         add_edit_asset: false,
         view_asset: false,
+        view_asset_masterlist: false,
         add_edit_branch: false,
         view_branch: false,
         add_edit_transaction: false,
@@ -38,6 +39,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                 view_user: accessLevel.view_user || false,
                 add_edit_asset: accessLevel.add_edit_asset || false,
                 view_asset: accessLevel.view_asset || false,
+                view_asset_masterlist: accessLevel.view_asset_masterlist || false,
                 add_edit_branch: accessLevel.add_edit_branch || false,
                 view_branch: accessLevel.view_branch || false,
                 add_edit_transaction: accessLevel.add_edit_transaction || false,
@@ -216,7 +218,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                                     Add/Edit Asset
                                 </label>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center mb-2">
                                 <input
                                     type="checkbox"
                                     id="view_asset"
@@ -229,11 +231,25 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                                     View Asset
                                 </label>
                             </div>
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="view_asset_masterlist"
+                                    name="view_asset_masterlist"
+                                    checked={formData.view_asset_masterlist}
+                                    onChange={handleChange}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="view_asset_masterlist" className="text-gray-700 text-sm">
+                                    View Asset Masterlist
+                                </label>
+                            </div>
                         </div>
                     </div>
 
                     <div className="mb-4">
-                        <h4 className="text-gray-700 font-bold mb-2">Branch Permissions</h4>
+                        
+                    <h4 className="text-gray-700 font-bold mb-2">Branch Permissions</h4>
                         <div className="pl-4 mb-2">
                             <div className="flex items-center mb-2">
                                 <input

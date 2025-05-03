@@ -54,3 +54,5 @@ Route::get('/users', function () {
 Route::get('/access-levels', function () {
     return Inertia::render('AccessLevels/AccessLevelsPage');
 })->name('access-levels');
+
+Route::get('/master-list', fn() => Inertia::render('MasterList/MasterListPage'));

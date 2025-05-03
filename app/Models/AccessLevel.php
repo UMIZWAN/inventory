@@ -52,6 +52,7 @@ class AccessLevel extends Model
         'view_user' => 'boolean',
         'add_edit_asset' => 'boolean',
         'view_asset' => 'boolean',
+        'view_asset_masterlist' => 'boolean',
         'add_edit_branch' => 'boolean',
         'view_branch' => 'boolean',
         'add_edit_transaction' => 'boolean',

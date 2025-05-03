@@ -163,6 +163,10 @@ const AccessLevelsPage = ({ auth }) => {
                                                                                 {renderPermissionStatus(accessLevel.view_asset)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
+                                                                                <span>View Asset Masterlist:</span>
+                                                                                {renderPermissionStatus(accessLevel.view_asset_masterlist)}
+                                                                            </div>
+                                                                            <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Branch:</span>
                                                                                 {renderPermissionStatus(accessLevel.add_edit_branch)}
                                                                             </div>
@@ -263,4 +267,3 @@ const AccessLevelsPage = ({ auth }) => {
 };
 
 export default AccessLevelsPage;
-

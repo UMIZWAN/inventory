@@ -108,6 +108,14 @@ const Sidebar = () => {
             </div> */}
             <div className="mb-2 rounded">
                 <ul>
+                    {/* Add Master List link */}
+                    {user?.view_asset_masterlist && (
+                        <Link href="/master-list" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Master List</span>
+                            </li>
+                        </Link>
+                    )}
                     {user?.view_supplier && (
                         <Link href="/categories" >
                             <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">

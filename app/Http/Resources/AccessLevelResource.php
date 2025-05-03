@@ -23,6 +23,7 @@ class AccessLevelResource extends JsonResource
             'view_user' => (bool) $this->view_user,
             'add_edit_asset' => (bool) $this->add_edit_asset,
             'view_asset' => (bool) $this->view_asset,
+            'view_asset_masterlist' => (bool) $this->view_asset_masterlist,
             'add_edit_branch' => (bool) $this->add_edit_branch,
             'view_branch' => (bool) $this->view_branch,
             'add_edit_transaction' => (bool) $this->add_edit_transaction,
