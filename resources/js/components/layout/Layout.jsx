@@ -1,10 +1,17 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Sidebar from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { router } from "@inertiajs/react";
 
 const Layout = ({ children }) => {
     const { user, logout } = useAuth();
+
+    useEffect(() => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            router.visit('/'); // redirect to login page
+        }
+    }, []);
 
     const handleLogout = () => {
         logout();

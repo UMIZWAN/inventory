@@ -138,12 +138,14 @@ const ItemDetails = ({ asset, onClose }) => {
                                 </button>
                             </>
                         ) : (
+                            user?.add_edit_transaction && (
                             <button
                                 onClick={() => setEditMode(true)}
                                 className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Edit
                             </button>
+                            )
                         )}
                     </div>
                 </div>

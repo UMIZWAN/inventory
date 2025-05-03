@@ -38,8 +38,6 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     <Text style={styles.label}>Type:</Text>
                     <Text style={styles.value}>{transaction.assets_transaction_type}</Text>
 
-                    <Text style={styles.label}>Created By:</Text>
-                    <Text style={styles.value}>{transaction.created_by_name}</Text>
                 </View>
 
                 <View style={styles.section}>
@@ -121,7 +119,6 @@ function CheckoutDetail({ transaction, onClose }) {
                         <p><strong>Branch:</strong> {transaction.assets_from_branch_name}</p>
                         <p><strong>Purpose:</strong> {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}</p>
                         <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
-                        <p><strong>Created By:</strong> {transaction.created_by_name}</p>
                     </div>
 
                     {/* Item List Table */}

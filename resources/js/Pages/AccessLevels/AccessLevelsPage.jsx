@@ -4,8 +4,10 @@ import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
 import AddAccessLevelModal from './AddAccessLevelModal';
 import EditAccessLevelModal from './EditAccessLevelModal';
+import { useAuth } from '../../context/AuthContext';
 
 const AccessLevelsPage = ({ auth }) => {
+    const { user } = useAuth();
     const [accessLevels, setAccessLevels] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -84,12 +86,14 @@ const AccessLevelsPage = ({ auth }) => {
                         <div className="p-6 text-gray-900">
                             <div className="flex justify-between items-center mb-6">
                                 <h1 className="text-2xl font-bold">Access Levels</h1>
+                                {user?.add_edit_role && (
                                 <button 
                                     onClick={() => setIsAddModalOpen(true)}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 >
                                     Add Access Level
                                 </button>
+                                )}
                             </div>
                             
                             {loading ? (
@@ -105,7 +109,9 @@ const AccessLevelsPage = ({ auth }) => {
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                                {user?.add_edit_role && (
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                )}
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
@@ -123,6 +129,7 @@ const AccessLevelsPage = ({ auth }) => {
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleAccessLevelClick(accessLevel)}
                                                             >{accessLevel.name}</td>
+                                                            {user?.add_edit_role && (
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <button 
                                                                     onClick={(e) => handleEditClick(accessLevel, e)}
@@ -131,6 +138,7 @@ const AccessLevelsPage = ({ auth }) => {
                                                                     Edit
                                                                 </button>
                                                             </td>
+                                                            )}
                                                         </tr>
                                                         {selectedAccessLevel?.id === accessLevel.id && (
                                                             <tr>

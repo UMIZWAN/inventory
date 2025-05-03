@@ -85,7 +85,9 @@ const CategoryPage = () => {
             <thead className="bg-gray-100 text-left">
               <tr>
                 <th className="border px-3 py-2">Name</th>
+                {user?.add_edit_supplier && (
                 <th className="border px-3 py-2 text-center">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>

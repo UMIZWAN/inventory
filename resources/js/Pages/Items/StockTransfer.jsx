@@ -3,17 +3,20 @@ import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
 import CheckoutList from "../../components/CheckoutList";
 import ReceiveList from "../../components/ReceiveList";
-
-const tabs = [
-  { key: "asset_in", label: "Asset In" },
-  { key: "asset_transfer", label: "Asset Transfer" },
-  { key: "asset_out", label: "Asset Out" }, // placeholder
-];
+import { useAuth } from "../../context/AuthContext";
 
 function StockTransfer() {
-  const [activeTab, setActiveTab] = useState(tabs[0].key);
+  const { user } = useAuth();
 
-  const currentTab = tabs.find((tab) => tab.key === activeTab);
+  const tabs = [
+    ...(user?.receive_transaction
+      ? [{ key: "asset_in", label: "Asset In" }]
+      : []),
+    { key: "asset_transfer", label: "Asset Transfer" },
+    { key: "asset_out", label: "Asset Out" },
+  ];
+
+  const [activeTab, setActiveTab] = useState(tabs[0].key);
 
   return (
     <Layout>
@@ -32,6 +35,7 @@ function StockTransfer() {
             </button>
           ))}
         </div>
+
 
         {activeTab === "asset_in" && (
           <ReceiveList />

@@ -78,7 +78,7 @@ export default function ReceiveList({ status, type }) {
             <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">Receive List</h1>
-                    {user?.add_edit_transaction && (
+                    {user?.access_level_name === "Admin" && (
                         <button
                             onClick={() => setShowReceiveForm(true)}
                             className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"

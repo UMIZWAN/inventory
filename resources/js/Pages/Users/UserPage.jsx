@@ -4,8 +4,10 @@ import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
 import AddUserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
+import { useAuth } from '../../context/AuthContext';
 
 const UserPage = ({ auth }) => {
+    const { user } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -84,12 +86,14 @@ const UserPage = ({ auth }) => {
                         <div className="p-6 text-gray-900">
                             <div className="flex justify-between items-center mb-6">
                                 <h1 className="text-2xl font-bold">Users</h1>
+                                {user?.add_edit_user && (
                                 <button 
                                     onClick={() => setIsAddModalOpen(true)}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 >
                                     Add User
                                 </button>
+                                )}
                             </div>
                             
                             {loading ? (
@@ -108,134 +112,138 @@ const UserPage = ({ auth }) => {
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Access Level</th>
+                                                {user?.add_edit_user && (
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                )}
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
                                             {users.length > 0 ? (
-                                                users.map(user => (
-                                                    <React.Fragment key={user.id}>
+                                                users.map(u => (
+                                                    <React.Fragment key={u.id}>
                                                         <tr
-                                                            className={`hover:bg-gray-50 ${selectedUser?.id === user.id ? 'bg-blue-50' : ''}`}
+                                                            className={`hover:bg-gray-50 ${selectedUser?.id === u.id ? 'bg-blue-50' : ''}`}
                                                         >
                                                             <td 
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(user)}
-                                                            >{user.id}</td>
+                                                                onClick={() => handleUserClick(u)}
+                                                            >{u.id}</td>
                                                             <td 
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(user)}
-                                                            >{user.name}</td>
+                                                                onClick={() => handleUserClick(u)}
+                                                            >{u.name}</td>
                                                             <td 
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(user)}
-                                                            >{user.email}</td>
+                                                                onClick={() => handleUserClick(u)}
+                                                            >{u.email}</td>
                                                             <td 
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(user)}
-                                                            >{user.branch_name}</td>
+                                                                onClick={() => handleUserClick(u)}
+                                                            >{u.branch_name}</td>
                                                             <td 
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(user)}
+                                                                onClick={() => handleUserClick(u)}
                                                             >
                                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                                    {user.access_level_name}
+                                                                    {u.access_level_name}
                                                                 </span>
                                                             </td>
+                                                            {user?.add_edit_user && (
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <button 
-                                                                    onClick={(e) => handleEditClick(user, e)}
+                                                                    onClick={(e) => handleEditClick(u, e)}
                                                                     className="text-indigo-600 hover:text-indigo-900 mr-3"
                                                                 >
                                                                     Edit
                                                                 </button>
                                                             </td>
+                                                            )}
                                                         </tr>
-                                                        {selectedUser?.id === user.id && (
+                                                        {selectedUser?.id === u.id && (
                                                             <tr>
                                                                 <td colSpan="6" className="px-6 py-4 bg-gray-50">
                                                                     <div className="border rounded-lg p-4 bg-white">
-                                                                        <h3 className="font-bold text-lg mb-3">Access Level Details: {user.access_level_name}</h3>
+                                                                        <h3 className="font-bold text-lg mb-3">Access Level Details: {u.access_level_name}</h3>
                                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Role:</span>
-                                                                                {renderPermissionStatus(user.add_edit_role)}
+                                                                                {renderPermissionStatus(u.add_edit_role)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Role:</span>
-                                                                                {renderPermissionStatus(user.view_role)}
+                                                                                {renderPermissionStatus(u.view_role)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit User:</span>
-                                                                                {renderPermissionStatus(user.add_edit_user)}
+                                                                                {renderPermissionStatus(u.add_edit_user)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View User:</span>
-                                                                                {renderPermissionStatus(user.view_user)}
+                                                                                {renderPermissionStatus(u.view_user)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Asset:</span>
-                                                                                {renderPermissionStatus(user.add_edit_asset)}
+                                                                                {renderPermissionStatus(u.add_edit_asset)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Asset:</span>
-                                                                                {renderPermissionStatus(user.view_asset)}
+                                                                                {renderPermissionStatus(u.view_asset)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Branch:</span>
-                                                                                {renderPermissionStatus(user.add_edit_branch)}
+                                                                                {renderPermissionStatus(u.add_edit_branch)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Branch:</span>
-                                                                                {renderPermissionStatus(user.view_branch)}
+                                                                                {renderPermissionStatus(u.view_branch)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Transaction:</span>
-                                                                                {renderPermissionStatus(user.add_edit_transaction)}
+                                                                                {renderPermissionStatus(u.add_edit_transaction)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Transaction:</span>
-                                                                                {renderPermissionStatus(user.view_transaction)}
+                                                                                {renderPermissionStatus(u.view_transaction)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Approve/Reject Transaction:</span>
-                                                                                {renderPermissionStatus(user.approve_reject_transaction)}
+                                                                                {renderPermissionStatus(u.approve_reject_transaction)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Receive Transaction:</span>
-                                                                                {renderPermissionStatus(user.receive_transaction)}
+                                                                                {renderPermissionStatus(u.receive_transaction)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Purchase Order:</span>
-                                                                                {renderPermissionStatus(user.add_edit_purchase_order)}
+                                                                                {renderPermissionStatus(u.add_edit_purchase_order)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Purchase Order:</span>
-                                                                                {renderPermissionStatus(user.view_purchase_order)}
+                                                                                {renderPermissionStatus(u.view_purchase_order)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Supplier:</span>
-                                                                                {renderPermissionStatus(user.add_edit_supplier)}
+                                                                                {renderPermissionStatus(u.add_edit_supplier)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Supplier:</span>
-                                                                                {renderPermissionStatus(user.view_supplier)}
+                                                                                {renderPermissionStatus(u.view_supplier)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Tax:</span>
-                                                                                {renderPermissionStatus(user.add_edit_tax)}
+                                                                                {renderPermissionStatus(u.add_edit_tax)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Tax:</span>
-                                                                                {renderPermissionStatus(user.view_tax)}
+                                                                                {renderPermissionStatus(u.view_tax)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Reports:</span>
-                                                                                {renderPermissionStatus(user.view_reports)}
+                                                                                {renderPermissionStatus(u.view_reports)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Download Reports:</span>
-                                                                                {renderPermissionStatus(user.download_reports)}
+                                                                                {renderPermissionStatus(u.download_reports)}
                                                                             </div>
                                                                         </div>
                                                                     </div>
