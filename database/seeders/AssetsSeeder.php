@@ -16,14 +16,6 @@ class AssetsSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create asset categories
-        collect(['Electronics', 'Furniture', 'Office Supplies', 'Vehicles', 'Tools'])
-            ->each(fn($name) => AssetsCategory::create(['name' => $name]));
-
-        // Create asset tags
-        collect(['High Value', 'Low Value', 'Consumable', 'Depreciated', 'New'])
-            ->each(fn($name) => AssetsTag::create(['name' => $name]));
-
         // Get existing branches
         $branches = AssetsBranch::all();
         

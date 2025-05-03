@@ -25,6 +25,7 @@ class AssetsBranchValuesFactory extends Factory
         return [
             'asset_id' => Assets::factory(),
             'asset_branch_id' => AssetsBranch::factory(),
+            'asset_rack_no' => 'NO - ' . $this->faker->numerify('####'),
             'asset_location_id' => AssetsBranch::factory(),
             'asset_current_unit' => $this->faker->numberBetween(1, 50),
         ];

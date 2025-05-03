@@ -45,6 +45,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->constrained('assets')->cascadeOnDelete();
             $table->foreignId('asset_branch_id')->constrained('assets_branch')->cascadeOnDelete();
+            $table->string('asset_rack_no')->nullable();
             $table->unique(['asset_id', 'asset_branch_id']);
             $table->foreignId('asset_location_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();
             $table->unsignedInteger('asset_current_unit')->default(0);
@@ -56,9 +57,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('asset_branch_values');
+        Schema::dropIfExists('assets_branch_values');
         Schema::dropIfExists('assets');
-        Schema::dropIfExists('assets_tag');
         Schema::dropIfExists('assets_category');
+        Schema::dropIfExists('assets_tag');
     }
 };

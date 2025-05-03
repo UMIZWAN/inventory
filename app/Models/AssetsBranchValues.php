@@ -14,6 +14,7 @@ class AssetsBranchValues extends Model
     protected $fillable = [
         'asset_id',
         'asset_branch_id',
+        'asset_rack_no',
         'asset_location_id',
         'asset_current_unit',
     ];

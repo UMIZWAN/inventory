@@ -28,9 +28,9 @@ class PurchaseOrderFactory extends Factory
         $receivedByUser = User::inRandomOrder()->first();
         $approvedByUser = User::inRandomOrder()->first();
         return [
-            'supplier_id' => Suppliers::factory(),
+            'supplier_id' => Suppliers::inRandomOrder()->first()->id,
             'expected_receipt_date' => $this->faker->dateTimeBetween('now', '+3 months'),
-            'tax_id' => Tax::factory(),
+            'tax_id' => Tax::inRandomOrder()->first()->id,
             'billing_address' => $this->faker->address(),
             'shipping_address' => $this->faker->address(),
             'tracking_ref' => $this->faker->unique()->regexify('[A-Z]{2}[0-9]{8}'),

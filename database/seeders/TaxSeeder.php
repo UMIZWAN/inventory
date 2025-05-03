@@ -21,12 +21,17 @@ class TaxSeeder extends Seeder
         ]);
 
         Tax::create([
-            'tax_name' => 'Standard GST',
+            'tax_name' => 'GST',
             'tax_percentage' => 7.5,
         ]);
 
         Tax::create([
-            'tax_name' => 'Sales Tax',
+            'tax_name' => 'SST',
+            'tax_percentage' => 6.5,
+        ]);
+
+        Tax::create([
+            'tax_name' => 'Markup',
             'tax_percentage' => 6,
         ]);
     }

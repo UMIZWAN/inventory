@@ -37,9 +37,5 @@ class UserSeeder extends Seeder
             'branch_id' => 1,
             'access_level_id' => 1,
         ]);
-
-        // Create 7 more random users to make a total of 10
-
-        
     }
 }

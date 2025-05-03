@@ -39,6 +39,7 @@ class AccessLevelFactory extends Factory
             // Asset
             'add_edit_asset' => $this->faker->boolean(),
             'view_asset' => $this->faker->boolean(),
+            'view_asset_masterlist' => $this->faker->boolean(),
 
             // Branch
             'add_edit_branch' => $this->faker->boolean(),
