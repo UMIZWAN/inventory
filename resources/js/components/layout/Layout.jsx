@@ -9,7 +9,7 @@ const Layout = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (!token) {
-            router.visit('/'); // redirect to login page
+            window.location.href = '/';
         }
     }, []);
 
@@ -25,7 +25,7 @@ const Layout = ({ children }) => {
                 <h1 className="text-lg font-bold">Inventory System</h1>
                 {user && (
                     <div className="flex items-center gap-4">
-                        <span className="text-gray-600">Hi, {user.name}</span>
+                        <span className="text-gray-600">{user.name}</span>
                         <button
                             onClick={handleLogout}
                             className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"

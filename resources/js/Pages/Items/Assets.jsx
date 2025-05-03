@@ -232,10 +232,10 @@ const Assets = () => {
                                                 {asset.asset_category_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {Number(asset.asset_purchase_cost).toFixed(2) || '—'}
+                                                RM {Number(asset.asset_purchase_cost).toFixed(2) || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {Number(asset.asset_sales_cost).toFixed(2) || '—'}
+                                                RM {Number(asset.asset_sales_cost).toFixed(2) || '—'}
                                             </td>
                                             {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_tag_name || '—'}

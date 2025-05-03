@@ -249,21 +249,11 @@ export const AssetMetaProvider = ({ children }) => {
     try {
       const res = await api.get('/api/assets-transaction');
       const transactions = res.data.data;
-      // Separate transactions by type
-      // const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN');
-      // const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
-      // const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
 
-      // Filter by selected branch ID
-      const filteredByBranch = transactions.filter(
-        tx => tx.assets_from_branch_id === user?.branch_id || tx.assets_to_branch_id === user?.branch_id
-      );
-
-      // Separate transactions by type
-      const assetIn = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET IN');
-      const assetOut = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
-      const assetTransfer = filteredByBranch.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
-      // const transferTo = assetTransfer.filter(tx => tx.assets_from_branch_id === user?.branch_id );
+      // Separate transactions by type and branch
+      const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN' && tx.assets_from_branch_id === user?.branch_id);
+      const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT' && tx.assets_from_branch_id === user?.branch_id);
+      const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER' && (tx.assets_from_branch_id === user?.branch_id || tx.assets_to_branch_id === user?.branch_id));
 
       // Update your states accordingly
       setAssetIn(assetIn);
