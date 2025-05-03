@@ -15,31 +15,31 @@ const Sidebar = () => {
             items: [
                 'Item List',
                 // 'View Transfers',
-                'Transfer Stock',
+                'Asset Transaction',
                 // 'Import Items from CSV',
             ],
         },
-        {
-            title: 'Purchase',
-            prefix: 'purchase',
-            items: [
-                'Order Stock',
-                'Receive Stock',
-                'View Orders',
-                'View Receive History',
-                // 'View Items On Order',
-                'Order Low Stock Items',
-                // 'Return Stock',
-            ],
-        },
-        {
-            title: 'Sell',
-            prefix: 'sell',
-            items: [
-                'Item checkout',
-                'View Checkout History',
-            ],
-        },
+        // {
+        //     title: 'Purchase',
+        //     prefix: 'purchase',
+        //     items: [
+        //         // 'Order Stock',
+        //         'Receive Stock',
+        //         // 'View Orders',
+        //         'View Receive History',
+        //         // 'View Items On Order',
+        //         // 'Order Low Stock Items',
+        //         // 'Return Stock',
+        //     ],
+        // },
+        // {
+        //     title: 'Sell',
+        //     prefix: 'sell',
+        //     items: [
+        //         'Item checkout',
+        //         'View Checkout History',
+        //     ],
+        // },
         // {
         //     title: 'Reports',
         //     prefix: 'reports',

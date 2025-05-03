@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { router } from "@inertiajs/react";
-import Layout from "../../components/layout/Layout";
-import ItemsTable from "../../components/ItemsTable";
-import { useAssetMeta } from "../../context/AssetsContext";
-import { useSuppliers } from "../../context/SuppliersContext";
-import { useAuth } from "../../context/AuthContext";
+import ItemsTable from "./ItemsTable";
+import { useAssetMeta } from "../context/AssetsContext";
+import { useSuppliers } from "../context/SuppliersContext";
+import { useAuth } from "../context/AuthContext";
 
-function ReceiveForm() {
+function ReceiveForm({ setShowReceiveForm, onSubmit}) {
   const { user } = useAuth();
   const { assets, branches, createAssetIn } = useAssetMeta();
   const { suppliers } = useSuppliers();
@@ -90,16 +88,17 @@ function ReceiveForm() {
         totalAmount
       });
       alert("Stock received successfully.");
-      router.visit("/items/item-list");
+      setShowReceiveForm(false);
     } catch (err) {
       alert("Failed to receive stock.");
     }
   };
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-lg space-y-4">
-        <h2 className="text-2xl font-semibold mb-4">Receive Stock</h2>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+
+        <h1 className="text-2xl font-bold mb-6">Receive Stock</h1>
 
         <div className="flex items-center gap-4">
           {/* <label className="flex items-center gap-2">
@@ -220,7 +219,12 @@ function ReceiveForm() {
         </div> */}
 
         <div className="flex justify-end gap-3 pt-4">
-          {/* <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded">Cancel</button> */}
+          <button
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+            onClick={() => setShowReceiveForm(false)}
+          >
+            Cancel
+          </button>
           <button
             className="bg-blue-600 text-white px-4 py-2 rounded"
             onClick={handleSubmit}
@@ -229,8 +233,10 @@ function ReceiveForm() {
           </button>
 
         </div>
+
       </div>
-    </Layout>
+    </div>
+
   );
 }
 

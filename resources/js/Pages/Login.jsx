@@ -49,7 +49,7 @@ const Login = () => {
           <div className="text-center mb-6">
             <h4 className="text-xl font-bold text-gray-800">Sign In</h4>
             <p className="text-gray-500 text-sm">
-              Enter your email address and password to access admin panel.
+              Enter your email address and password
             </p>
           </div>
 
@@ -76,9 +76,9 @@ const Login = () => {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                {/* <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
                   Forgot your password?
-                </a>
+                </a> */}
               </div>
               <div className="mt-1">
                 <input
@@ -94,17 +94,17 @@ const Login = () => {
             </div>
 
             <div className="mb-4">
-              <label className="inline-flex items-center">
+              {/* <label className="inline-flex items-center">
                 <input
                   type="checkbox"
                   className="form-checkbox text-blue-600"
                   defaultChecked
                 />
                 <span className="ml-2 text-sm text-gray-700">Remember me</span>
-              </label>
+              </label> */}
             </div>
 
-            <div className="mb-0">
+            <div className="mb-0 mt-4">
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
@@ -115,12 +115,12 @@ const Login = () => {
           </form>
         </div>
 
-        <div className="text-center text-sm text-gray-500 mt-4">
+        {/* <div className="text-center text-sm text-gray-500 mt-4">
           Don't have an account?
           <a href="/register" className="ml-1 text-blue-600 font-medium hover:underline">
             Sign Up
           </a>
-        </div>
+        </div> */}
       </div>
 
       <footer className="mt-6 text-center text-xs text-gray-400 z-10">
