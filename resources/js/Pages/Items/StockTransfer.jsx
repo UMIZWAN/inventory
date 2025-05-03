@@ -2,8 +2,10 @@ import { useState } from "react";
 import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
 import CheckoutList from "../../components/CheckoutList";
+import ReceiveList from "../../components/ReceiveList";
 
 const tabs = [
+  { key: "asset_in", label: "Asset In" },
   { key: "asset_transfer", label: "Asset Transfer" },
   { key: "asset_out", label: "Asset Out" }, // placeholder
 ];
@@ -30,6 +32,10 @@ function StockTransfer() {
             </button>
           ))}
         </div>
+
+        {activeTab === "asset_in" && (
+          <ReceiveList />
+        )}
 
         {activeTab === "asset_transfer" && (
           <TransferList status={null} mode="both" />

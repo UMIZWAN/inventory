@@ -119,7 +119,7 @@ const Assets = () => {
                                 ))}
                             </select> */}
 
-                            <select
+                            {/* <select
                                 value={filters.location}
                                 onChange={(e) => setFilters({ ...filters, location: e.target.value })}
                                 className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -128,7 +128,7 @@ const Assets = () => {
                                 {[...new Set(assets.map(a => a.assets_location_name).filter(Boolean))].map(loc => (
                                     <option key={loc} value={loc}>{loc}</option>
                                 ))}
-                            </select>
+                            </select> */}
 
                             {/* <select
                                 value={filters.status}
@@ -181,9 +181,9 @@ const Assets = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Quantity
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Location
-                                        </th>
+                                        </th> */}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
@@ -247,9 +247,9 @@ const Assets = () => {
                                                 {asset.branch_values[0].asset_current_unit ?? '—'}
                                             </td>
 
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.branch_values[0].asset_location_name ?? '—'}
-                                            </td>
+                                            </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {(() => {
                                                     const current = Number(asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit);

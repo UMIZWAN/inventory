@@ -18,13 +18,10 @@ Route::get('/tags', function () {
 Route::get('/supplier', function () {
     return inertia('SuppliersPage');
 });
-// Route::get('/stock-out', function () {
-//     return inertia('StockOutPage');
-// });
 
 Route::prefix('items')->group(function () {
     Route::get('/item-list', fn() => Inertia::render('Items/Assets'));
-    Route::get('/transfer-stock', fn() => Inertia::render('Items/StockTransfer'));
+    Route::get('/asset-transaction', fn() => Inertia::render('Items/StockTransfer'));
 });
 
 Route::prefix('purchase')->group(function () {
@@ -37,10 +34,10 @@ Route::prefix('purchase')->group(function () {
     // Route::get('/return-stock', fn () => Inertia::render('Purchase/ReturnStock'));
 });
 
-Route::prefix('sell')->group(function () {
-    Route::get('/item-checkout', fn() => Inertia::render('Sell/StockOutPage'));
-    Route::get('/view-checkout-history', fn() => Inertia::render('Sell/CheckoutHistory'));
-});
+// Route::prefix('sell')->group(function () {
+//     Route::get('/item-checkout', fn() => Inertia::render('Sell/StockOutPage'));
+//     Route::get('/view-checkout-history', fn() => Inertia::render('Sell/CheckoutHistory'));
+// });
 
 Route::get('/test', function () {
     return inertia('TestPage');
