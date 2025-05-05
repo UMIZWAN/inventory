@@ -8,14 +8,16 @@ const Layout = ({ children }) => {
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
-        if (!token) {
+        const isLoginPage = window.location.pathname === '/';
+        if (!token && !isLoginPage) {
             window.location.href = '/';
         }
     }, []);
 
     const handleLogout = () => {
         logout();
-        router.visit("/");
+        localStorage.removeItem('access_token');
+        router.visit('/');
     };
 
     return (
