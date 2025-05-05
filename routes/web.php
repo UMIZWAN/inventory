@@ -11,10 +11,6 @@ Route::get('/categories', function () {
     return inertia('CategoryPage');
 });
 
-Route::get('/branch', function () {
-    return inertia('BranchPage');
-});
-
 Route::get('/tags', function () {
     return inertia('TagPage');
 });
