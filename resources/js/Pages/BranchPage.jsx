@@ -48,7 +48,7 @@ const BranchPage = () => {
       <div className="max-w-3xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Branches</h1>
 
-        {user?.add_edit_supplier && (
+        {user?.add_edit_branch && (
           <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
             <input
               type="text"
@@ -95,7 +95,7 @@ const BranchPage = () => {
               {branches.map((cat) => (
                 <tr key={cat.id} className="hover:bg-gray-50">
                   <td className="border px-3 py-2">{cat.name}</td>
-                  {user?.add_edit_supplier && (
+                  {user?.add_edit_branch && (
                     <td className="border px-3 py-2 text-center space-x-2">
                       <button
                         onClick={() => handleEdit(cat)}
