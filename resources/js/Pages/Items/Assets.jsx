@@ -193,9 +193,9 @@ const Assets = () => {
                                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Location
                                         </th> */}
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
-                                        </th>
+                                        </th> */}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Date Created
                                         </th>
@@ -259,7 +259,7 @@ const Assets = () => {
                                             {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.branch_values[0].asset_location_name ?? '—'}
                                             </td> */}
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            {/* <td className="px-6 py-4 whitespace-nowrap">
                                                 {(() => {
                                                     const current = Number(asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit);
                                                     const stable = Number(asset.asset_stable_unit);
@@ -284,7 +284,7 @@ const Assets = () => {
                                                         </span>
                                                     );
                                                 })()}
-                                            </td>
+                                            </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {new Date(asset.created_at).toLocaleDateString()}
                                             </td>

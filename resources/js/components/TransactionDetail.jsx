@@ -82,92 +82,118 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 };
 
 // Main Component
-function CheckoutDetail({ transaction, onClose }) {
-    const { allAssets } = useAssetMeta();
-
-    const getAssetDetails =  (assetId) => {
-        const found = allAssets.find((a) => a.id === assetId);
-        return found ? { name: found.name, price: found.asset_sales_cost } : { name: "-", price: 0 };
+function TransactionDetail({ transaction, onClose, type = "transfer" }) {
+    const { allAssets, suppliers } = useAssetMeta();
+    console.log("Transaction Detail", transaction, type);
+    const getAssetDetails = (assetId) => {
+        const asset = allAssets.find((a) => a.id === assetId);
+        return asset
+            ? { name: asset.name, price: type === "receive" ? asset.asset_purchase_cost : asset.asset_sales_cost }
+            : { name: "-", price: 0 };
     };
+
+    const getItemList = () => {
+        // if (type === "receive") {
+        //     return transaction.items || [];
+        // } else {
+        return transaction.assets_transaction_item_list || [];
+        // }
+    };
+
+    const totalAmount = getItemList().reduce((sum, item) => {
+        const { price } = getAssetDetails(item.asset_id);
+        const quantity = (item.asset_unit || 1);
+        return sum + price * quantity;
+    }, 0);
 
     return (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full relative">
-                <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl"
-                >
+                <button onClick={onClose} className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl">
                     &times;
                 </button>
 
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold">Transaction Invoice</h2>
-                    <PDFDownloadLink
-                        document={<InvoicePDF transaction={transaction} getAssetDetails={getAssetDetails} />}
-                        fileName={`Invoice_${transaction.assets_transaction_running_number}.pdf`}
-                        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm"
-                    >
-                        {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
-                    </PDFDownloadLink>
+                    <h2 className="text-2xl font-bold">{type === "receive" ? "Receive Details" : "Transaction Invoice"}</h2>
+                    {type === "transfer" && (
+                        <PDFDownloadLink
+                            document={
+                                <InvoicePDF
+                                    transaction={transaction}
+                                    getAssetDetails={getAssetDetails}
+                                    type={type}
+                                />
+                            }
+                            fileName={`${type === "receive" ? "Receive" : "Invoice"}_${transaction.assets_transaction_running_number}.pdf`}
+                            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm"
+                        >
+                            {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
+                        </PDFDownloadLink>
+                    )}
                 </div>
 
-                {/* Preview (optional) */}
                 <div className="bg-white p-6">
-                    {/* Same content as the PDF for preview purposes */}
                     <div className="mb-6 space-y-1">
                         <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
-                        <p><strong>Branch:</strong> {transaction.assets_from_branch_name}</p>
-                        <p><strong>Purpose:</strong> {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}</p>
-                        <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
+                        <p><strong>Branch:</strong> {transaction.branch_name || transaction.assets_from_branch_name}</p>
+                        {type === "transfer" && (
+                            <>
+                                <p><strong>Purpose:</strong> {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}</p>
+                                <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
+                                <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString()}</p>
+                            </>
+                        )}
+                        {type === "receive" && (
+                            <>
+                                <p><strong>Supplier:</strong>{transaction.supplier_name}</p>
+                                <p><strong>Received Date:</strong> {new Date(transaction.received_at).toLocaleDateString()}</p>
+                            </>
+                        )}
                     </div>
 
-                    {/* Item List Table */}
-                    <div>
-                        <h3 className="text-xl font-semibold mb-2">Item List</h3>
-                        <table className="min-w-full border border-gray-300">
-                            <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="px-4 py-2 border">#</th>
-                                    <th className="px-4 py-2 border">Asset Name</th>
-                                    <th className="px-4 py-2 border">Quantity</th>
-                                    <th className="px-4 py-2 border">Price (Each)</th>
-                                    <th className="px-4 py-2 border">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {transaction.assets_transaction_item_list.map((item, index) => {
-                                    const { name, price } = getAssetDetails(item.asset_id);
-                                    const quantity = item.asset_unit || 1;
-                                    const total = price * quantity;
-                                    return (
-                                        <tr key={index}>
-                                            <td className="px-4 py-2 border text-center">{index + 1}</td>
-                                            <td className="px-4 py-2 border">{name}</td>
-                                            <td className="px-4 py-2 border text-center">{quantity}</td>
-                                            <td className="px-4 py-2 border text-right">RM {Number(price).toFixed(2)}</td>
-                                            <td className="px-4 py-2 border text-right">RM {Number(total).toFixed(2)}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                    <h3 className="text-xl font-semibold mb-2">Item List</h3>
+                    <table className="min-w-full border border-gray-300">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-4 py-2 border">#</th>
+                                <th className="px-4 py-2 border">Asset Name</th>
+                                <th className="px-4 py-2 border">Quantity</th>
+                                <th className="px-4 py-2 border">Price (Each)</th>
+                                <th className="px-4 py-2 border">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {getItemList().map((item, index) => {
+                                const id = item.asset_id;
+                                const { name, price } = getAssetDetails(id);
+                                const quantity = item.asset_unit || 1;
+                                const total = price * quantity;
+                                return (
+                                    <tr key={index}>
+                                        <td className="px-4 py-2 border text-center">{index + 1}</td>
+                                        <td className="px-4 py-2 border">{name}</td>
+                                        <td className="px-4 py-2 border text-center">{quantity}</td>
+                                        <td className="px-4 py-2 border text-right">RM {Number(price).toFixed(2)}</td>
+                                        <td className="px-4 py-2 border text-right">RM {Number(total).toFixed(2)}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
 
-                        {/* Total Amount */}
-                        <div className="flex justify-end mt-4">
-                            <div className="text-right">
-                                <p className="text-lg font-bold">Total Amount: RM {transaction.assets_transaction_item_list.reduce((sum, item) => {
-                                    const { price } = getAssetDetails(item.asset_id);
-                                    const quantity = item.asset_unit || 1;
-                                    return sum + (price * quantity);
-                                }, 0).toFixed(2)}</p>
-                            </div>
-                        </div>
+                    <div className="flex justify-end mt-4">
+                        <p className="text-lg font-bold">Total Amount: RM {totalAmount.toFixed(2)}</p>
+                    </div>
+
+                    <div className="mt-4">
+                        <p><strong>Remark:</strong> {transaction.assets_transaction_remark || "-"}</p>
                     </div>
                 </div>
             </div>
         </div>
     );
 }
+
 
 // Define styles for the PDF
 const styles = StyleSheet.create({
@@ -229,4 +255,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CheckoutDetail;
+export default TransactionDetail;

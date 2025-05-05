@@ -1,12 +1,12 @@
 import { useState } from "react";
-import CheckoutDetail from "./CheckoutDetail";
 import TransactionFilter from "./TransactionFilter";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import ExportButton from "./ExportButton";
 import ReceiveForm from "./ReceiveForm";
+import TransactionDetail from "./TransactionDetail";
 
-export default function ReceiveList({ status, type }) {
+export default function ReceiveList() {
     const { user } = useAuth();
     const { allAssets, assetIn } = useAssetMeta();
     const [selected, setSelected] = useState(null);
@@ -172,12 +172,14 @@ export default function ReceiveList({ status, type }) {
                 </table>
             </div>
 
-            {/* {isOpen && selected && (
-                <CheckoutDetail
-                    transaction={selected}
-                    onClose={closeModal}
-                />
-            )} */}
+            {isOpen && selected && (
+                // <CheckoutDetail
+                //     transaction={selected}
+                //     onClose={closeModal}
+                // />
+
+                <TransactionDetail transaction={selected} onClose={closeModal} type="receive" />
+            )}
         </>
     );
 }

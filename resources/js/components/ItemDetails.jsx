@@ -65,7 +65,7 @@ const ItemDetails = ({ asset, onClose }) => {
                 // Otherwise, send as regular JSON
                 await updateAsset(asset.id, payload);
             }
-            console.log('Submitting form data:', payload); // or formData
+
             setEditMode(false);
             setToast('Asset updated successfully!');
             setTimeout(() => setToast(null), 3000);
