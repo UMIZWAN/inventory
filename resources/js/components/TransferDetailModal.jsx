@@ -64,6 +64,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                   <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
                   <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
+                  <p><span className="font-semibold">Shipping Option:</span> {data?.assets_shipping_option}</p>
                   <p><span className="font-semibold">Created At:</span> {new Date(data?.created_at).toLocaleString()}</p>
                   
                   <div className="mt-4">

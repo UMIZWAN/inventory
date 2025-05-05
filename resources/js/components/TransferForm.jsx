@@ -14,6 +14,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: "",
+    shipping:"",
     items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: [],
@@ -186,16 +187,16 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
               </select>
             </div>
 
-            {/* <div>
-                <label className="block font-medium mb-1">Department</label>
+            <div>
+                <label className="block font-medium mb-1">Shipping Option</label>
                 <input
                   type="text"
-                  name="department"
-                  value={form.department}
+                  name="shipping"
+                  value={form.shipping}
                   onChange={handleChange}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2"
                 />
-              </div> */}
+              </div>
           </div>
 
           {/* Purposes checkboxes */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AddAsset from '../../components/AddAsset';
 import ItemDetails from '../../components/ItemDetails';
 import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, fetchAssets, branches, loading } = useAssetMeta();
+    const { assets, fetchAssets, fetchBranches, branches, loading } = useAssetMeta();
     const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
@@ -20,6 +20,10 @@ const Assets = () => {
         location: '',
         status: '',
     });
+
+    useEffect(() => {
+        fetchBranches();
+    }, []);
 
     const handleView = (asset) => setSelectedAsset(asset);
 
@@ -73,7 +77,7 @@ const Assets = () => {
                         <div className="w-full lg:w-1/3">
                             <input
                                 type="text"
-                                placeholder="Search by name..."
+                                placeholder="Search by name/code..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -82,31 +86,36 @@ const Assets = () => {
 
                         {/* Filters */}
                         <div className="flex flex-wrap gap-4">
+                            <div>
+                                <label className="block mb-1">Branch:</label>
+                                <select
+                                    id="branch-select"
+                                    value={selectedBranch || ''}
+                                    onChange={handleBranchChange}
+                                    disabled={loading}
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    {branches.map((branch) => (
+                                        <option key={branch.id} value={branch.id.toString()}>
+                                            {branch.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                            <select
-                                id="branch-select"
-                                value={selectedBranch || ''}
-                                onChange={handleBranchChange}
-                                disabled={loading}
-                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                {branches.map((branch) => (
-                                    <option key={branch.id} value={branch.id.toString()}>
-                                        {branch.name}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={filters.category}
-                                onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">All Categories</option>
-                                {[...new Set(assets.map(a => a.asset_category_name).filter(Boolean))].map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
+                            <div>
+                                <label className="block mb-1">Categories:</label>
+                                <select
+                                    value={filters.category}
+                                    onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                                    className="px-2 py-1 text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">All Categories</option>
+                                    {[...new Set(assets.map(a => a.asset_category_name).filter(Boolean))].map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             {/* <select
                                 value={filters.tag}

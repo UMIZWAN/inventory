@@ -275,6 +275,7 @@ export const AssetMetaProvider = ({ children }) => {
         assets_transaction_status: form.status.toUpperCase(), // make sure it's uppercase
         assets_from_branch_id: parseInt(form.fromBranch),
         assets_to_branch_id: parseInt(form.toBranch),
+        assets_shipping_option: form.shipping,
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
@@ -340,6 +341,7 @@ export const AssetMetaProvider = ({ children }) => {
         assets_transaction_running_number: form.referenceNo,
         assets_transaction_type: 'ASSET IN',
         assets_from_branch_id: user?.branch_id,
+        supplier_id: form.supplierId,
         created_by: user?.id,
         created_at: form.date,
         // received_by: user?.id,
@@ -391,6 +393,7 @@ export const AssetMetaProvider = ({ children }) => {
         updateTag,
         deleteTag,
         branches,
+        fetchBranches,
         loading,
         assetTransfer,
         assetIn,

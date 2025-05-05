@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AssetsBranchValues;
+use Illuminate\Support\Facades\Log;
 
 class AssetsTransactionController extends Controller
 {
@@ -73,6 +74,7 @@ class AssetsTransactionController extends Controller
 
     public function store(Request $request)
     {
+        Log::info('Request data:', $request->all());
         try {
             if ($request->assets_transaction_type == null) {
                 return response()->json([
@@ -149,7 +151,7 @@ class AssetsTransactionController extends Controller
             if ($request->assets_transaction_type == 'ASSET IN') {
                 $validator = Validator::make($request->all(), [
                     'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
-                    'purchase_order_id' => 'nullable|integer|exists:purchase_order,id',
+                    'supplier_id' => 'nullable|integer|exists:suppliers,id',
                     'assets_transaction_type' => 'required|string',
                     'assets_from_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
@@ -173,6 +175,7 @@ class AssetsTransactionController extends Controller
 
                 $transaction = AssetsTransaction::create($request->only([
                     'assets_transaction_running_number',
+                    'supplier_id',
                     'assets_transaction_type',
                     'assets_transaction_remark',
                     'assets_from_branch_id',
@@ -259,6 +262,7 @@ class AssetsTransactionController extends Controller
                 $transaction = AssetsTransaction::create([
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
+                    'assets_shipping_option' => $request->assets_shipping_option,
                     'assets_transaction_status' => 'IN-TRANSIT',
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
