@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { Link } from '@inertiajs/react';
 import { useAuth } from '../../context/AuthContext';
@@ -8,52 +8,55 @@ const Sidebar = () => {
     const { user } = useAuth();
     const { branches, fetchAssets, loading } = useAssetMeta(); // Get branches and fetchAssets from context
     const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
-    const menu = [
-        {
-            title: 'Items',
-            prefix: 'items',
-            items: [
-                'Item List',
-                // 'View Transfers',
-                'Asset Transaction',
-                // 'Import Items from CSV',
-            ],
-        },
-        // {
-        //     title: 'Purchase',
-        //     prefix: 'purchase',
-        //     items: [
-        //         // 'Order Stock',
-        //         'Receive Stock',
-        //         // 'View Orders',
-        //         'View Receive History',
-        //         // 'View Items On Order',
-        //         // 'Order Low Stock Items',
-        //         // 'Return Stock',
-        //     ],
-        // },
-        // {
-        //     title: 'Sell',
-        //     prefix: 'sell',
-        //     items: [
-        //         'Item checkout',
-        //         'View Checkout History',
-        //     ],
-        // },
-        // {
-        //     title: 'Reports',
-        //     prefix: 'reports',
-        //     items: [
-        //         'Inventory',
-        //         'Inventory by Location and Category',
-        //         'Inventory with Image by Category',
-        //         'Low Level Stock',
-        //         'Inventory by Default Supplier',
-        //         'Backorder Report',
-        //         'Sales Report',
-        //     ],
-        // },
-    ];
+    const menu = useMemo(() => {
+        if (!user) return [];
+
+        return [
+            {
+                title: 'Items',
+                prefix: 'items',
+                items: [
+                    user?.view_asset_masterlist && 'Master List',
+                    'Item List',
+                    'Asset Transaction',
+                ].filter(Boolean),
+            },
+            // {
+            //     title: 'Purchase',
+            //     prefix: 'purchase',
+            //     items: [
+            //         'Order Stock',
+            //         // 'Receive Stock',
+            //         'View Orders',
+            //         // 'View Receive History',
+            //         // 'View Items On Order',
+            //         // 'Order Low Stock Items',
+            //         // 'Return Stock',
+            //     ],
+            // },
+            // {
+            //     title: 'Sell',
+            //     prefix: 'sell',
+            //     items: [
+            //         'Item checkout',
+            //         'View Checkout History',
+            //     ],
+            // },
+            // {
+            //     title: 'Reports',
+            //     prefix: 'reports',
+            //     items: [
+            //         'Inventory',
+            //         'Inventory by Location and Category',
+            //         'Inventory with Image by Category',
+            //         'Low Level Stock',
+            //         'Inventory by Default Supplier',
+            //         'Backorder Report',
+            //         'Sales Report',
+            //     ],
+            // },
+        ];
+    }, [user]);
 
     const [openSections, setOpenSections] = useState({});
 
@@ -108,14 +111,6 @@ const Sidebar = () => {
             </div> */}
             <div className="mb-2 rounded">
                 <ul>
-                    {/* Add Master List link */}
-                    {user?.view_asset_masterlist && (
-                        <Link href="/master-list" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Master List</span>
-                            </li>
-                        </Link>
-                    )}
                     {user?.view_role && (
                         <Link href="/access-levels" >
                             <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
@@ -150,7 +145,7 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    
+
                 </ul>
             </div>
             {menu.map((section, index) => {

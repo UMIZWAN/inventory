@@ -20,6 +20,7 @@ Route::get('/supplier', function () {
 });
 
 Route::prefix('items')->group(function () {
+    Route::get('/master-list', fn() => Inertia::render('Items/MasterListPage'));
     Route::get('/item-list', fn() => Inertia::render('Items/Assets'));
     Route::get('/asset-transaction', fn() => Inertia::render('Items/StockTransfer'));
 });
@@ -48,4 +49,3 @@ Route::get('/access-levels', function () {
     return Inertia::render('AccessLevels/AccessLevelsPage');
 })->name('access-levels');
 
-Route::get('/master-list', fn() => Inertia::render('MasterList/MasterListPage'));
