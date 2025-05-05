@@ -177,6 +177,21 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
+  const addBranch = async (name) => {
+    await api.post('/api/assets-branch', { name });
+    fetchBranches();
+  };
+
+  const updateBranch = async (id, name) => {
+    await api.put(`/api/assets-branch/${id}`, { name });
+    fetchBranches();
+  };
+
+  const deleteBranch = async (id) => {
+    await api.delete(`/api/assets-branch/${id}`);
+    fetchBranches();
+  };
+
   // --------------------------------------------------------------------------------
   // Category functions
   // --------------------------------------------------------------------------------
@@ -394,6 +409,9 @@ export const AssetMetaProvider = ({ children }) => {
         deleteTag,
         branches,
         fetchBranches,
+        addBranch,
+        updateBranch,
+        deleteBranch,
         loading,
         assetTransfer,
         assetIn,
