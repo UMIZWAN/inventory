@@ -11,13 +11,13 @@ function AddAsset({ setShowModal }) {
         asset_type: '',
         asset_running_number: '',
         asset_category_id: '',
-        asset_tag_id: '',
+        // asset_tag_id: '',
         assets_branch_id: '',
         asset_purchase_cost: '',
         asset_sales_cost: '',
         asset_stable_unit: '',
         asset_unit_measure: '',
-        assets_location_id: '',
+        // assets_location_id: '',
         assets_remark: "",
         asset_image: ''
     });
@@ -59,13 +59,13 @@ function AddAsset({ setShowModal }) {
                 asset_type: '',
                 asset_running_number: '',
                 asset_category_id: '',
-                asset_tag_id: '',
+                // asset_tag_id: '',
                 assets_branch_id: '',
                 asset_purchase_cost: '',
                 asset_sales_cost: '',
                 asset_stable_unit: '',
                 asset_unit_measure: '',
-                assets_location_id: '',
+                // assets_location_id: '',
                 assets_remark: "",
                 asset_image: ''
             });
