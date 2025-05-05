@@ -121,7 +121,7 @@ export default function ReceiveList({ status, type }) {
                             <th className="px-4 py-2 border">Branch</th>
                             <th className="px-4 py-2 border">Items</th>
                             <th className="px-4 py-2 border">Total Cost</th>
-                            <th className="px-4 py-2 border">Date</th>
+                            <th className="px-4 py-2 border">Date Received</th>
                             <th className="px-4 py-2 border">Action</th>
                         </tr>
                     </thead>
@@ -150,7 +150,7 @@ export default function ReceiveList({ status, type }) {
                                         </div>
                                     </td>
                                     <td className="px-4 py-2 border">{txn.assets_transaction_total_cost}</td>
-                                    <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 border">{new Date(txn.received_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2 border">
                                         <button
                                             onClick={() => openModal(txn)}
