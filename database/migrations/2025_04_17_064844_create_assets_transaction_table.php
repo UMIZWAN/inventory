@@ -14,11 +14,13 @@ return new class extends Migration
     Schema::create('assets_transaction', function (Blueprint $table) {
       $table->id();
       $table->string('assets_transaction_running_number')->unique();
-      $table->unsignedBigInteger('purchase_order_id')->nullable();
-      $table->foreign('purchase_order_id')->references('id')->on('purchase_order')->nullOnDelete();
+      $table->unsignedBigInteger('supplier_id')->nullable();
+      $table->foreign('supplier_id')->references('id')->on('suppliers')->nullOnDelete();
 
       $table->enum('assets_transaction_type', ['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER']);
-      
+
+      $table->string('assets_shipping_option')->nullable();
+
       // STATUS only relevant for ASSET TRANSFER
       $table->enum('assets_transaction_status', ['DRAFT', 'IN-TRANSIT', 'RECEIVED'])->nullable();
 

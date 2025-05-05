@@ -20,8 +20,9 @@ class Suppliers extends Model
 
     public $timestamps = false;
 
-    public function purchaseOrders()
+    // Relationships
+    public function assetsTransactions()
     {
-        return $this->hasMany(PurchaseOrder::class);
+        return $this->hasMany(AssetsTransaction::class);
     }
 }

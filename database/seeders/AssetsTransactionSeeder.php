@@ -23,7 +23,6 @@ class AssetsTransactionSeeder extends Seeder
 
             $transaction->update([
                 'assets_transaction_status' => $newStatus,
-                'assets_transaction_purpose' => json_encode($this->getRandomPurposes()),
             ]);
 
             $assets = Assets::inRandomOrder()->take(rand(1, 5))->get();

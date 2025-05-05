@@ -116,6 +116,20 @@ const Sidebar = () => {
                             </li>
                         </Link>
                     )}
+                    {user?.view_role && (
+                        <Link href="/access-levels" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Access Levels</span>
+                            </li>
+                        </Link>
+                    )}
+                    {user?.view_user && (
+                        <Link href="/users" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Users</span>
+                            </li>
+                        </Link>
+                    )}
                     {user?.view_supplier && (
                         <Link href="/categories" >
                             <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
@@ -135,20 +149,8 @@ const Sidebar = () => {
                             </li>
                         </Link>
                     )}
-                    {user?.view_user && (
-                        <Link href="/users" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Users</span>
-                            </li>
-                        </Link>
-                    )}
-                    {user?.view_role && (
-                        <Link href="/access-levels" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Access Levels</span>
-                            </li>
-                        </Link>
-                    )}
+
+                    
                 </ul>
             </div>
             {menu.map((section, index) => {

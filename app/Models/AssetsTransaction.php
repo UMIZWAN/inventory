@@ -18,7 +18,8 @@ class AssetsTransaction extends Model
 
     protected $fillable = [
         'assets_transaction_running_number',
-        'purchase_order_id',
+        'supplier_id',
+        'assets_shipping_option',
         'assets_transaction_type',
         'assets_transaction_status',
         'assets_transaction_purpose',
@@ -47,9 +48,10 @@ class AssetsTransaction extends Model
     ];
 
     // Relationships
-    public function purchaseOrder()
+
+    public function supplier()
     {
-        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
+        return $this->belongsTo(Suppliers::class, 'supplier_id');
     }
 
     public function fromBranch()

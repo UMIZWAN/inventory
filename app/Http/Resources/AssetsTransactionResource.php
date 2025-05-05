@@ -17,7 +17,9 @@ class AssetsTransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'assets_transaction_running_number' => $this->assets_transaction_running_number,
-            'purchase_order_id' => $this->purchase_order_id,
+            'supplier_id' => $this->supplier_id,
+            'supplier_name' => $this->supplier->supplier_name ?? null,
+            'assets_shipping_option' => $this->assets_shipping_option,
             'assets_transaction_type' => $this->assets_transaction_type,
             'assets_transaction_status' => $this->assets_transaction_status,
             'assets_transaction_purpose' => $this->assets_transaction_purpose,
