@@ -222,7 +222,7 @@ const Assets = () => {
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         <img className="h-10 w-10 rounded"
-                                                            src={asset.asset_image ? `http://127.0.0.1:8000/${asset.asset_image}` : placeholder}
+                                                            src={asset.asset_image ? `http://universalmotor.synology.me:30000/${asset.asset_image}` : placeholder}
                                                             // src={asset.asset_image || placeholder}
                                                             alt={asset.name}
                                                             onError={(e) => {
