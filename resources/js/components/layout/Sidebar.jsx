@@ -111,6 +111,13 @@ const Sidebar = () => {
             </div> */}
             <div className="mb-2 rounded">
                 <ul>
+                {user?.view_asset_masterlist && (
+                        <Link href="/items/master-list" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>MasterList</span>
+                            </li>
+                        </Link>
+                    )}
                     {user?.view_role && (
                         <Link href="/access-levels" >
                             <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
@@ -161,6 +168,7 @@ const Sidebar = () => {
                             </li>
                         </Link>
                     )}
+
                 </ul>
             </div>
             {/* {menu.map((section, index) => {
