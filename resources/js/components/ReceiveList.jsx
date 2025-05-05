@@ -1,12 +1,12 @@
 import { useState } from "react";
-import CheckoutDetail from "./CheckoutDetail";
 import TransactionFilter from "./TransactionFilter";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import ExportButton from "./ExportButton";
 import ReceiveForm from "./ReceiveForm";
+import TransactionDetail from "./TransactionDetail";
 
-export default function ReceiveList({ status, type }) {
+export default function ReceiveList() {
     const { user } = useAuth();
     const { allAssets, assetIn } = useAssetMeta();
     const [selected, setSelected] = useState(null);
@@ -121,7 +121,7 @@ export default function ReceiveList({ status, type }) {
                             <th className="px-4 py-2 border">Branch</th>
                             <th className="px-4 py-2 border">Items</th>
                             <th className="px-4 py-2 border">Total Cost</th>
-                            <th className="px-4 py-2 border">Date</th>
+                            <th className="px-4 py-2 border">Date Received</th>
                             <th className="px-4 py-2 border">Action</th>
                         </tr>
                     </thead>
@@ -150,7 +150,7 @@ export default function ReceiveList({ status, type }) {
                                         </div>
                                     </td>
                                     <td className="px-4 py-2 border">{txn.assets_transaction_total_cost}</td>
-                                    <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 border">{new Date(txn.received_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2 border">
                                         <button
                                             onClick={() => openModal(txn)}
@@ -172,12 +172,14 @@ export default function ReceiveList({ status, type }) {
                 </table>
             </div>
 
-            {/* {isOpen && selected && (
-                <CheckoutDetail
-                    transaction={selected}
-                    onClose={closeModal}
-                />
-            )} */}
+            {isOpen && selected && (
+                // <CheckoutDetail
+                //     transaction={selected}
+                //     onClose={closeModal}
+                // />
+
+                <TransactionDetail transaction={selected} onClose={closeModal} type="receive" />
+            )}
         </>
     );
 }

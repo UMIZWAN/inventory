@@ -1,12 +1,12 @@
 import { useState } from "react";
 import CheckoutForm from "./CheckoutForm";
-import CheckoutDetail from "./CheckoutDetail";
 import TransactionFilter from "./TransactionFilter";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import ExportButton from "./ExportButton";
+import TransactionDetail from "./TransactionDetail";
 
-export default function CheckoutList({ status, type }) {
+export default function CheckoutList() {
     const { user } = useAuth();
     const { allAssets, assetOut, createStockOut } = useAssetMeta();
     const [selected, setSelected] = useState(null);
@@ -126,7 +126,7 @@ export default function CheckoutList({ status, type }) {
                             <th className="px-4 py-2 border">Branch</th>
                             <th className="px-4 py-2 border">Items</th>
                             <th className="px-4 py-2 border">Purpose</th>
-                            <th className="px-4 py-2 border">Date</th>
+                            <th className="px-4 py-2 border">Date Issued</th>
                             <th className="px-4 py-2 border">Action</th>
                         </tr>
                     </thead>
@@ -182,10 +182,11 @@ export default function CheckoutList({ status, type }) {
             </div>
 
             {isOpen && selected && (
-                <CheckoutDetail
-                    transaction={selected}
-                    onClose={closeModal}
-                />
+                // <CheckoutDetail
+                //     transaction={selected}
+                //     onClose={closeModal}
+                // />
+                <TransactionDetail transaction={selected} onClose={closeModal} type="transfer" />
             )}
         </>
     );

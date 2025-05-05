@@ -155,7 +155,8 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_type' => 'required|string',
                     'assets_from_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
-                    'created_at' => 'nullable|date',
+                    // 'created_at' => 'nullable|date',
+                    'received_at' => 'nullable|date',
                     'assets_transaction_total_cost' => 'required|numeric',
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
@@ -181,7 +182,8 @@ class AssetsTransactionController extends Controller
                     'assets_from_branch_id',
                     'assets_transaction_total_cost',
                     'created_by',
-                    'created_at'
+                    'created_at',
+                    'received_at',
                 ]));
 
                 foreach ($request->assets_transaction_item_list as $item) {

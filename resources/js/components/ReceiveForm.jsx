@@ -135,14 +135,14 @@ function ReceiveForm({ setShowReceiveForm, onSubmit}) {
               ))}
             </select>
           </div>
-          {isUsingPO && (
+          {/* {isUsingPO && (
             <div>
               <label className="block text-sm font-medium">Order</label>
               <select className="w-full border rounded p-2 mt-1">
                 <option value="">[Select Order]</option>
               </select>
             </div>
-          )}
+          )} */}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -205,7 +205,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit}) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Note:</label>
+          <label className="block text-sm font-medium">Remarks:</label>
           <textarea
             className="w-full border rounded p-2 mt-1 h-24"
             value={note}
