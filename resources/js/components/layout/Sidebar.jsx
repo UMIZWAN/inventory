@@ -132,7 +132,7 @@ const Sidebar = () => {
                             </li>
                         </Link>
                     )}
-                    {user?.view_user && (
+                    {user?.view_branch && (
                         <Link href="/branch" >
                             <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
                                 <span>Branches</span>
