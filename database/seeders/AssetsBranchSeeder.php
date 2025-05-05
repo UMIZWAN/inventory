@@ -15,7 +15,7 @@ class AssetsBranchSeeder extends Seeder
         // DB::statement('SET FOREIGN_KEY_CHECKS=1');
         
         // Insert branches
-        $branches = ['HQKK', 'UMKK1', 'UMKK2', 'UCH', 'UJ'];
+        $branches = ['HQKK', 'HQTWU',  'UMKK1', 'UMKK2', 'UCH', 'UJ'];
         
         foreach ($branches as $name) {
             DB::table('assets_branch')->insert([
