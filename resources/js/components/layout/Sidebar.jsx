@@ -150,10 +150,26 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    
+                    {user?.view_asset && (
+                        <Link href="/items/item-list" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Item List</span>
+                            </li>
+                        </Link>
+                    )}
+
+                    {user?.view_transaction && (
+                        <Link href="/items/asset-transaction" >
+                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
+                                <span>Transaction</span>
+                            </li>
+                        </Link>
+                    )}
+
+
                 </ul>
             </div>
-            {menu.map((section, index) => {
+            {/* {menu.map((section, index) => {
                 const isOpen = openSections[section.title];
                 return (
                     <SidebarSection
@@ -165,7 +181,7 @@ const Sidebar = () => {
                         onToggle={() => toggleSection(section.title)}
                     />
                 );
-            })}
+            })} */}
         </div>
     );
 };
