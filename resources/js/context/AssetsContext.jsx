@@ -17,26 +17,9 @@ export const AssetMetaProvider = ({ children }) => {
   const [assetTransfer, setAssetTransfer] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // const fetchAssets = () => {
-  //   api.get('/api/assets')
-  //     .then(response => {
-  //       if (response.data.success) {
-  //         console.log('Assets fetched:', response.data.data);
-  //         setAssets(response.data.data);
-  //       }
-  //     })
-  //     .catch(error => {
-  //       console.error('Error fetching assets:', error);
-  //     })
-  //     .finally(() => {
-  //       setLoading(false);
-  //     });
-  // };
-
   useEffect(() => {
     if (user?.branch_id) {
-      console.log("User branch ID:", user.branch_id);
-      fetchAssets();
+      fetchAssets(user?.branch_id);
       fetchAssetTransaction();
     }
   }, [user]);
@@ -75,13 +58,6 @@ export const AssetMetaProvider = ({ children }) => {
   
           setAllAssets(allAssets);
           setAssets(processedAssets);
-          
-          console.log('Processed assets:', {
-            selectedBranch: branchId,
-            totalAssets: allAssets.length,
-            filteredAssets: processedAssets.length,
-            sampleAsset: processedAssets[0]
-          });
         }
       })
       .catch(error => {
@@ -109,16 +85,6 @@ export const AssetMetaProvider = ({ children }) => {
 
   const addAsset = async (form) => {
     console.log('Adding asset:', form);
-    // const formData = new FormData();
-    // Object.entries(form).forEach(([key, value]) => {
-    //   if (key === 'assets_remark') {
-    //     value.split('\n').forEach((line, i) => {
-    //       formData.append(`assets_remark[${i}]`, line);
-    //     });
-    //   } else {
-    //     formData.append(key, value);
-    //   }
-    // });
 
     try {
       await api.post('/api/assets', form, {
@@ -135,7 +101,6 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   const updateAsset = async (id, data) => {
-    console.log('Updating asset:', id, data);
     try {
       let config = {};
 
@@ -420,6 +385,7 @@ export const AssetMetaProvider = ({ children }) => {
         createTransfer,
         createStockOut,
         createAssetIn,
+        fetchAssetTransaction,
         allAssets,
       }}
     >

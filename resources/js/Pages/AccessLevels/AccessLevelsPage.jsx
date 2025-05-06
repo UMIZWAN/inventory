@@ -110,7 +110,7 @@ const AccessLevelsPage = ({ auth }) => {
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                                 {user?.add_edit_role && (
-                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                                 )}
                                             </tr>
                                         </thead>
@@ -130,7 +130,7 @@ const AccessLevelsPage = ({ auth }) => {
                                                                 onClick={() => handleAccessLevelClick(accessLevel)}
                                                             >{accessLevel.name}</td>
                                                             {user?.add_edit_role && (
-                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                <td className="px-6 py-4 whitespace-nowrap text-center">
                                                                     <button
                                                                         onClick={(e) => handleEditClick(accessLevel, e)}
                                                                         className="text-indigo-600 hover:text-indigo-900 mr-3"

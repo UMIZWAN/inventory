@@ -118,7 +118,7 @@ function AddAsset({ setShowModal }) {
                         ))}
                     </select> */}
 
-                    <textarea name="assets_remark" placeholder="Remarks (each line becomes a remark)" value={form.assets_remark} onChange={handleChange} className="w-full p-2 border rounded col-span-2" rows="3" />
+                    <textarea name="assets_remark" placeholder="Remarks" value={form.assets_remark} onChange={handleChange} className="w-full p-2 border rounded col-span-2" rows="3" />
 
                     <div className="col-span-2 space-y-2">
                         <input type="file" name="asset_image" onChange={handleFileChange} className="w-full p-2 border rounded" />

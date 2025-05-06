@@ -10,7 +10,7 @@ import ExportButton from "./ExportButton";
 
 export default function TransferList({ status, mode }) {
   const { user } = useAuth();
-  const { allAssets, assetTransfer, createTransfer } = useAssetMeta();
+  const { allAssets, assetTransfer, createTransfer, fetchAssetTransaction, fetchAssets } = useAssetMeta();
 
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -83,12 +83,14 @@ export default function TransferList({ status, mode }) {
     }
   };
 
-  const handleAction = (newStatus) => {
-    api.put(`/api/assets-transaction/${selected.id}`, {
-      ...selected,
+  const handleAction = (txn, newStatus) => {
+    api.put(`/api/assets-transaction/${txn.id}`, {
+      ...txn,
       assets_transaction_status: newStatus,
     }).then(() => {
       closeModal();
+      fetchAssetTransaction();
+      fetchAssets();
     }).catch((err) => {
       console.error("Update failed:", err);
     });
@@ -294,7 +296,7 @@ export default function TransferList({ status, mode }) {
                     {txn.assets_transaction_status === "IN-TRANSIT" &&
                       txn.assets_to_branch_id === user?.branch_id && (
                         <button
-                          onClick={() => handleAction("RECEIVED")}
+                          onClick={() => handleAction(txn, "RECEIVED")}
                           className="bg-white shadow-sm shadow-lime-600/30 px-2 rounded text-lime-600 hover:bg-lime-100"
                         >
                           <IoMdCheckmarkCircleOutline className="inline-block mr-1 mb-1" />

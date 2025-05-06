@@ -95,6 +95,7 @@ const Assets = () => {
                                     disabled={loading}
                                     className="px-2 py-1 text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
+                                    <option value="">Branches</option>
                                     {branches.map((branch) => (
                                         <option key={branch.id} value={branch.id.toString()}>
                                             {branch.name}
@@ -187,7 +188,7 @@ const Assets = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Branch
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Quantity
                                         </th>
                                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -196,7 +197,7 @@ const Assets = () => {
                                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th> */}
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Date Created
                                         </th>
                                         {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -252,7 +253,7 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.branch_values[0].asset_branch_name ?? '—'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {asset.branch_values[0].asset_current_unit ?? '—'}
                                             </td>
 
@@ -285,7 +286,7 @@ const Assets = () => {
                                                     );
                                                 })()}
                                             </td> */}
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {new Date(asset.created_at).toLocaleDateString()}
                                             </td>
                                             {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
