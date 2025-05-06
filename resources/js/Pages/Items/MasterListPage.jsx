@@ -53,9 +53,8 @@ const MasterListPage = () => {
                 </span>
             );
         }
-        
-        const percentage = 0;
-        percentage = (totalUnits / stableUnit) * 100;
+
+        const percentage = (totalUnits / stableUnit) * 100;
 
         if (percentage >= 100) {
             return (

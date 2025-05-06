@@ -83,6 +83,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
 
     const handleSubmit = async () => {
+
         try {
             const form = {
                 branch,
@@ -94,6 +95,23 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                 items,
                 totalAmount,
             };
+
+            const invalidItem = form.items.find(({ item, quantity }) => {
+                const asset = assets.find(a => a.id === Number(item));
+                if (!asset) return false;
+            
+                const currentBranchStock = asset.branch_values?.find(
+                  (bv) => bv.asset_branch_id === user.branch_id
+                )?.asset_current_unit ?? 0;
+            
+                return quantity > currentBranchStock;
+              });
+            
+              if (invalidItem) {
+                const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
+                alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
+                return;
+              }
 
             await createStockOut(form);
             alert('Stock Out created successfully!');

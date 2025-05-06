@@ -105,25 +105,24 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const invalidItem = form.items.find(({ item, quantity }) => {
       const asset = assets.find(a => a.id === Number(item));
       if (!asset) return false;
-
-      // Find current branch stock (assuming branch_values is an array)
+  
       const currentBranchStock = asset.branch_values?.find(
-        (bv) => bv.branch_id === user.branch_id
+        (bv) => bv.asset_branch_id === user.branch_id
       )?.asset_current_unit ?? 0;
-
+  
       return quantity > currentBranchStock;
     });
-
+  
     if (invalidItem) {
       const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
       alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
       return;
     }
-
+  
     try {
       await onSubmit(form, totalAmount);
       setShowTransferForm(false);
@@ -132,7 +131,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       alert("Submission failed. Please try again.");
     }
   };
-
+  
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
