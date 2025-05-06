@@ -14,7 +14,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: "",
-    shipping:"",
+    shipping: "",
     items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: [],
@@ -103,14 +103,33 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     return sum + qty * cost;
   }, 0);
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const invalidItem = form.items.find(({ item, quantity }) => {
+      const asset = assets.find(a => a.id === Number(item));
+      if (!asset) return false;
+
+      // Find current branch stock (assuming branch_values is an array)
+      const currentBranchStock = asset.branch_values?.find(
+        (bv) => bv.branch_id === user.branch_id
+      )?.asset_current_unit ?? 0;
+
+      return quantity > currentBranchStock;
+    });
+
+    if (invalidItem) {
+      const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
+      alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
+      return;
+    }
+
     try {
       await onSubmit(form, totalAmount);
       setShowTransferForm(false);
     } catch (error) {
       console.error("Submission failed:", error);
+      alert("Submission failed. Please try again.");
     }
   };
 
@@ -188,15 +207,15 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
             </div>
 
             <div>
-                <label className="block font-medium mb-1">Shipping Option</label>
-                <input
-                  type="text"
-                  name="shipping"
-                  value={form.shipping}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                />
-              </div>
+              <label className="block font-medium mb-1">Shipping Option</label>
+              <input
+                type="text"
+                name="shipping"
+                value={form.shipping}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              />
+            </div>
           </div>
 
           {/* Purposes checkboxes */}
