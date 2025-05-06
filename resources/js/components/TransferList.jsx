@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import api from "../api/api";
 import TransferForm from "./TransferForm";
 import TransferDetailModal from "./TransferDetailModal";
@@ -286,7 +287,7 @@ export default function TransferList({ status, mode }) {
                   <td className="px-4 py-2 border space-x-2">
                     <button
                       onClick={() => openModal(txn)}
-                      className="px-3 py-1 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md border border-blue-100 transition-colors duration-200"
+                      className="bg-white shadow-sm shadow-blue-600/30 px-2 rounded text-blue-600 hover:text-blue-800"
                     >
                       View
                     </button>
@@ -294,8 +295,9 @@ export default function TransferList({ status, mode }) {
                       txn.assets_to_branch_id === user?.branch_id && (
                         <button
                           onClick={() => handleAction("RECEIVED")}
-                          className="px-3 py-1 text-sm bg-lime-50 text-lime-600 hover:bg-lime-100 rounded-md border border-lime-100 transition-colors duration-200"
+                          className="bg-white shadow-sm shadow-lime-600/30 px-2 rounded text-lime-600 hover:bg-lime-100"
                         >
+                          <IoMdCheckmarkCircleOutline className="inline-block mr-1 mb-1" />
                           Receive
                         </button>
                       )}

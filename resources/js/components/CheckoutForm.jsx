@@ -9,7 +9,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
     const [type, setType] = useState("sold");
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-    const [reference, setReference] = useState('');
+    const [recipient, setRecipient] = useState('');
     const [remarks, setRemarks] = useState('');
     const [purposes, setPurposes] = useState({
         CSI: false,
@@ -88,7 +88,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             const form = {
                 branch,
                 date,
-                reference,
+                recipient,
                 remarks,
                 type,
                 purpose: type === "sold" ? ["SELL"] : Object.keys(purposes).filter(key => purposes[key]),
@@ -168,6 +168,8 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                                     type="text"
                                     className="w-full border border-gray-300 rounded px-3 py-2"
                                     placeholder="Enter name"
+                                    value={recipient}
+                                    onChange={(e) => setRecipient(e.target.value)}
                                 />
                             </div>
                         )}
@@ -190,15 +192,6 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                                 onChange={(e) => setDate(e.target.value)}
                             />
                         </div>
-                        {/* <div>
-              <label className="block mb-1 font-medium">Reference Number</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-              />
-            </div> */}
                     </div>
 
                     {/* Purposes (for normal checkout) */}

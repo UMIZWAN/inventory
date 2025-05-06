@@ -321,12 +321,13 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   const createStockOut = async (form) => {
+    console.log("Creating stock out with form:", form);
     try {
       const payload = {
         assets_transaction_running_number: generateRunningNumber(),
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
         assets_from_branch_id: user?.branch_id,
-        // assets_to_branch_id: parseInt(form.branch),
+        assets_recipient_name: form.recipient,
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,

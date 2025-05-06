@@ -136,16 +136,26 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                     <div className="mb-6 space-y-1">
                         <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
                         <p><strong>Branch:</strong> {transaction.branch_name || transaction.assets_from_branch_name}</p>
+
                         {type === "transfer" && (
                             <>
-                                <p><strong>Purpose:</strong> {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}</p>
+                                {transaction.assets_transaction_purpose &&
+                                    JSON.parse(transaction.assets_transaction_purpose).includes("SELL") && (
+                                        <p><strong>Recipient:</strong> {transaction.assets_recipient_name}</p>
+                                    )}
+                                <p><strong>Purpose:</strong>
+                                    {transaction.assets_transaction_purpose
+                                        ? JSON.parse(transaction.assets_transaction_purpose).join(", ")
+                                        : "-"}
+                                </p>
                                 <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
                                 <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString()}</p>
                             </>
                         )}
+
                         {type === "receive" && (
                             <>
-                                <p><strong>Supplier:</strong>{transaction.supplier_name}</p>
+                                <p><strong>Supplier:</strong> {transaction.supplier_name}</p>
                                 <p><strong>Received Date:</strong> {new Date(transaction.received_at).toLocaleDateString()}</p>
                             </>
                         )}

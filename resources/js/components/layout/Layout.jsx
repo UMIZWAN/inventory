@@ -1,4 +1,5 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
+import { IoIosNotificationsOutline, IoMdLogOut } from "react-icons/io";
 import Sidebar from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { router } from "@inertiajs/react";
@@ -28,10 +29,14 @@ const Layout = ({ children }) => {
                 {user && (
                     <div className="flex items-center gap-4">
                         <span className="text-gray-600">{user.name}</span>
+                        <button className="text-white px-1 py-1 rounded-full hover:bg-sky-100">
+                            <IoIosNotificationsOutline className="text-2xl text-gray-600" />
+                        </button>
                         <button
                             onClick={handleLogout}
-                            className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+                            className="bg-white text-red-600 shadow-sm shadow-red-600/50 px-2 py-1 rounded hover:bg-red-100"
                         >
+                            <IoMdLogOut className="inline-block mr-1 mb-1" />
                             Logout
                         </button>
                     </div>
@@ -41,14 +46,14 @@ const Layout = ({ children }) => {
             {/* Main layout container */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar */}
-                <aside className="w-64 bg-gray-50 overflow-y-auto">
+                <aside className="w-64 bg-gray-100 overflow-y-auto">
                     <div className="flex items-center justify-between px-4 py-4 border-b border-gray-300">
                         <Sidebar />
                     </div>
                 </aside>
 
                 {/* Page Content */}
-                <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+                <main className="flex-1 p-6 overflow-y-auto bg-gray-100">
                     {children}
                 </main>
             </div>
