@@ -113,7 +113,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                     &times;
                 </button>
 
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 mr-6">
                     <h2 className="text-2xl font-bold">{type === "receive" ? "Receive Details" : "Transaction Invoice"}</h2>
                     {type === "transfer" && (
                         <PDFDownloadLink

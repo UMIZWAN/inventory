@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import api from '../api/api';
 import { useAuth } from './AuthContext';
-import { all } from 'axios';
 
 const AssetsContext = createContext();
 
@@ -36,7 +35,6 @@ export const AssetMetaProvider = ({ children }) => {
             asset.branch_values?.some(bv => bv.asset_branch_id === user?.branch_id)
           );
           setAllAssets(allAssets); // Store all assets for later use
-          console.log('Filtered assets for user branch:', userBranchAssets);
           setAssets(userBranchAssets);
   
           // const processedAssets = branchId 
