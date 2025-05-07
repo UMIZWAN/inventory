@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AssetsBranchValues;
-use Illuminate\Support\Facades\Log;
 
 class AssetsTransactionController extends Controller
 {
@@ -25,7 +24,7 @@ class AssetsTransactionController extends Controller
                 'fromBranch',
                 'toBranch',
                 'createdBy',
-            ])->latest()->get(); //->paginate($request->per_page ?? 50);
+            ])->latest()->get();
 
             return response()->json([
                 'success' => true,
@@ -74,7 +73,6 @@ class AssetsTransactionController extends Controller
 
     public function store(Request $request)
     {
-        Log::info('Request data:', $request->all());
         try {
             if ($request->assets_transaction_type == null) {
                 return response()->json([
@@ -157,7 +155,6 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_type' => 'required|string',
                     'assets_from_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
-                    // 'created_at' => 'nullable|date',
                     'received_at' => 'nullable|date',
                     'assets_transaction_total_cost' => 'required|numeric',
                     'assets_transaction_item_list' => 'required|array|min:1',
@@ -213,9 +210,6 @@ class AssetsTransactionController extends Controller
                     ]);
                 }
 
-                // add asset current unit from assetbranchvalue where branch id = $request [frombranchid] and asset id = $item[assetid]
-
-                // update asset branch value
                 foreach ($request->assets_transaction_item_list as $item) {
                     $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
                         ->where('asset_id', $item['asset_id'])
@@ -223,6 +217,16 @@ class AssetsTransactionController extends Controller
 
                     if ($assetBranchValue) {
                         $assetBranchValue->increment('asset_current_unit', $item['asset_unit']);
+                    } else {
+                        AssetsBranchValues::create([
+                            'asset_branch_id' => $transaction->assets_from_branch_id,
+                            'asset_location_id' => null,
+                            'asset_id' => $item['asset_id'],
+                            'asset_current_unit' => $item['asset_unit'],
+                            'asset_min_unit' => 0,
+                            'asset_max_unit' => 0,
+                            'created_by' => Auth::user()->id,
+                        ]);
                     }
                 }
 
@@ -239,7 +243,6 @@ class AssetsTransactionController extends Controller
                 $validator = Validator::make($request->all(), [
                     'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
-                    // 'assets_transaction_status' => 'required|string|in:DRAFT,IN-TRANSIT,RECEIVED',
                     'assets_from_branch_id' => 'required|integer',
                     'assets_to_branch_id' => 'required|integer',
                     'assets_transaction_total_cost' => 'required|numeric',
@@ -286,9 +289,7 @@ class AssetsTransactionController extends Controller
                     ]);
                 }
 
-                // only do quantity update based on transaction status
                 if ($request->assets_transaction_status == 'IN-TRANSIT') {
-                    // Deduct from source branch
                     foreach ($request->assets_transaction_item_list as $item) {
                         $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
                             ->where('asset_id', $item['asset_id'])
@@ -299,22 +300,6 @@ class AssetsTransactionController extends Controller
                         }
                     }
                 }
-
-                // if ($request->assets_transaction_status == 'RECEIVED') {
-                //     // Add to destination branch
-                //     foreach ($request->assets_transaction_item_list as $item) {
-                //         $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $request->assets_to_branch_id)
-                //             ->where('asset_id', $item['asset_id'])
-                //             ->first();
-
-                //         if ($assetBranchToValue) {
-                //             $assetBranchToValue->increment('asset_current_unit', $item['asset_unit']);
-                //         }
-                //     }
-                // }
-
-                // DRAFT -> do nothing to quantities
-
                 DB::commit();
 
                 return response()->json([
@@ -337,11 +322,10 @@ class AssetsTransactionController extends Controller
         try {
             $transaction = AssetsTransaction::findOrFail($id);
 
-            // Validate based on transaction type
             if ($transaction->assets_transaction_type == 'ASSET TRANSFER' && $transaction->assets_transaction_status == 'IN-TRANSIT') {
                 DB::beginTransaction();
 
-                // Update transaction status
+
                 $oldStatus = $transaction->assets_transaction_status;
                 $newStatus = 'RECEIVED';
 
@@ -353,14 +337,11 @@ class AssetsTransactionController extends Controller
                 ]);
 
                 if ($oldStatus == 'IN-TRANSIT' && $newStatus == 'RECEIVED') {
-                    // Add to destination branch when receiving
                     $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
 
                     foreach ($transactionItems as $item) {
-                        // Update item status
                         $item->update(['status' => 'RECEIVED']);
 
-                        // Add to destination branch inventory
                         $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_to_branch_id)
                             ->where('asset_id', $item->asset_id)
                             ->first();
@@ -368,13 +349,11 @@ class AssetsTransactionController extends Controller
                         if ($assetBranchToValue) {
                             $assetBranchToValue->increment('asset_current_unit', $item->asset_unit);
                         } else {
-                            // Create new branch asset value record
                             AssetsBranchValues::create([
                                 'asset_branch_id' => $transaction->assets_to_branch_id,
                                 'asset_location_id' => $transaction->assets_to_branch_id,
                                 'asset_id' => $item->asset_id,
                                 'asset_current_unit' => $item->asset_unit,
-                                // Optionally, set default values for other required fields
                                 'asset_min_unit' => 0,
                                 'asset_max_unit' => 0,
                                 'created_by' => Auth::user()->id,

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class AssetsController extends Controller
 {
@@ -110,27 +111,21 @@ class AssetsController extends Controller
 
             $asset = Assets::create($data);
 
-            // Automatically add an entry in assets_branch_values using the current user's branch
-            AssetsBranchValues::create([
-                'asset_id' => $asset->id,
-                'asset_branch_id' => Auth::user()->branch_id,
-                'asset_location_id' => $request->assets_location_id ?? null, // optional, may use from form
-                'asset_current_unit' => 0,
-            ]);
+            // Get all branches from the database
+            $branches = DB::table('assets_branch')->get();
 
-            // If optional: still allow adding additional branch values from frontend (multi-branch)
-            if ($request->has('asset_branch_values') && is_array($request->asset_branch_values)) {
-                foreach ($request->asset_branch_values as $branchValue) {
-                    AssetsBranchValues::create([
-                        'asset_id' => $asset->id,
-                        'asset_branch_id' => $branchValue['asset_branch_id'],
-                        'asset_location_id' => $branchValue['asset_location_id'] ?? null,
-                        'asset_current_unit' => $branchValue['asset_current_unit'] ?? 0,
-                    ]);
-                }
+            // Create an entry in assets_branch_values for each branch
+            foreach ($branches as $branch) {
+                AssetsBranchValues::create([
+                    'asset_id' => $asset->id,
+                    'asset_branch_id' => $branch->id,
+                    'asset_location_id' => null, // Default to null, can be updated later
+                    'asset_current_unit' => 0,   // Initialize with 0 quantity
+                ]);
             }
 
             $asset->load(['category', 'tag', 'branchValues']);
+            
 
             return response()->json([
                 'success' => true,
