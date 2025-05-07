@@ -14,6 +14,8 @@ use App\Models\User;
 use App\Observers\UserObserver;
 use App\Models\AssetsBranchValues;
 use App\Observers\AssetsBranchValuesObserver;
+use App\Models\AccessLevel;
+use App\Observers\AccessLevelObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,5 +38,6 @@ class AppServiceProvider extends ServiceProvider
         AssetsCategory::observe(AssetsCategoryObserver::class);
         User::observe(UserObserver::class);
         AssetsBranchValues::observe(AssetsBranchValuesObserver::class);
+        AccessLevel::observe(AccessLevelObserver::class);
     }
 }
