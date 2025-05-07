@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { FaEdit, FaSave } from "react-icons/fa";
+import { MdOutlineCancel } from "react-icons/md";
 import { useAssetMeta } from '../context/AssetsContext';
 import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +13,6 @@ const ItemDetails = ({ asset, onClose }) => {
     const [form, setForm] = useState({
         name: asset.name || '',
         asset_category_id: asset.asset_category_id || '',
-        asset_tag_id: asset.asset_tag_id || '',
         asset_stable_unit: asset.asset_stable_unit || '',
         asset_unit_measure: asset.asset_unit_measure || '',
         asset_description: asset.asset_description || '',
@@ -41,7 +42,6 @@ const ItemDetails = ({ asset, onClose }) => {
             const payload = {
                 name: form.name,
                 asset_category_id: form.asset_category_id,
-                asset_tag_id: form.asset_tag_id,
                 asset_stable_unit: form.asset_stable_unit,
                 asset_unit_measure: form.asset_unit_measure,
                 asset_description: form.asset_description || null,
@@ -122,8 +122,9 @@ const ItemDetails = ({ asset, onClose }) => {
                             <>
                                 <button
                                     onClick={handleSubmit}
-                                    className="px-4 py-1.5 text-sm font-medium bg-green-600 text-white rounded hover:bg-green-700"
+                                    className="bg-white shadow-sm shadow-green-600/30 px-4 py-1 rounded-xs text-green-600 hover:text-green-800 hover:bg-green-100 focus:outline-2"
                                 >
+                                    <FaSave className="inline-block mr-1 mb-1" />
                                     Save
                                 </button>
                                 <button
@@ -132,8 +133,9 @@ const ItemDetails = ({ asset, onClose }) => {
                                         setForm({ ...asset, asset_image: null });
                                         setImagePreview(null);
                                     }}
-                                    className="px-4 py-1.5 text-sm font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                    className="bg-white shadow-sm shadow-gray-600/30 px-3 py-1 rounded-xs text-gray-500 hover:text-gray-800 hover:bg-gray-100 focus:outline-2 mr-6"
                                 >
+                                    <MdOutlineCancel className="inline-block mr-1 mb-1" />
                                     Cancel
                                 </button>
                             </>
@@ -141,8 +143,9 @@ const ItemDetails = ({ asset, onClose }) => {
                             user?.add_edit_transaction && (
                             <button
                                 onClick={() => setEditMode(true)}
-                                className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700"
+                                className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-6"
                             >
+                                <FaEdit className="inline-block mr-1 mb-1" />
                                 Edit
                             </button>
                             )
@@ -201,7 +204,7 @@ const ItemDetails = ({ asset, onClose }) => {
                             <span>{asset.asset_category_name ?? '—'}</span>
                         )}
                     />
-                    <Detail
+                    {/* <Detail
                         label="Tag"
                         value={editMode ? (
                             <select
@@ -217,7 +220,7 @@ const ItemDetails = ({ asset, onClose }) => {
                         ) : (
                             <span>{asset.asset_tag_name ?? '—'}</span>
                         )}
-                    />
+                    /> */}
                     <Detail label="Unit" value={isEditing('asset_unit_measure')} />
                     <Detail label="Cost" value={isEditing('asset_purchase_cost')} />
                     <Detail label="Price" value={isEditing('asset_sales_cost')} />

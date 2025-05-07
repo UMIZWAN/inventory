@@ -58,7 +58,7 @@ const AccessLevelsPage = ({ auth }) => {
                 accessLevel.id === updatedAccessLevel.id ? updatedAccessLevel : accessLevel
             )
         );
-        
+
         // If this access level was selected, update the selected access level as well
         if (selectedAccessLevel && selectedAccessLevel.id === updatedAccessLevel.id) {
             setSelectedAccessLevel(updatedAccessLevel);
@@ -79,23 +79,23 @@ const AccessLevelsPage = ({ auth }) => {
 
     return (
         <Layout>
-            <div className="py-12">
+            <div className="py-6">
                 <Head title="Access Levels" />
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-2xl font-bold">Access Levels</h1>
+                        {user?.add_edit_role && (
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                                Add Access Level
+                            </button>
+                        )}
+                    </div>
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
-                            <div className="flex justify-between items-center mb-6">
-                                <h1 className="text-2xl font-bold">Access Levels</h1>
-                                {user?.add_edit_role && (
-                                <button 
-                                    onClick={() => setIsAddModalOpen(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                >
-                                    Add Access Level
-                                </button>
-                                )}
-                            </div>
-                            
+
                             {loading ? (
                                 <p className="text-center py-4">Loading access levels...</p>
                             ) : error ? (
@@ -110,7 +110,7 @@ const AccessLevelsPage = ({ auth }) => {
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                                 {user?.add_edit_role && (
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                                 )}
                                             </tr>
                                         </thead>
@@ -121,23 +121,23 @@ const AccessLevelsPage = ({ auth }) => {
                                                         <tr
                                                             className={`hover:bg-gray-50 ${selectedAccessLevel?.id === accessLevel.id ? 'bg-blue-50' : ''}`}
                                                         >
-                                                            <td 
+                                                            <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleAccessLevelClick(accessLevel)}
                                                             >{accessLevel.id}</td>
-                                                            <td 
+                                                            <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleAccessLevelClick(accessLevel)}
                                                             >{accessLevel.name}</td>
                                                             {user?.add_edit_role && (
-                                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                                <button 
-                                                                    onClick={(e) => handleEditClick(accessLevel, e)}
-                                                                    className="text-indigo-600 hover:text-indigo-900 mr-3"
-                                                                >
-                                                                    Edit
-                                                                </button>
-                                                            </td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                                    <button
+                                                                        onClick={(e) => handleEditClick(accessLevel, e)}
+                                                                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                </td>
                                                             )}
                                                         </tr>
                                                         {selectedAccessLevel?.id === accessLevel.id && (
@@ -252,21 +252,21 @@ const AccessLevelsPage = ({ auth }) => {
             </div>
 
             {/* Add Access Level Modal */}
-            <AddAccessLevelModal 
-                isOpen={isAddModalOpen} 
-                onClose={() => setIsAddModalOpen(false)} 
+            <AddAccessLevelModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
                 onAccessLevelAdded={(newAccessLevel) => {
                     handleAccessLevelAdded(newAccessLevel);
                 }}
             />
 
             {/* Edit Access Level Modal */}
-            <EditAccessLevelModal 
-                isOpen={isEditModalOpen} 
+            <EditAccessLevelModal
+                isOpen={isEditModalOpen}
                 onClose={() => {
                     setIsEditModalOpen(false);
                     setAccessLevelToEdit(null);
-                }} 
+                }}
                 accessLevel={accessLevelToEdit}
                 onAccessLevelUpdated={handleAccessLevelUpdated}
             />

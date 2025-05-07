@@ -163,7 +163,7 @@ export default function CheckoutList() {
                                     <td className="px-4 py-2 border">
                                         <button
                                             onClick={() => openModal(txn)}
-                                            className="text-blue-600 hover:text-blue-800"
+                                            className="bg-white shadow-sm shadow-blue-600/30 px-2 rounded text-blue-600 hover:text-blue-800"
                                         >
                                             View
                                         </button>

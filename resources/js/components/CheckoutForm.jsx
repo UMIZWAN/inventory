@@ -9,7 +9,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
     const [type, setType] = useState("sold");
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-    const [reference, setReference] = useState('');
+    const [recipient, setRecipient] = useState('');
     const [remarks, setRemarks] = useState('');
     const [purposes, setPurposes] = useState({
         CSI: false,
@@ -83,17 +83,35 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
 
     const handleSubmit = async () => {
+
         try {
             const form = {
                 branch,
                 date,
-                reference,
+                recipient,
                 remarks,
                 type,
                 purpose: type === "sold" ? ["SELL"] : Object.keys(purposes).filter(key => purposes[key]),
                 items,
                 totalAmount,
             };
+
+            const invalidItem = form.items.find(({ item, quantity }) => {
+                const asset = assets.find(a => a.id === Number(item));
+                if (!asset) return false;
+            
+                const currentBranchStock = asset.branch_values?.find(
+                  (bv) => bv.asset_branch_id === user.branch_id
+                )?.asset_current_unit ?? 0;
+            
+                return quantity > currentBranchStock;
+              });
+            
+              if (invalidItem) {
+                const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
+                alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
+                return;
+              }
 
             await createStockOut(form);
             alert('Stock Out created successfully!');
@@ -150,6 +168,8 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                                     type="text"
                                     className="w-full border border-gray-300 rounded px-3 py-2"
                                     placeholder="Enter name"
+                                    value={recipient}
+                                    onChange={(e) => setRecipient(e.target.value)}
                                 />
                             </div>
                         )}
@@ -172,15 +192,6 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                                 onChange={(e) => setDate(e.target.value)}
                             />
                         </div>
-                        {/* <div>
-              <label className="block mb-1 font-medium">Reference Number</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-              />
-            </div> */}
                     </div>
 
                     {/* Purposes (for normal checkout) */}

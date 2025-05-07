@@ -88,6 +88,7 @@ class AssetsTransactionController extends Controller
                 $validator = Validator::make($request->all(), [
                     'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
+                    'assets_recipient_name' => 'nullable|string',
                     'assets_from_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
                     'created_at' => 'nullable|date',
@@ -112,6 +113,7 @@ class AssetsTransactionController extends Controller
                 $transaction = AssetsTransaction::create([
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
+                    'assets_recipient_name' => $request->assets_recipient_name,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
@@ -119,7 +121,7 @@ class AssetsTransactionController extends Controller
                     'created_by' => $request->created_by,
                     'created_at' => $request->created_at,
                 ]);
-
+                
                 foreach ($request->assets_transaction_item_list as $item) {
                     AssetsTransactionItemList::create([
                         'asset_transaction_id' => $transaction->id,

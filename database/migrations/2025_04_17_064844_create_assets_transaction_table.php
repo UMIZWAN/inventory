@@ -18,7 +18,7 @@ return new class extends Migration
       $table->foreign('supplier_id')->references('id')->on('suppliers')->nullOnDelete();
 
       $table->enum('assets_transaction_type', ['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER']);
-
+      $table->string('assets_recipient_name')->nullable();
       $table->string('assets_shipping_option')->nullable();
 
       // STATUS only relevant for ASSET TRANSFER
