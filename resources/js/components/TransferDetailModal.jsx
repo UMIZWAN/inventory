@@ -2,6 +2,8 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import TransferDeliveryOrderPDF from "./TransferDeliveryOrderPDF";
 
 export default function TransferDetailModal({ isOpen, onClose, data, buttons, mode }) {
   const { getCategoryById, allAssets } = useAssetMeta();
@@ -21,9 +23,9 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
   // Only show receive button if:
   // 1. We're in incoming mode (to branch is user's branch)
   // 2. The transfer status is IN-TRANSIT
-  const shouldShowReceiveButton = mode === 'incoming' && 
-                                data?.assets_transaction_status === 'IN-TRANSIT' &&
-                                data?.assets_to_branch_id === user?.branch_id;
+  const shouldShowReceiveButton = mode === 'incoming' &&
+    data?.assets_transaction_status === 'IN-TRANSIT' &&
+    data?.assets_to_branch_id === user?.branch_id;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -66,7 +68,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
                   <p><span className="font-semibold">Shipping Option:</span> {data?.assets_shipping_option}</p>
                   <p><span className="font-semibold">Created At:</span> {new Date(data?.created_at).toLocaleString()}</p>
-                  
+
                   <div className="mt-4">
                     <h4 className="font-semibold">Items:</h4>
                     <div className="overflow-x-auto">
@@ -100,6 +102,27 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                 </div>
 
                 <div className="mt-4 flex justify-end space-x-2">
+                  {data && (
+                    <PDFDownloadLink
+                      document={
+                        <TransferDeliveryOrderPDF
+                          data={data}
+                          items={data.assets_transaction_item_list?.map(getItemDetails) || []}
+                        />
+                      }
+                      fileName={`DeliveryOrder_${data.assets_transaction_running_number}.pdf`}
+                    >
+                      {({ loading }) => (
+                        <button
+                          type="button"
+                          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        >
+                          {loading ? "Preparing PDF..." : "Download"}
+                        </button>
+                      )}
+                    </PDFDownloadLink>
+                  )}
+
                   <button
                     type="button"
                     className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"

@@ -102,7 +102,7 @@ function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
             {filterType === "transfer" && (
                 <>
                     <div>
-                        <label className="block mb-1">From Branch"</label>
+                        <label className="block mb-1">From Branch</label>
                         <select
                             value={filters.fromBranch}
                             onChange={(e) => handleChange('fromBranch', e.target.value)}

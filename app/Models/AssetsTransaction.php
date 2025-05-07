@@ -19,6 +19,7 @@ class AssetsTransaction extends Model
     protected $fillable = [
         'assets_transaction_running_number',
         'supplier_id',
+        'assets_recipient_name',
         'assets_shipping_option',
         'assets_transaction_type',
         'assets_transaction_status',

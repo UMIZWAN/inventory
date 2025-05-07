@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { FiShield, FiUsers, FiMapPin, FiTag, FiPackage, FiTruck, FiList, FiRepeat } from 'react-icons/fi';
 import { Link } from '@inertiajs/react';
 import { useAuth } from '../../context/AuthContext';
 import { useAssetMeta } from '../../context/AssetsContext';
@@ -89,7 +90,7 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-gray-200 p-2 shadow-md h-full overflow-y-auto">
+        <div className="w-64 bg-white p-2 shadow-md h-full overflow-y-auto">
             {/* Branch Selector */}
             {/* <div className="mb-4">
                 <label htmlFor="branch-select" className="block text-sm font-medium text-gray-700 mb-1">
@@ -109,73 +110,87 @@ const Sidebar = () => {
                     ))}
                 </select>
             </div> */}
-            <div className="mb-2 rounded">
-                <ul>
-                {user?.view_asset_masterlist && (
-                        <Link href="/items/master-list" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>MasterList</span>
-                            </li>
-                        </Link>
-                    )}
+            <div className="mb-2 rounded px-2">
+                <div className="border-b border-gray-300 my-2 py-2">
+                    <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3">Administration</label>
+                </div>
+                <ul className="space-y-1">
+
                     {user?.view_role && (
-                        <Link href="/access-levels" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Access Levels</span>
-                            </li>
-                        </Link>
-                    )}
-                    {user?.view_user && (
-                        <Link href="/users" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Users</span>
-                            </li>
-                        </Link>
-                    )}
-                    {user?.view_branch && (
-                        <Link href="/branch" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Branches</span>
-                            </li>
-                        </Link>
-                    )}
-                    {user?.view_supplier && (
-                        <Link href="/categories" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Categories</span>
-                            </li>
-                        </Link>
-                    )}
-                    {/* <Link href="/tags" >
-                        <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                            <span>Tag</span>
-                        </li>
-                    </Link> */}
-                    {user?.view_supplier && (
-                        <Link href="/supplier" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Suppliers</span>
+                        <Link href="/access-levels">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiShield className="text-sky-600" />
+                                <span className="font-medium">Access Levels</span>
                             </li>
                         </Link>
                     )}
 
+                    {user?.view_user && (
+                        <Link href="/users">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiUsers className="text-sky-600" />
+                                <span className="font-medium">Users</span>
+                            </li>
+                        </Link>
+                    )}
+
+                    {user?.view_user && (
+                        <Link href="/branch">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiMapPin className="text-sky-600" />
+                                <span className="font-medium">Branches</span>
+                            </li>
+                        </Link>
+                    )}
+
+                    {user?.view_supplier && (
+                        <Link href="/categories">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiTag className="text-sky-600" />
+                                <span className="font-medium">Categories</span>
+                            </li>
+                        </Link>
+                    )}
+
+                    {user?.view_supplier && (
+                        <Link href="/supplier">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiTruck className="text-sky-600" />
+                                <span className="font-medium">Suppliers</span>
+                            </li>
+                        </Link>
+                    )}
+                </ul>
+                <div className="border-b border-gray-300 my-2 py-2">
+                    <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3 mt-3">Manage Assets</label>
+                </div>
+                <ul className="space-y-1">
+                    {user?.view_asset_masterlist && (
+                        <Link href="/items/master-list">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiList className="text-sky-600" />
+                                <span className="font-medium">MasterList</span>
+                            </li>
+                        </Link>
+                    )}
 
                     {user?.view_asset && (
-                        <Link href="/items/item-list" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Item List</span>
+                        <Link href="/items/item-list">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiPackage className="text-sky-600" />
+                                <span className="font-medium">Item List</span>
                             </li>
                         </Link>
                     )}
 
                     {user?.view_transaction && (
-                        <Link href="/items/asset-transaction" >
-                            <li className="font-semibold px-3 py-2 rounded-t flex items-center justify-between cursor-pointer hover:bg-sky-100">
-                                <span>Transaction</span>
+                        <Link href="/items/asset-transaction">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiRepeat className="text-sky-600" />
+                                <span className="font-medium">Transaction</span>
                             </li>
                         </Link>
                     )}
-
                 </ul>
             </div>
             {/* {menu.map((section, index) => {

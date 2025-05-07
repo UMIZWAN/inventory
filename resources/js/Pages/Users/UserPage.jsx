@@ -58,7 +58,7 @@ const UserPage = ({ auth }) => {
                 user.id === updatedUser.id ? updatedUser : user
             )
         );
-        
+
         // If this user was selected, update the selected user as well
         if (selectedUser && selectedUser.id === updatedUser.id) {
             setSelectedUser(updatedUser);
@@ -79,23 +79,23 @@ const UserPage = ({ auth }) => {
 
     return (
         <Layout>
-            <div className="py-12">
+            <div className="py-6">
                 <Head title="Users" />
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-2xl font-bold">Users</h1>
+                        {user?.add_edit_user && (
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                                Add User
+                            </button>
+                        )}
+                    </div>
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
-                            <div className="flex justify-between items-center mb-6">
-                                <h1 className="text-2xl font-bold">Users</h1>
-                                {user?.add_edit_user && (
-                                <button 
-                                    onClick={() => setIsAddModalOpen(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                >
-                                    Add User
-                                </button>
-                                )}
-                            </div>
-                            
+
                             {loading ? (
                                 <p className="text-center py-4">Loading users...</p>
                             ) : error ? (
@@ -113,7 +113,7 @@ const UserPage = ({ auth }) => {
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Access Level</th>
                                                 {user?.add_edit_user && (
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                                 )}
                                             </tr>
                                         </thead>
@@ -124,23 +124,23 @@ const UserPage = ({ auth }) => {
                                                         <tr
                                                             className={`hover:bg-gray-50 ${selectedUser?.id === u.id ? 'bg-blue-50' : ''}`}
                                                         >
-                                                            <td 
+                                                            <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleUserClick(u)}
                                                             >{u.id}</td>
-                                                            <td 
+                                                            <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleUserClick(u)}
                                                             >{u.name}</td>
-                                                            <td 
+                                                            <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleUserClick(u)}
                                                             >{u.email}</td>
-                                                            <td 
+                                                            <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleUserClick(u)}
                                                             >{u.branch_name}</td>
-                                                            <td 
+                                                            <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleUserClick(u)}
                                                             >
@@ -149,14 +149,14 @@ const UserPage = ({ auth }) => {
                                                                 </span>
                                                             </td>
                                                             {user?.add_edit_user && (
-                                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                                <button 
-                                                                    onClick={(e) => handleEditClick(u, e)}
-                                                                    className="text-indigo-600 hover:text-indigo-900 mr-3"
-                                                                >
-                                                                    Edit
-                                                                </button>
-                                                            </td>
+                                                                <td className="px-4 py-4 whitespace-nowrap text-center">
+                                                                    <button
+                                                                        onClick={(e) => handleEditClick(u, e)}
+                                                                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                </td>
                                                             )}
                                                         </tr>
                                                         {selectedUser?.id === u.id && (
@@ -267,21 +267,21 @@ const UserPage = ({ auth }) => {
             </div>
 
             {/* Add User Modal */}
-            <AddUserModal 
-                isOpen={isAddModalOpen} 
-                onClose={() => setIsAddModalOpen(false)} 
+            <AddUserModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
                 onUserAdded={(newUser) => {
                     handleUserAdded(newUser);
                 }}
             />
 
             {/* Edit User Modal */}
-            <EditUserModal 
-                isOpen={isEditModalOpen} 
+            <EditUserModal
+                isOpen={isEditModalOpen}
                 onClose={() => {
                     setIsEditModalOpen(false);
                     setUserToEdit(null);
-                }} 
+                }}
                 user={userToEdit}
                 onUserUpdated={handleUserUpdated}
             />

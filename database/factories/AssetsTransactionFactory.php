@@ -41,6 +41,8 @@ class AssetsTransactionFactory extends Factory
             'supplier_id' => $transactionType === 'ASSET IN' ?
                 ($purchaseOrder ? $purchaseOrder->supplier_id : null) : null,
             'assets_transaction_type' => $transactionType,
+            'assets_recipient_name' => $transactionType === 'ASSET OUT' ?
+                $this->faker->name() : null,
             'assets_shipping_option' => $transactionType === 'ASSET TRANSFER' ?
                 $this->faker->randomElement(['AIR', 'SEA', 'ROAD', 'RAIL']) : null,
 

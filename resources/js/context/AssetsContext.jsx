@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import api from '../api/api';
 import { useAuth } from './AuthContext';
-import { all } from 'axios';
 
 const AssetsContext = createContext();
 
@@ -17,26 +16,9 @@ export const AssetMetaProvider = ({ children }) => {
   const [assetTransfer, setAssetTransfer] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // const fetchAssets = () => {
-  //   api.get('/api/assets')
-  //     .then(response => {
-  //       if (response.data.success) {
-  //         console.log('Assets fetched:', response.data.data);
-  //         setAssets(response.data.data);
-  //       }
-  //     })
-  //     .catch(error => {
-  //       console.error('Error fetching assets:', error);
-  //     })
-  //     .finally(() => {
-  //       setLoading(false);
-  //     });
-  // };
-
   useEffect(() => {
     if (user?.branch_id) {
-      console.log("User branch ID:", user.branch_id);
-      fetchAssets();
+      fetchAssets(user?.branch_id);
       fetchAssetTransaction();
     }
   }, [user]);
@@ -47,41 +29,41 @@ export const AssetMetaProvider = ({ children }) => {
       .then(response => {
         if (response.data.success) {
           const allAssets = response.data.data;
+
+          // Filter assets that have at least one branch_value for the current user's branch
+          const userBranchAssets = allAssets.filter(asset =>
+            asset.branch_values?.some(bv => bv.asset_branch_id === user?.branch_id)
+          );
+          setAllAssets(allAssets); // Store all assets for later use
+          setAssets(userBranchAssets);
   
-          const processedAssets = branchId 
-            ? allAssets
-                // Filter assets that exist in this branch
-                .filter(asset => 
-                  asset.branch_values?.some(bv => 
-                    bv.asset_branch_id === parseInt(branchId)
-                  )
-                )
-                // Transform to show only the selected branch's data
-                .map(asset => {
-                  const branchData = asset.branch_values.find(
-                    bv => bv.asset_branch_id === parseInt(branchId)
-                  );
-                  return {
-                    ...asset,
-                    // Override asset-wide properties with branch-specific ones
-                    asset_current_unit: branchData.asset_current_unit,
-                    asset_location_id: branchData.asset_location_id,
-                    asset_location_name: branchData.asset_location_name,
-                    // Keep only the selected branch's data
-                    branch_values: [branchData]
-                  };
-                })
-            : allAssets;
+          // const processedAssets = branchId 
+          //   ? allAssets
+          //       // Filter assets that exist in this branch
+          //       .filter(asset => 
+          //         asset.branch_values?.some(bv => 
+          //           bv.asset_branch_id === parseInt(branchId)
+          //         )
+          //       )
+          //       // Transform to show only the selected branch's data
+          //       .map(asset => {
+          //         const branchData = asset.branch_values.find(
+          //           bv => bv.asset_branch_id === parseInt(branchId)
+          //         );
+          //         return {
+          //           ...asset,
+          //           // Override asset-wide properties with branch-specific ones
+          //           asset_current_unit: branchData.asset_current_unit,
+          //           asset_location_id: branchData.asset_location_id,
+          //           asset_location_name: branchData.asset_location_name,
+          //           // Keep only the selected branch's data
+          //           branch_values: [branchData]
+          //         };
+          //       })
+          //   : allAssets;
   
-          setAllAssets(allAssets);
-          setAssets(processedAssets);
-          
-          console.log('Processed assets:', {
-            selectedBranch: branchId,
-            totalAssets: allAssets.length,
-            filteredAssets: processedAssets.length,
-            sampleAsset: processedAssets[0]
-          });
+          // setAllAssets(allAssets);
+          // setAssets(processedAssets);
         }
       })
       .catch(error => {
@@ -109,16 +91,6 @@ export const AssetMetaProvider = ({ children }) => {
 
   const addAsset = async (form) => {
     console.log('Adding asset:', form);
-    // const formData = new FormData();
-    // Object.entries(form).forEach(([key, value]) => {
-    //   if (key === 'assets_remark') {
-    //     value.split('\n').forEach((line, i) => {
-    //       formData.append(`assets_remark[${i}]`, line);
-    //     });
-    //   } else {
-    //     formData.append(key, value);
-    //   }
-    // });
 
     try {
       await api.post('/api/assets', form, {
@@ -135,7 +107,6 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   const updateAsset = async (id, data) => {
-    console.log('Updating asset:', id, data);
     try {
       let config = {};
 
@@ -321,12 +292,13 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   const createStockOut = async (form) => {
+    console.log("Creating stock out with form:", form);
     try {
       const payload = {
         assets_transaction_running_number: generateRunningNumber(),
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
         assets_from_branch_id: user?.branch_id,
-        // assets_to_branch_id: parseInt(form.branch),
+        assets_recipient_name: form.recipient,
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
@@ -419,6 +391,7 @@ export const AssetMetaProvider = ({ children }) => {
         createTransfer,
         createStockOut,
         createAssetIn,
+        fetchAssetTransaction,
         allAssets,
       }}
     >

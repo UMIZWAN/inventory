@@ -46,7 +46,13 @@ const MasterListPage = () => {
     }, [searchTerm, items]);
 
     const getStatusBadge = (totalUnits, stableUnit) => {
-        if (!totalUnits || !stableUnit) return null;
+        if (!totalUnits || !stableUnit) {
+            return (
+                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                    Critical Stock
+                </span>
+            );
+        }
 
         const percentage = (totalUnits / stableUnit) * 100;
 
@@ -62,7 +68,7 @@ const MasterListPage = () => {
                     Low Stock
                 </span>
             );
-        } else {
+        } else  {
             return (
                 <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                     Critical Stock
