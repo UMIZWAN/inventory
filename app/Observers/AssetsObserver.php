@@ -14,4 +14,14 @@ class AssetsObserver
     {
         Cache::forget('assets_cache');
     }
+
+    public function updated(Assets $assets): void
+    {
+        Cache::forget('assets_cache');
+    }
+
+    public function deleted(Assets $assets): void
+    {
+        Cache::forget('assets_cache');
+    }
 }

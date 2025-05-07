@@ -25,7 +25,7 @@ class AssetsSeeder extends Seeder
         }
 
         // Create 20 assets
-        $assets = Assets::factory(1000)->create();
+        $assets = Assets::factory(5)->create();
         
         // Create branch values for EACH asset in EACH branch
         foreach ($assets as $asset) {

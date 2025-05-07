@@ -14,4 +14,14 @@ class SuppliersObserver
     {
         Cache::forget('suppliers_cache');
     }
+
+    public function updated(Suppliers $suppliers): void
+    {
+        Cache::forget('suppliers_cache');
+    }
+
+    public function deleted(Suppliers $suppliers): void
+    {
+        Cache::forget('suppliers_cache');
+    }
 }

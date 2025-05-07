@@ -12,6 +12,8 @@ use App\Models\AssetsCategory;
 use App\Observers\AssetsCategoryObserver;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Models\AssetsBranchValues;
+use App\Observers\AssetsBranchValuesObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,5 +35,6 @@ class AppServiceProvider extends ServiceProvider
         AssetsBranch::observe(AssetsBranchObserver::class);
         AssetsCategory::observe(AssetsCategoryObserver::class);
         User::observe(UserObserver::class);
+        AssetsBranchValues::observe(AssetsBranchValuesObserver::class);
     }
 }
