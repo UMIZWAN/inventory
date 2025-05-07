@@ -363,6 +363,7 @@ export const AssetMetaProvider = ({ children }) => {
         addAsset,
         updateAsset,
         categories,
+        fetchCategories,
         addCategory,
         updateCategory,
         deleteCategory,
