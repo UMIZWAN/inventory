@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AssetsBranchResource;
 use App\Models\AssetsBranch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
+
 
 class AssetsBranchController extends Controller
 {
@@ -23,7 +25,9 @@ class AssetsBranchController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List Data Assets Branch',
-            'data' => $assetsBranch
+            'data' => Cache::remember('assets_branch_cache', 3600, function () use ($assetsBranch) {
+                return $assetsBranch;
+            })
         ], 200);
     }
 

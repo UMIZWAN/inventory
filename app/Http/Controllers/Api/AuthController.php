@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
@@ -199,7 +200,9 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Users retrieved successfully',
-                'data' => UserResource::collection($users),
+                'data' => UserResource::collection(Cache::remember('users_cache', 3600, function () use ($users) {
+                    return $users;
+                })),
                 'pagination' => [
                     'total' => $users->total(),
                     'per_page' => $users->perPage(),

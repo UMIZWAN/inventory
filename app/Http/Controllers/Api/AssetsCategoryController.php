@@ -8,6 +8,7 @@ use App\Models\Assets;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 
 class AssetsCategoryController extends Controller
 {
@@ -23,7 +24,9 @@ class AssetsCategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List Data Assets Category',
-            'data' => $assetsCategory
+            'data' => Cache::remember('assets_category_cache', 3600, function () use ($assetsCategory) {
+                return $assetsCategory;
+            })
         ], 200);
     }
 

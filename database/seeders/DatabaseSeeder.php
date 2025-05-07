@@ -18,15 +18,15 @@ class DatabaseSeeder extends Seeder
         $this->call(UserSeeder::class);
 
         // $this->call(TaxSeeder::class);
-        // $this->call(AssetsCategorySeeder::class);
+        $this->call(AssetsCategorySeeder::class);
         // $this->call(AssetsTagSeeder::class);
-        // Run the rest of your seeders
-        // $this->call([
-            
-        //     AssetsSeeder::class,
-        //     SuppliersSeeder::class,
-        //     // PurchaseOrderSeeder::class,
-        //     AssetsTransactionSeeder::class,
-        // ]);
+        // Run the rest of your seeders`
+        $this->call([
+
+            // AssetsSeeder::class,
+            SuppliersSeeder::class,
+            // PurchaseOrderSeeder::class,
+            // AssetsTransactionSeeder::class,
+        ]);
     }
 }

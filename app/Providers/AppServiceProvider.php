@@ -2,8 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\Assets;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use App\Observers\AssetsObserver;
+use App\Models\AssetsBranch;
+use App\Observers\AssetsBranchObserver;
+use App\Models\AssetsCategory;
+use App\Observers\AssetsCategoryObserver;
+use App\Models\User;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +29,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        Assets::observe(AssetsObserver::class);
+        AssetsBranch::observe(AssetsBranchObserver::class);
+        AssetsCategory::observe(AssetsCategoryObserver::class);
+        User::observe(UserObserver::class);
     }
 }

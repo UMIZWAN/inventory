@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class AssetsController extends Controller
 {
@@ -24,7 +25,11 @@ class AssetsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'List of Assets',
-                'data' => AssetsResource::collection($assets)
+                'data' => AssetsResource::collection(
+                    Cache::remember('assets_cache', 3600, function () use ($assets) {
+                        return $assets;
+                    })
+                )
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -125,7 +130,7 @@ class AssetsController extends Controller
             }
 
             $asset->load(['category', 'tag', 'branchValues']);
-            
+
 
             return response()->json([
                 'success' => true,

@@ -42,14 +42,14 @@ class UserSeeder extends Seeder
             'email' => 'dayangnurhafizah@gmail.com',
             'password' => Hash::make('12345678'),
             'branch_id' => 1,
-            'access_level_id' => 1,
+            'access_level_id' =>2,
         ]);
         User::create([
             'name' => 'SET YEE',
             'email' => 'setyee@gmail.com',
             'password' => Hash::make('12345678'),
             'branch_id' => 2,
-            'access_level_id' => 1,
+            'access_level_id' => 2,
         ]);
     }
 }
