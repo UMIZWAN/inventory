@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "../components/layout/Layout";
 import { useSuppliers } from "../context/SuppliersContext";
 import AddSupplierModal from "../components/AddSupplierModal";
@@ -6,8 +6,12 @@ import { useAuth } from "../context/AuthContext";
 
 const SuppliersPage = () => {
     const { user } = useAuth();
-    const { suppliers, loading } = useSuppliers();
+    const { fetchSuppliers, suppliers, loading } = useSuppliers();
     const [openModal, setOpenModal] = useState(false);
+
+    useEffect(() => {
+        fetchSuppliers();
+    }, []);
 
     return (
         <Layout>

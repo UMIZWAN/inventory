@@ -23,7 +23,7 @@ class AssetsFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->randomElement([
+            'name' => $this->faker->unique()->randomElement([
                 'Laptop',
                 'Desktop PC',
                 'Monitor',

@@ -14,4 +14,14 @@ class AssetsCategoryObserver
     {
         Cache::forget('assets_category_cache');
     }
+
+    public function updated(AssetsCategory $assetsCategory): void
+    {
+        Cache::forget('assets_category_cache');
+    }
+
+    public function deleted(AssetsCategory $assetsCategory): void
+    {
+        Cache::forget('assets_category_cache');
+    }
 }

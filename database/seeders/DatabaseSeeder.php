@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         // Run the rest of your seeders`
         $this->call([
 
-            // AssetsSeeder::class,
+            AssetsSeeder::class,
             SuppliersSeeder::class,
             // PurchaseOrderSeeder::class,
             // AssetsTransactionSeeder::class,

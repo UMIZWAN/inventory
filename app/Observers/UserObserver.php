@@ -22,4 +22,12 @@ class UserObserver
     {
         Cache::forget('users_cache');
     }
+
+    /**
+     * Handle the User "deleted" event.
+     */
+    public function deleted(User $user): void
+    {
+        Cache::forget('users_cache');
+    }
 }
