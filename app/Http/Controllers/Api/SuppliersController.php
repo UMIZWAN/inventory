@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\SuppliersResource;
 use App\Models\Suppliers;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -24,7 +25,9 @@ class SuppliersController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List Data Assets Tag',
-            'data' => $suppliers
+            'data' => Cache::remember('suppliers_cache', 3600, function () use ($suppliers) {
+                return $suppliers;
+            })
         ], 200);
     }
 
