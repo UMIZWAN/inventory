@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
   const { allAssets, assets, branches } = useAssetMeta();
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     requester: user?.id || "",
     department: "",
@@ -105,33 +106,36 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    setSubmitting(true);
+
     const invalidItem = form.items.find(({ item, quantity }) => {
       const asset = assets.find(a => a.id === Number(item));
       if (!asset) return false;
-  
+
       const currentBranchStock = asset.branch_values?.find(
         (bv) => bv.asset_branch_id === user.branch_id
       )?.asset_current_unit ?? 0;
-  
+
       return quantity > currentBranchStock;
     });
-  
+
     if (invalidItem) {
       const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
       alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
       return;
     }
-  
+
     try {
       await onSubmit(form, totalAmount);
       setShowTransferForm(false);
     } catch (error) {
       console.error("Submission failed:", error);
       alert("Submission failed. Please try again.");
+    } finally {
+      setSubmitting(false); // <-- End submitting
     }
   };
-  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
       <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -272,14 +276,16 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
           <div className="flex justify-end gap-4 mt-4">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+              disabled={submitting}
             >
               {isEditMode ? "Update" : "Submit"}
             </button>
             <button
               type="button"
               onClick={() => setShowTransferForm(false)}
-              className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg"
+              className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+              disabled={submitting}
             >
               Cancel
             </button>

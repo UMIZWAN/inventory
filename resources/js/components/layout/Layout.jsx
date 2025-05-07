@@ -29,9 +29,9 @@ const Layout = ({ children }) => {
                 {user && (
                     <div className="flex items-center gap-4">
                         <span className="text-gray-600">{user.name}</span>
-                        <button className="text-white px-1 py-1 rounded-full hover:bg-sky-100">
+                        {/* <button className="text-white px-1 py-1 rounded-full hover:bg-sky-100">
                             <IoIosNotificationsOutline className="text-2xl text-gray-600" />
-                        </button>
+                        </button> */}
                         <button
                             onClick={handleLogout}
                             className="bg-white text-red-600 shadow-sm shadow-red-600/50 px-2 py-1 rounded hover:bg-red-100"

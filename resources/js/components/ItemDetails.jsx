@@ -10,6 +10,7 @@ const ItemDetails = ({ asset, onClose }) => {
     const { user } = useAuth();
     const { updateAsset, categories, tags, branches } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
         name: asset.name || '',
         asset_category_id: asset.asset_category_id || '',
@@ -37,6 +38,8 @@ const ItemDetails = ({ asset, onClose }) => {
     };
 
     const handleSubmit = async () => {
+        setSubmitting(true);
+
         try {
             // Create a clean payload with all required fields
             const payload = {
@@ -71,6 +74,8 @@ const ItemDetails = ({ asset, onClose }) => {
             setTimeout(() => setToast(null), 3000);
         } catch (err) {
             alert('Update failed: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setSubmitting(false); // <-- End submitting
         }
     };
 
@@ -123,6 +128,7 @@ const ItemDetails = ({ asset, onClose }) => {
                                 <button
                                     onClick={handleSubmit}
                                     className="bg-white shadow-sm shadow-green-600/30 px-4 py-1 rounded-xs text-green-600 hover:text-green-800 hover:bg-green-100 focus:outline-2"
+                                    disabled={submitting}
                                 >
                                     <FaSave className="inline-block mr-1 mb-1" />
                                     Save
@@ -134,6 +140,7 @@ const ItemDetails = ({ asset, onClose }) => {
                                         setImagePreview(null);
                                     }}
                                     className="bg-white shadow-sm shadow-gray-600/30 px-3 py-1 rounded-xs text-gray-500 hover:text-gray-800 hover:bg-gray-100 focus:outline-2 mr-6"
+                                    disabled={submitting}
                                 >
                                     <MdOutlineCancel className="inline-block mr-1 mb-1" />
                                     Cancel
@@ -141,13 +148,13 @@ const ItemDetails = ({ asset, onClose }) => {
                             </>
                         ) : (
                             user?.add_edit_transaction && (
-                            <button
-                                onClick={() => setEditMode(true)}
-                                className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-6"
-                            >
-                                <FaEdit className="inline-block mr-1 mb-1" />
-                                Edit
-                            </button>
+                                <button
+                                    onClick={() => setEditMode(true)}
+                                    className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-6"
+                                >
+                                    <FaEdit className="inline-block mr-1 mb-1" />
+                                    Edit
+                                </button>
                             )
                         )}
                     </div>

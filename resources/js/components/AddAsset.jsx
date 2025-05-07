@@ -4,7 +4,8 @@ import { useAuth } from "../context/AuthContext";
 
 function AddAsset({ setShowModal }) {
     const { user } = useAuth();
-    const { categories, branches, tags, addAsset } = useAssetMeta();
+    const { categories, branches, addAsset } = useAssetMeta();
+    const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
         name: '',
         asset_description: '',
@@ -48,7 +49,7 @@ function AddAsset({ setShowModal }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setSubmitting(true); // <-- Start submitting
         try {
             await addAsset(form);
             alert('Asset added successfully!');
@@ -59,13 +60,11 @@ function AddAsset({ setShowModal }) {
                 asset_type: '',
                 asset_running_number: '',
                 asset_category_id: '',
-                // asset_tag_id: '',
                 assets_branch_id: '',
                 asset_purchase_cost: '',
                 asset_sales_cost: '',
                 asset_stable_unit: '',
                 asset_unit_measure: '',
-                // assets_location_id: '',
                 assets_remark: "",
                 asset_image: ''
             });
@@ -73,6 +72,8 @@ function AddAsset({ setShowModal }) {
         } catch (error) {
             console.error('Error adding asset:', error);
             alert('Failed to add asset.');
+        } finally {
+            setSubmitting(false); // <-- End submitting
         }
     };
 
@@ -128,9 +129,23 @@ function AddAsset({ setShowModal }) {
                     </div>
 
                     <div className="col-span-2 flex justify-end gap-2 mt-4">
-                        <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-sm">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Save</button>
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-sm"
+                            disabled={submitting} // <-- disable Cancel button
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={submitting} // <-- disable Save button
+                        >
+                            {submitting ? "Saving..." : "Save"}
+                        </button>
                     </div>
+
                 </form>
             </div>
         </div>
