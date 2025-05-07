@@ -4,11 +4,12 @@ import { useAssetMeta } from "../context/AssetsContext";
 import { useSuppliers } from "../context/SuppliersContext";
 import { useAuth } from "../context/AuthContext";
 
-function ReceiveForm({ setShowReceiveForm, onSubmit}) {
+function ReceiveForm({ setShowReceiveForm, onSubmit }) {
   const { user } = useAuth();
   const { assets, branches, createAssetIn } = useAssetMeta();
   const { suppliers } = useSuppliers();
   const [isUsingPO, setIsUsingPO] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
   const [referenceNo, setReferenceNo] = useState("");
   const [supplierId, setSupplierId] = useState("");
@@ -76,6 +77,8 @@ function ReceiveForm({ setShowReceiveForm, onSubmit}) {
   }, 0);
 
   const handleSubmit = async () => {
+    setSubmitting(true);
+
     try {
       await createAssetIn({
         date: receiveDate,
@@ -91,6 +94,8 @@ function ReceiveForm({ setShowReceiveForm, onSubmit}) {
       setShowReceiveForm(false);
     } catch (err) {
       alert("Failed to receive stock.");
+    } finally {
+      setSubmitting(false); // <-- End submitting
     }
   };
 
@@ -220,18 +225,19 @@ function ReceiveForm({ setShowReceiveForm, onSubmit}) {
 
         <div className="flex justify-end gap-3 pt-4">
           <button
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-            onClick={() => setShowReceiveForm(false)}
-          >
-            Cancel
-          </button>
-          <button
             className="bg-blue-600 text-white px-4 py-2 rounded"
             onClick={handleSubmit}
+            disabled={submitting}
           >
             Receive
           </button>
-
+          <button
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+            onClick={() => setShowReceiveForm(false)}
+            disabled={submitting}
+          >
+            Cancel
+          </button>
         </div>
 
       </div>
