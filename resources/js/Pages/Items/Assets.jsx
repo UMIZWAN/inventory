@@ -176,9 +176,11 @@ const Assets = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Category
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Cost
-                                        </th>
+                                        {user?.add_edit_asset && (
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Cost
+                                            </th>
+                                        )}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Price
                                         </th>
@@ -241,9 +243,11 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_category_name || '—'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                RM {Number(asset.asset_purchase_cost).toFixed(2) || '—'}
-                                            </td>
+                                            {user?.add_edit_asset && (
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    RM {Number(asset.asset_purchase_cost).toFixed(2) || '—'}
+                                                </td>
+                                            )}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 RM {Number(asset.asset_sales_cost).toFixed(2) || '—'}
                                             </td>
