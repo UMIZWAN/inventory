@@ -125,6 +125,7 @@ class AssetsController extends Controller
             }
 
             $asset->load(['category', 'tag', 'branchValues']);
+            
 
             return response()->json([
                 'success' => true,
