@@ -3,6 +3,7 @@ import Layout from "../components/layout/Layout";
 import { useSuppliers } from "../context/SuppliersContext";
 import AddSupplierModal from "../components/AddSupplierModal";
 import { useAuth } from "../context/AuthContext";
+import { Head } from "@inertiajs/react";
 
 const SuppliersPage = () => {
     const { user } = useAuth();
@@ -15,6 +16,7 @@ const SuppliersPage = () => {
 
     return (
         <Layout>
+            <Head title="Suppliers" />
             <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-xl font-bold">Suppliers</h1>

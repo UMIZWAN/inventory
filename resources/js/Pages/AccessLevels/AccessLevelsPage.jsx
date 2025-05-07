@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Head } from '@inertiajs/react';
 import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
@@ -16,11 +16,8 @@ const AccessLevelsPage = ({ auth }) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [accessLevelToEdit, setAccessLevelToEdit] = useState(null);
 
-    useEffect(() => {
-        fetchAccessLevels();
-    }, []);
-
-    const fetchAccessLevels = async () => {
+    // Fetch Access Levels (Memoized using useCallback)
+    const fetchAccessLevels = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -36,23 +33,27 @@ const AccessLevelsPage = ({ auth }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []); // Dependency array is empty since it doesn't depend on any props or state
 
-    const handleAccessLevelClick = (accessLevel) => {
-        setSelectedAccessLevel(selectedAccessLevel?.id === accessLevel.id ? null : accessLevel);
-    };
+    // Handle Access Level Click (Memoized)
+    const handleAccessLevelClick = useCallback((accessLevel) => {
+        setSelectedAccessLevel(prev => prev?.id === accessLevel.id ? null : accessLevel);
+    }, []);
 
-    const handleAccessLevelAdded = (newAccessLevel) => {
+    // Handle Add Access Level (Memoized)
+    const handleAccessLevelAdded = useCallback((newAccessLevel) => {
         setAccessLevels(prevAccessLevels => [...prevAccessLevels, newAccessLevel]);
-    };
+    }, []);
 
-    const handleEditClick = (accessLevel, e) => {
+    // Handle Edit Access Level Click (Memoized)
+    const handleEditClick = useCallback((accessLevel, e) => {
         e.stopPropagation(); // Prevent row click event
         setAccessLevelToEdit(accessLevel);
         setIsEditModalOpen(true);
-    };
+    }, []);
 
-    const handleAccessLevelUpdated = (updatedAccessLevel) => {
+    // Handle Access Level Update (Memoized)
+    const handleAccessLevelUpdated = useCallback((updatedAccessLevel) => {
         setAccessLevels(prevAccessLevels =>
             prevAccessLevels.map(accessLevel =>
                 accessLevel.id === updatedAccessLevel.id ? updatedAccessLevel : accessLevel
@@ -63,9 +64,10 @@ const AccessLevelsPage = ({ auth }) => {
         if (selectedAccessLevel && selectedAccessLevel.id === updatedAccessLevel.id) {
             setSelectedAccessLevel(updatedAccessLevel);
         }
-    };
+    }, [selectedAccessLevel]); // Dependency array includes selectedAccessLevel to update it accordingly
 
-    const renderPermissionStatus = (value) => {
+    // Render Permission Status
+    const renderPermissionStatus = useCallback((value) => {
         return value ? (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Allowed
@@ -75,7 +77,12 @@ const AccessLevelsPage = ({ auth }) => {
                 Denied
             </span>
         );
-    };
+    }, []); // No dependencies since it doesn't change
+
+    // useEffect to fetch data on mount
+    useEffect(() => {
+        fetchAccessLevels();
+    }, [fetchAccessLevels]); // Ensure fetchAccessLevels is called once on mount
 
     return (
         <Layout>
@@ -255,9 +262,7 @@ const AccessLevelsPage = ({ auth }) => {
             <AddAccessLevelModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                onAccessLevelAdded={(newAccessLevel) => {
-                    handleAccessLevelAdded(newAccessLevel);
-                }}
+                onAccessLevelAdded={handleAccessLevelAdded}
             />
 
             {/* Edit Access Level Modal */}

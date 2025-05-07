@@ -92,7 +92,7 @@ class AssetsFactory extends Factory
             'asset_description' => $this->faker->paragraph(),
             'asset_type' => $this->faker->randomElement(['Red', 'Blue', 'Green']),
             'asset_category_id' => AssetsCategory::inRandomOrder()->first()->id,
-            'asset_tag_id' => AssetsTag::inRandomOrder()->first()->id,
+            'asset_tag_id' => null,
             'asset_stable_unit' => $this->faker->numberBetween(10, 100),
             'asset_purchase_cost' => $this->faker->randomFloat(2, 100, 5000),
             'asset_sales_cost' => $this->faker->randomFloat(2, 200, 6000),

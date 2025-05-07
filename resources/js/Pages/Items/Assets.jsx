@@ -6,6 +6,7 @@ import Layout from '../../components/layout/Layout';
 import { useAssetMeta } from '../../context/AssetsContext';
 import placeholder from '../../assets/image/placeholder.png';
 import { useAuth } from '../../context/AuthContext';
+import { Head } from "@inertiajs/react";
 
 const Assets = () => {
     const { user } = useAuth();
@@ -20,6 +21,9 @@ const Assets = () => {
         location: '',
         status: '',
     });
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
 
     useEffect(() => {
         if (user?.branch_id) {
@@ -59,9 +63,59 @@ const Assets = () => {
         return matchesSearch && matchesCategory && matchesTag && matchesLocation && matchesStatus;
     });
 
+    // Get current items for pagination
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredAssets.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Change page
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+
+    // Function to determine which page numbers to show
+    const getPageRange = () => {
+        const delta = 2; // Number of pages to show before and after current page
+        const range = [];
+        const rangeWithDots = [];
+        let l;
+        
+        // Always include page 1
+        range.push(1);
+        
+        // Calculate the range of pages to show around current page
+        for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+            if (i > 1 && i < totalPages) {
+                range.push(i);
+            }
+        }
+        
+        // Always include the last page if there are more than 1 pages
+        if (totalPages > 1) {
+            range.push(totalPages);
+        }
+        
+        // Add dots where needed
+        for (let i of range) {
+            if (l) {
+                if (i - l === 2) {
+                    rangeWithDots.push(l + 1);
+                } else if (i - l !== 1) {
+                    rangeWithDots.push('...');
+                }
+            }
+            rangeWithDots.push(i);
+            l = i;
+        }
+        
+        return rangeWithDots;
+    };
+
     return (
         <>
             <Layout>
+                <Head title="Item List" />
                 <div className="p-6 max-w-9xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold">Assets List</h1>
@@ -89,24 +143,6 @@ const Assets = () => {
 
                         {/* Filters */}
                         <div className="flex flex-wrap gap-4">
-                            {/* <div>
-                                <label className="block mb-1">Branch:</label>
-                                <select
-                                    id="branch-select"
-                                    value={selectedBranch || ''}
-                                    onChange={handleBranchChange}
-                                    disabled={loading}
-                                    className="px-2 py-1 text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">Branches</option>
-                                    {branches.map((branch) => (
-                                        <option key={branch.id} value={branch.id.toString()}>
-                                            {branch.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div> */}
-
                             <div>
                                 <label className="block mb-1">Categories:</label>
                                 <select
@@ -120,40 +156,6 @@ const Assets = () => {
                                     ))}
                                 </select>
                             </div>
-
-                            {/* <select
-                                value={filters.tag}
-                                onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
-                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">All Tags</option>
-                                {[...new Set(assets.map(a => a.asset_tag_name).filter(Boolean))].map(tag => (
-                                    <option key={tag} value={tag}>{tag}</option>
-                                ))}
-                            </select> */}
-
-                            {/* <select
-                                value={filters.location}
-                                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">All Locations</option>
-                                {[...new Set(assets.map(a => a.assets_location_name).filter(Boolean))].map(loc => (
-                                    <option key={loc} value={loc}>{loc}</option>
-                                ))}
-                            </select> */}
-
-                            {/* <select
-                                value={filters.status}
-                                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                                className="px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="">All Status</option>
-                                <option value="Normal">Normal</option>
-                                <option value="Low">Low</option>
-                                <option value="Very Low">Very Low</option>
-                                <option value="Critical">Critical</option>
-                            </select> */}
                         </div>
                     </div>
 
@@ -162,14 +164,6 @@ const Assets = () => {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <input
-                                        type="checkbox"
-                                        className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                                        onChange={toggleSelectAll}
-                                        checked={selectedAssets.length === assets.length && assets.length > 0}
-                                    />
-                                </th> */}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Code
                                         </th>
@@ -187,40 +181,20 @@ const Assets = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Price
                                         </th>
-                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Tag
-                                        </th> */}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Branch
                                         </th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Quantity
                                         </th>
-                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Location
-                                        </th> */}
-                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th> */}
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Date Created
                                         </th>
-                                        {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Action
-                                        </th> */}
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredAssets.map((asset) => (
+                                    {currentItems.map((asset) => (
                                         <tr key={asset.id} className="hover:bg-gray-50" onClick={() => handleView(asset)}>
-                                            {/* <td className="px-6 py-4 whitespace-nowrap">
-                                        <input
-                                            type="checkbox"
-                                            className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                                            checked={selectedAssets.includes(asset.id)}
-                                            onChange={() => toggleAssetSelection(asset.id)}
-                                        />
-                                    </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_running_number || '—'}
                                             </td>
@@ -229,7 +203,6 @@ const Assets = () => {
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         <img className="h-10 w-10 rounded"
                                                             src={asset.asset_image ? `http://universalmotor.synology.me:30000/${asset.asset_image}` : placeholder}
-                                                            // src={asset.asset_image || placeholder}
                                                             alt={asset.name}
                                                             onError={(e) => {
                                                                 e.target.onerror = null;
@@ -254,63 +227,15 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 RM {Number(asset.asset_sales_cost).toFixed(2) || '—'}
                                             </td>
-                                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.asset_tag_name || '—'}
-                                            </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
-                                                {/* {asset.branch_values[0].asset_branch_name ?? '—'} */}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'}
-                                                {/* {asset.branch_values[0].asset_current_unit ?? '—'} */}
                                             </td>
-
-                                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values[0].asset_location_name ?? '—'}
-                                            </td> */}
-                                            {/* <td className="px-6 py-4 whitespace-nowrap">
-                                                {(() => {
-                                                    const current = Number(asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit);
-                                                    const stable = Number(asset.asset_stable_unit);
-                                                    let badgeClass = 'px-4.5 bg-green-100 text-green-800';
-                                                    let label = 'Normal';
-
-                                                    if (current <= 0) {
-                                                        badgeClass = 'px-4.5 bg-red-600 text-white';
-                                                        label = 'Critical';
-                                                    } else if (current <= stable / 3) {
-                                                        badgeClass = 'px-3.5 bg-red-100 text-red-800';
-                                                        label = 'Very Low';
-                                                    } else if (current <= (2 * stable) / 3) {
-                                                        badgeClass = 'px-7 bg-yellow-100 text-yellow-800';
-                                                        label = 'Low';
-                                                    }
-
-
-                                                    return (
-                                                        <span className={`w-20 text-center inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}`}>
-                                                            {label}
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {new Date(asset.created_at).toLocaleDateString()}
                                             </td>
-                                            {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <div className="flex space-x-2">
-                                                    <button className="text-blue-600 hover:text-blue-900" onClick={() => handleView(asset)}>
-                                                        <FiEye />
-                                                    </button>
-                                                    <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleEdit(asset)}>
-                                                        <FiEdit2 />
-                                                    </button>
-                                                    <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(asset.id)}>
-                                                        <FiTrash2 />
-                                                    </button>
-                                                </div>
-                                            </td> */}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -318,11 +243,67 @@ const Assets = () => {
                         </div>
                     </div>
 
+                    {/* Pagination */}
+                    {filteredAssets.length > 0 && (
+                        <div className="flex justify-between items-center mt-4">
+                            <div className="text-sm text-gray-700">
+                                Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
+                                <span className="font-medium">
+                                    {indexOfLastItem > filteredAssets.length ? filteredAssets.length : indexOfLastItem}
+                                </span>{" "}
+                                of <span className="font-medium">{filteredAssets.length}</span> results
+                            </div>
+                            <nav className="flex items-center">
+                                <button
+                                    onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
+                                    disabled={currentPage === 1}
+                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                                        currentPage === 1
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-gray-700 hover:bg-gray-50"
+                                    }`}
+                                >
+                                    Previous
+                                </button>
+                                <div className="hidden md:flex">
+                                    {getPageRange().map((number, index) => (
+                                        number === '...' ? (
+                                            <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700">
+                                                {number}
+                                            </span>
+                                        ) : (
+                                            <button
+                                                key={`page-${number}`}
+                                                onClick={() => paginate(number)}
+                                                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
+                                                    currentPage === number
+                                                        ? "bg-blue-600 text-white"
+                                                        : "text-gray-700 hover:bg-gray-50"
+                                                }`}
+                                            >
+                                                {number}
+                                            </button>
+                                        )
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                                        currentPage === totalPages || totalPages === 0
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-gray-700 hover:bg-gray-50"
+                                    }`}
+                                >
+                                    Next
+                                </button>
+                            </nav>
+                        </div>
+                    )}
 
                     {showModal && (
                         <AddAsset setShowModal={setShowModal} />
                     )}
-
 
                     {selectedAsset && (
                         <ItemDetails
@@ -330,7 +311,6 @@ const Assets = () => {
                             onClose={() => setSelectedAsset(null)}
                         />
                     )}
-
                 </div>
             </Layout>
         </>

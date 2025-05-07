@@ -5,6 +5,7 @@ import CheckoutList from "../../components/CheckoutList";
 import ReceiveList from "../../components/ReceiveList";
 import { useAuth } from "../../context/AuthContext";
 import { useAssetMeta } from "../../context/AssetsContext";
+import { Head } from "@inertiajs/react";
 
 function StockTransfer() {
   const { user } = useAuth();
@@ -46,6 +47,7 @@ function StockTransfer() {
 
   return (
     <Layout>
+      <Head title="Transaction" />
       <div className="p-4">
         <div className="flex border-b border-gray-400 mb-4">
           {tabs.map((tab) => (
