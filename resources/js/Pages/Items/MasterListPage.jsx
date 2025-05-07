@@ -8,6 +8,10 @@ const MasterListPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredItems, setFilteredItems] = useState([]);
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
 
     useEffect(() => {
         const fetchItems = async () => {
@@ -26,7 +30,6 @@ const MasterListPage = () => {
                 setLoading(false);
             }
         };
-
         fetchItems();
     }, []);
 
@@ -43,6 +46,8 @@ const MasterListPage = () => {
             );
             setFilteredItems(filtered);
         }
+        // Reset to first page when search changes
+        setCurrentPage(1);
     }, [searchTerm, items]);
 
     const getStatusBadge = (totalUnits, stableUnit) => {
@@ -53,9 +58,7 @@ const MasterListPage = () => {
                 </span>
             );
         }
-
         const percentage = (totalUnits / stableUnit) * 100;
-
         if (percentage >= 100) {
             return (
                 <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
@@ -68,7 +71,7 @@ const MasterListPage = () => {
                     Low Stock
                 </span>
             );
-        } else  {
+        } else {
             return (
                 <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                     Critical Stock
@@ -77,12 +80,60 @@ const MasterListPage = () => {
         }
     };
 
+    // Get current items for pagination
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Change page
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+
+    // Function to determine which page numbers to show
+    const getPageRange = () => {
+        const delta = 2; // Number of pages to show before and after current page
+        const range = [];
+        const rangeWithDots = [];
+        let l;
+        
+        // Always include page 1
+        range.push(1);
+        
+        // Calculate the range of pages to show around current page
+        for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+            if (i > 1 && i < totalPages) {
+                range.push(i);
+            }
+        }
+        
+        // Always include the last page if there are more than 1 pages
+        if (totalPages > 1) {
+            range.push(totalPages);
+        }
+        
+        // Add dots where needed
+        for (let i of range) {
+            if (l) {
+                if (i - l === 2) {
+                    rangeWithDots.push(l + 1);
+                } else if (i - l !== 1) {
+                    rangeWithDots.push('...');
+                }
+            }
+            rangeWithDots.push(i);
+            l = i;
+        }
+        
+        return rangeWithDots;
+    };
+
     return (
         <Layout>
             <Head title="Master List" />
             <div className="p-4">
                 <h1 className="text-2xl font-bold mb-4">Master Inventory List</h1>
-
                 <div className="mb-4">
                     <div className="relative">
                         <input
@@ -107,85 +158,144 @@ const MasterListPage = () => {
                         </div>
                     </div>
                 </div>
-
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto bg-white rounded-lg shadow">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Asset Number
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Item Name
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Category
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Total Quantity
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Branch Distribution
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredItems.length > 0 ? (
-                                    filteredItems.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">{item.asset_running_number}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {item.name}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">
-                                                    {item.asset_category_name || "N/A"}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">
-                                                    {item.total_units || 0} / {item.asset_stable_unit || 0} {item.asset_unit_measure}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {getStatusBadge(item.total_units, item.asset_stable_unit)}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-500">
-                                                    {item.branch_values && item.branch_values.map((branch, idx) => (
-                                                        <div key={idx} className="mb-1">
-                                                            {branch.asset_branch_name}: {branch.asset_current_unit} {item.asset_unit_measure}
-                                                        </div>
-                                                    ))}
-                                                </div>
+                    <>
+                        <div className="overflow-x-auto bg-white rounded-lg shadow">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Asset Number
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Item Name
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Category
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Total Quantity
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Branch Distribution
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {currentItems.length > 0 ? (
+                                        currentItems.map((item) => (
+                                            <tr key={item.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-500">{item.asset_running_number}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-medium text-gray-900">
+                                                        {item.name}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-500">
+                                                        {item.asset_category_name || "N/A"}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-500">
+                                                        {item.total_units || 0} / {item.asset_stable_unit || 0} {item.asset_unit_measure}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {getStatusBadge(item.total_units, item.asset_stable_unit)}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-gray-500">
+                                                        {item.branch_values && item.branch_values.map((branch, idx) => (
+                                                            <div key={idx} className="mb-1">
+                                                                {branch.asset_branch_name}: {branch.asset_current_unit} {item.asset_unit_measure}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan="7"
+                                                className="px-6 py-4 text-center text-sm text-gray-500"
+                                            >
+                                                No assets found
                                             </td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan="7"
-                                            className="px-6 py-4 text-center text-sm text-gray-500"
-                                        >
-                                            No assets found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination */}
+                        {filteredItems.length > 0 && (
+                            <div className="flex justify-between items-center mt-4">
+                                <div className="text-sm text-gray-700">
+                                    Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
+                                    <span className="font-medium">
+                                        {indexOfLastItem > filteredItems.length ? filteredItems.length : indexOfLastItem}
+                                    </span>{" "}
+                                    of <span className="font-medium">{filteredItems.length}</span> results
+                                </div>
+                                <nav className="flex items-center">
+                                    <button
+                                        onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
+                                        disabled={currentPage === 1}
+                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                                            currentPage === 1
+                                                ? "text-gray-400 cursor-not-allowed"
+                                                : "text-gray-700 hover:bg-gray-50"
+                                        }`}
+                                    >
+                                        Previous
+                                    </button>
+                                    <div className="hidden md:flex">
+                                        {getPageRange().map((number, index) => (
+                                            number === '...' ? (
+                                                <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700">
+                                                    {number}
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    key={`page-${number}`}
+                                                    onClick={() => paginate(number)}
+                                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
+                                                        currentPage === number
+                                                            ? "bg-blue-600 text-white"
+                                                            : "text-gray-700 hover:bg-gray-50"
+                                                    }`}
+                                                >
+                                                    {number}
+                                                </button>
+                                            )
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
+                                        disabled={currentPage === totalPages || totalPages === 0}
+                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                                            currentPage === totalPages || totalPages === 0
+                                                ? "text-gray-400 cursor-not-allowed"
+                                                : "text-gray-700 hover:bg-gray-50"
+                                        }`}
+                                    >
+                                        Next
+                                    </button>
+                                </nav>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </Layout>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAssetMeta } from '../context/AssetsContext';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/layout/Layout';
+import { Head } from '@inertiajs/react';
 
 const BranchPage = () => {
   const { user } = useAuth();
@@ -49,6 +50,7 @@ const BranchPage = () => {
 
   return (
     <Layout>
+      <Head title="Branches" />
       <div className="max-w-3xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Branches</h1>
 

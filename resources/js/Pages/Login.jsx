@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { router } from "@inertiajs/react";
+import { router, Head} from "@inertiajs/react";
 
 const Login = () => {
   const { login } = useAuth(); // use login from context
@@ -24,6 +24,7 @@ const Login = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col justify-center bg-gray-50 overflow-hidden">
+      <Head title="Login" />
       {/* Background SVG Circles */}
       <div className="absolute inset-0 z-0">
         <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 800 800">
