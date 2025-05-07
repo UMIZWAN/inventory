@@ -4,11 +4,35 @@ import { FiShield, FiUsers, FiMapPin, FiTag, FiPackage, FiTruck, FiList, FiRepea
 import { Link } from '@inertiajs/react';
 import { useAuth } from '../../context/AuthContext';
 import { useAssetMeta } from '../../context/AssetsContext';
+import moment from "moment";
 
 const Sidebar = () => {
     const { user } = useAuth();
-    const { branches, fetchAssets, loading } = useAssetMeta(); // Get branches and fetchAssets from context
+    const { assets, assetTransfer, fetchAssets, loading } = useAssetMeta(); // Get branches and fetchAssets from context
     const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
+
+    const hasLowOrCriticalStock = assets?.some((item) => {
+        const total = item.total_units || 0;
+        const stable = item.asset_stable_unit || 0;
+        const percentage = (total / stable) * 100;
+        return percentage < 100; // could use < 50 if you only want critical
+    });
+
+    const now = moment();
+
+    const incomingTransfers = assetTransfer?.filter(
+        (txn) =>
+            txn.assets_transaction_status === "IN-TRANSIT" &&
+            txn.assets_to_branch_id === user?.branch_id
+    ) || [];
+
+    const hasIncomingTransfer = incomingTransfers.length > 0;
+
+    const hasOverdueTransfer = incomingTransfers.some((txn) => {
+        const created = moment(txn.created_at);
+        return now.diff(created, "days") > 5;
+    });
+
     const menu = useMemo(() => {
         if (!user) return [];
 
@@ -167,9 +191,12 @@ const Sidebar = () => {
                 <ul className="space-y-1">
                     {user?.view_asset_masterlist && (
                         <Link href="/items/master-list">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer relative">
                                 <FiList className="text-sky-600" />
                                 <span className="font-medium">MasterList</span>
+                                {hasLowOrCriticalStock && (
+                                    <span className="absolute right-3 w-2 h-2 bg-red-500 rounded-full"></span>
+                                )}
                             </li>
                         </Link>
                     )}
@@ -185,11 +212,18 @@ const Sidebar = () => {
 
                     {user?.view_transaction && (
                         <Link href="/items/asset-transaction">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiRepeat className="text-sky-600" />
-                                <span className="font-medium">Transaction</span>
-                            </li>
-                        </Link>
+                        <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                          <FiRepeat className="text-sky-600" />
+                          <span className="font-medium">Transaction</span>
+                          {hasIncomingTransfer && (
+                            <span
+                              className={`absolute right-3 w-2 h-2 rounded-full ${
+                                hasOverdueTransfer ? "bg-red-500" : "bg-green-500"
+                              }`}
+                            />
+                          )}
+                        </li>
+                      </Link>
                     )}
                 </ul>
             </div>

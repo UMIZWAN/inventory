@@ -28,12 +28,12 @@ export const SuppliersProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, []);
+  // useEffect(() => {
+  //   fetchSuppliers();
+  // }, []);
 
   return (
-    <SuppliersContext.Provider value={{ suppliers, loading, addSupplier }}>
+    <SuppliersContext.Provider value={{ fetchSuppliers, suppliers, loading, addSupplier }}>
       {children}
     </SuppliersContext.Provider>
   );
