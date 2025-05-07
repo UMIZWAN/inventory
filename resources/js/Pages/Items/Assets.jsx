@@ -86,7 +86,7 @@ const Assets = () => {
 
                         {/* Filters */}
                         <div className="flex flex-wrap gap-4">
-                            <div>
+                            {/* <div>
                                 <label className="block mb-1">Branch:</label>
                                 <select
                                     id="branch-select"
@@ -102,7 +102,7 @@ const Assets = () => {
                                         </option>
                                     ))}
                                 </select>
-                            </div>
+                            </div> */}
 
                             <div>
                                 <label className="block mb-1">Categories:</label>
@@ -251,10 +251,12 @@ const Assets = () => {
                                                 {asset.asset_tag_name || '—'}
                                             </td> */}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values[0].asset_branch_name ?? '—'}
+                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
+                                                {/* {asset.branch_values[0].asset_branch_name ?? '—'} */}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                {asset.branch_values[0].asset_current_unit ?? '—'}
+                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'}
+                                                {/* {asset.branch_values[0].asset_current_unit ?? '—'} */}
                                             </td>
 
                                             {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
