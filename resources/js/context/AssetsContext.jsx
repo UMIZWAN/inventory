@@ -16,12 +16,12 @@ export const AssetMetaProvider = ({ children }) => {
   const [assetTransfer, setAssetTransfer] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.branch_id) {
-      fetchAssets(user?.branch_id);
-      fetchAssetTransaction();
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user?.branch_id) {
+  //     fetchAssets(user?.branch_id);
+  //     fetchAssetTransaction();
+  //   }
+  // }, [user]);
 
   const fetchAssets = (branchId) => {
     setLoading(true);
@@ -354,14 +354,6 @@ export const AssetMetaProvider = ({ children }) => {
       throw error;
     }
   };
-
-  useEffect(() => {
-    fetchBranches();
-    fetchTags();
-    fetchCategories();
-    fetchAssets();
-    fetchAssetTransaction();
-  }, []);
 
   return (
     <AssetsContext.Provider

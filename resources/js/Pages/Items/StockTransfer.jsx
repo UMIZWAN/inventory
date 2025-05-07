@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
 import CheckoutList from "../../components/CheckoutList";
@@ -8,7 +8,13 @@ import { useAssetMeta } from "../../context/AssetsContext";
 
 function StockTransfer() {
   const { user } = useAuth();
-  const { assetTransfer } = useAssetMeta();
+  const { assetTransfer, fetchAssetTransaction } = useAssetMeta();
+
+  useEffect(() => {
+      if (user?.branch_id) {
+        fetchAssetTransaction();
+      }
+    }, [user]);
 
   const incomingTransfersCount = assetTransfer.filter(
     (txn) =>

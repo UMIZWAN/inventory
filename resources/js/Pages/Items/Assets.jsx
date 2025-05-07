@@ -22,8 +22,11 @@ const Assets = () => {
     });
 
     useEffect(() => {
-        fetchBranches();
-    }, []);
+        if (user?.branch_id) {
+            fetchAssets(user?.branch_id);
+            fetchBranches();
+        }
+    }, [user]);
 
     const handleView = (asset) => setSelectedAsset(asset);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAssetMeta } from '../context/AssetsContext';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/layout/Layout';
@@ -16,6 +16,10 @@ const BranchPage = () => {
 
   const [form, setForm] = useState({ name: '', id: null });
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
