@@ -7,6 +7,7 @@ use App\Models\AccessLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 
 class AccessLevelController extends Controller
 {
@@ -23,7 +24,9 @@ class AccessLevelController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'List of Access Levels',
-                'data' => $accessLevels
+                'data' => Cache::remember('access_levels_cache', 3600, function () use ($accessLevels) {
+                    return $accessLevels;
+                })
             ], 200);
         } catch (Exception $e) {
             return response()->json([
