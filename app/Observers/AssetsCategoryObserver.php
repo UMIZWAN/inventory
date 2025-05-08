@@ -18,6 +18,7 @@ class AssetsCategoryObserver
     public function updated(AssetsCategory $assetsCategory): void
     {
         Cache::forget('assets_category_cache');
+        Cache::forget('assets_cache');
     }
 
     public function deleted(AssetsCategory $assetsCategory): void

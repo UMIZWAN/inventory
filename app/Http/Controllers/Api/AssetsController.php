@@ -149,7 +149,6 @@ class AssetsController extends Controller
 
     public function update(Request $request, $id)
     {
-        Log::info($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             // 'asset_running_number' => 'required|string|max:255|unique:assets,asset_running_number,' . $id,
@@ -325,5 +324,38 @@ class AssetsController extends Controller
             'message' => 'Asset deleted successfully',
             'data' => null
         ], 200);
+    }
+
+    public function copyItems($id)
+    {
+        try {
+            $asset = Assets::find($id);
+            // $validator = Validator::make($request->all(), [
+            //     'name' => 'required|string|max:255',
+            //     'asset_running_number' => 'required|string|max:255|unique:assets',
+            //     'asset_description' => 'nullable|string',
+            //     'asset_type' => 'nullable|string|max:255',
+            //     'asset_category_id' => 'required|exists:assets_category,id',
+            //     // 'asset_tag_id' => 'required|exists:assets_tag,id',
+            //     'asset_stable_unit' => 'required|integer|min:0',
+            //     'asset_purchase_cost' => 'nullable|numeric|min:0',
+            //     'asset_sales_cost' => 'nullable|numeric|min:0',
+            //     'asset_unit_measure' => 'required|string|max:255',
+            //     'asset_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            //     'assets_remark' => 'nullable|string',
+            // ]);
+            if (!$asset) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset not found',
+                    'data' => null
+                ], 404);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
