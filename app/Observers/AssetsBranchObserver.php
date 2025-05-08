@@ -18,6 +18,7 @@ class AssetsBranchObserver
     public function updated(AssetsBranch $assetsBranch): void
     {
         Cache::forget('assets_branch_cache');
+        Cache::forget('users_cache');
     }
 
     public function deleted(AssetsBranch $assetsBranch): void
