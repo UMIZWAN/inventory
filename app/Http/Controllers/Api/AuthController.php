@@ -55,9 +55,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User profile retrieved successfully',
-                'data' => new UserResource(Cache::remember('user_' . $user->id, 3600, function () use ($user) {
-                    return $user;
-                }))
+                'data' => new UserResource($user)
             ]);
         } catch (Exception $e) {
             return response()->json([
