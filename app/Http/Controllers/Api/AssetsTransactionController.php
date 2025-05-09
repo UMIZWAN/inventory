@@ -81,10 +81,12 @@ class AssetsTransactionController extends Controller
                     'errors' => 'Assets transaction type is required'
                 ], 422);
             }
+            $request['assets_transaction_running_number'] = $this->generateNextRunningNumber();
+
             if ($request->assets_transaction_type == 'ASSET OUT') {
 
                 $validator = Validator::make($request->all(), [
-                    'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
+                    // 'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
                     'assets_recipient_name' => 'nullable|string',
                     'assets_from_branch_id' => 'required|integer',
@@ -119,7 +121,7 @@ class AssetsTransactionController extends Controller
                     'created_by' => $request->created_by,
                     'created_at' => $request->created_at,
                 ]);
-                
+
                 foreach ($request->assets_transaction_item_list as $item) {
                     AssetsTransactionItemList::create([
                         'asset_transaction_id' => $transaction->id,
@@ -380,6 +382,75 @@ class AssetsTransactionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the latest asset transaction running number
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getLatestRunningNo()
+    {
+        try {
+            $latestTransaction = AssetsTransaction::orderBy('assets_transaction_running_number', 'desc')->first();
+
+            // If no transactions exist yet, return a default format
+            if (!$latestTransaction) {
+                $today = now()->format('Ymd'); // Current date in YYYYMMDD format
+                $defaultRunningNo = "AST-{$today}-0001";
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No existing transactions, returning default running number',
+                    'data' => [
+                        'running_number' => $defaultRunningNo
+                    ]
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Latest Running Number Retrieved',
+                'data' => $latestTransaction
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve latest running number: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate the next running number based on the format AST-YYYYMMDD-XXXX
+     * 
+     * @return string The next running number
+     */
+    public function generateNextRunningNumber()
+    {
+        try {
+            $latestTransaction = AssetsTransaction::orderBy('assets_transaction_running_number', 'desc')->first();
+
+            if (!$latestTransaction) {
+                $nextNumber = 1;
+            } else {
+                // Extract numeric part (e.g., "MKT-00123" => 123)
+                $latestNumber = (int) str_replace('MKT-', '', $latestTransaction->assets_transaction_running_number);
+                $nextNumber = $latestNumber + 1;
+            }
+
+            // Format with a minimum of 5 digits, more if needed
+            $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            $nextRunningNumber = 'MKT-' . $numberPart;
+
+            return $nextRunningNumber;
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate next running number: ' . $e->getMessage(),
+                'data' => null
             ], 500);
         }
     }

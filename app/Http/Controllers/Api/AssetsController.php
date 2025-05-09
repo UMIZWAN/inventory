@@ -330,20 +330,6 @@ class AssetsController extends Controller
     {
         try {
             $asset = Assets::find($id);
-            // $validator = Validator::make($request->all(), [
-            //     'name' => 'required|string|max:255',
-            //     'asset_running_number' => 'required|string|max:255|unique:assets',
-            //     'asset_description' => 'nullable|string',
-            //     'asset_type' => 'nullable|string|max:255',
-            //     'asset_category_id' => 'required|exists:assets_category,id',
-            //     // 'asset_tag_id' => 'required|exists:assets_tag,id',
-            //     'asset_stable_unit' => 'required|integer|min:0',
-            //     'asset_purchase_cost' => 'nullable|numeric|min:0',
-            //     'asset_sales_cost' => 'nullable|numeric|min:0',
-            //     'asset_unit_measure' => 'required|string|max:255',
-            //     'asset_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            //     'assets_remark' => 'nullable|string',
-            // ]);
             if (!$asset) {
                 return response()->json([
                     'success' => false,
@@ -351,6 +337,32 @@ class AssetsController extends Controller
                     'data' => null
                 ], 404);
             }
+
+            $latestId = Assets::max('id');
+
+            $new_running_no = $asset->asset_running_number . '-COPY' . $latestId;
+
+            $newAsset = Assets::create([
+                'name' => $asset->name,
+                'asset_running_number' => $new_running_no,
+                'asset_description' => $asset->asset_description ?? null,
+                'asset_type' => $asset->asset_type ?? null,
+                'asset_category_id' => $asset->asset_category_id,
+                'asset_stable_unit' => $asset->asset_stable_unit,
+                'asset_purchase_cost' => $asset->asset_purchase_cost ?? null,
+                'asset_sales_cost' => $asset->asset_sales_cost ?? null,
+                'asset_unit_measure' => $asset->asset_unit_measure,
+                'asset_image' => $asset->asset_image ?? null,
+                'assets_remark' => $asset->assets_remark ?? null,
+                'assets_log' => Auth::user()->name . ' menambahkan aset ' . $asset->asset_running_number . ' pada ' . date('Y-m-d H:i:s'),
+
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Asset copied successfully',
+                'data' => $newAsset
+            ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
