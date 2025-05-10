@@ -13,6 +13,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
   const getItemDetails = (item) => {
     const asset = allAssets.find(a => a.id === item.asset_id);
     return {
+      code: asset?.asset_running_number || 'Unknown Code',
       name: asset?.name || 'Unknown Asset',
       price: asset?.asset_sales_cost || 0,
       category: asset?.asset_category_name || 'Unknown',
@@ -43,6 +44,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
+          
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child
               as={Fragment}
@@ -63,23 +65,23 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
 
                 <div className="mt-4 space-y-2">
                   <p><span className="font-semibold">Running Number:</span> {data?.assets_transaction_running_number}</p>
+                  <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
                   <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                   <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
                   <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
                   <p><span className="font-semibold">Shipping Option:</span> {data?.assets_shipping_option}</p>
-                  <p><span className="font-semibold">Created At:</span> {new Date(data?.created_at).toLocaleString()}</p>
-
+                  
                   <div className="mt-4">
                     <h4 className="font-semibold">Items:</h4>
                     <div className="overflow-x-auto">
                       <table className="min-w-full mt-2 border">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Code</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Name</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Category</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Price</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Quantity</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Total</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -87,11 +89,11 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                             const details = getItemDetails(item);
                             return (
                               <tr key={index} className="hover:bg-gray-50">
+                                <td className="px-4 py-2 border">{details.code}</td>
                                 <td className="px-4 py-2 border">{details.name}</td>
                                 <td className="px-4 py-2 border">{details.category}</td>
                                 <td className="px-4 py-2 border">{Number(details.price).toFixed(2)}</td>
                                 <td className="px-4 py-2 border">{details.asset_unit}</td>
-                                <td className="px-4 py-2 border">{(details.price * details.asset_unit).toLocaleString()}</td>
                               </tr>
                             );
                           })}

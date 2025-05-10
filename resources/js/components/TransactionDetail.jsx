@@ -1,6 +1,7 @@
 import React from "react";
+import logo from '../assets/image/universal group - black logo.jpg';
 import { useAssetMeta } from "../context/AssetsContext";
-import { PDFDownloadLink, Document, Page, View, Text, StyleSheet, Font } from "@react-pdf/renderer";
+import { PDFDownloadLink, Document, Page, View, Text, StyleSheet, Font, Image } from "@react-pdf/renderer";
 
 // Register fonts (optional)
 Font.register({
@@ -19,33 +20,42 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
     return (
         <Document>
             <Page size="A4" style={styles.page}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>Transaction Invoice</Text>
+                <Image style={styles.logo} src={logo} />
+                <Text style={styles.header}>invoice</Text>
+
+                <View style={styles.section}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                        <Text>
+                            <Text style={styles.label}>Date:</Text>{" "}
+                            {new Date(transaction?.created_at).toLocaleDateString()}
+                        </Text>
+                        <Text style={{ marginRight: 40 }}>
+                            <Text style={styles.label}>Ref. No.:</Text>{" "}
+                            {transaction?.assets_transaction_running_number}
+                        </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                        <Text>
+                            <Text style={styles.label}>Branch:</Text> {transaction?.assets_from_branch_name}
+                        </Text>
+                        <Text style={{ marginRight: 40 }}>
+                            <Text style={styles.label}>Purpose:</Text>{" "}
+                            {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}
+                        </Text>
+                    </View>
+
+                    <View style={{ marginTop: 20 }}>
+                        <Text style={styles.label}>Bill to:</Text>
+                        <Text style={{ marginTop: 8 }}>{transaction.assets_recipient_name}</Text>
+                    </View>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.label}>Reference Number:</Text>
-                    <Text style={styles.value}>{transaction.assets_transaction_running_number}</Text>
-
-                    <Text style={styles.label}>Branch:</Text>
-                    <Text style={styles.value}>{transaction.assets_from_branch_name}</Text>
-
-                    <Text style={styles.label}>Purpose:</Text>
-                    <Text style={styles.value}>
-                        {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}
-                    </Text>
-
-                    <Text style={styles.label}>Type:</Text>
-                    <Text style={styles.value}>{transaction.assets_transaction_type}</Text>
-
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={{ ...styles.label, marginBottom: 10 }}>Item List</Text>
                     <View style={styles.table}>
                         {/* Table Header */}
                         <View style={{ ...styles.tableRow, ...styles.tableHeader }}>
                             {/* <Text style={styles.tableCell}>#</Text> */}
+                            <Text style={styles.tableCell}>Code</Text>
                             <Text style={styles.tableCell}>Asset Name</Text>
                             <Text style={styles.tableCell}>Quantity</Text>
                             <Text style={styles.tableCell}>Price (Each)</Text>
@@ -63,6 +73,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                                 <View key={index} style={styles.tableRow}>
                                     {/* <Text style={styles.tableCell}>{index + 1}</Text> */}
                                     <Text style={styles.tableCell}>{name}</Text>
+                                    <Text style={styles.tableCell}>{name}</Text>
                                     <Text style={styles.tableCell}>{quantity}</Text>
                                     <Text style={styles.tableCell}>RM {Number(price).toFixed(2)}</Text>
                                     <Text style={styles.tableCell}>RM {Number(total).toFixed(2)}</Text>
@@ -72,8 +83,23 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     </View>
 
                     {/* Total Amount */}
-                    <View style={styles.totalContainer}>
+                    {/* <View style={styles.totalContainer}>
                         <Text style={styles.totalText}>Total Amount: RM {totalAmount.toFixed(2)}</Text>
+                    </View> */}
+                </View>
+
+                <View style={styles.signatureRow}>
+                    <View style={styles.issuedBlock}>
+                        <Text style={{ marginBottom: 10, textTransform: "capitalize" }}>
+                            <Text>Issued by</Text> {transaction?.created_by_name}
+                        </Text>
+                        <Text>
+                            <Text>{transaction?.assets_from_branch_name}</Text>
+                        </Text>
+                    </View>
+                    <View style={styles.signatureBlock}>
+                        <Text style={{ marginBottom: 30 }}>Receiver's Signature:</Text>
+                        <Text>___________________________</Text>
                     </View>
                 </View>
             </Page>
@@ -88,8 +114,8 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
     const getAssetDetails = (assetId) => {
         const asset = allAssets.find((a) => a.id === assetId);
         return asset
-            ? { name: asset.name, price: type === "receive" ? asset.asset_purchase_cost : asset.asset_sales_cost }
-            : { name: "-", price: 0 };
+            ? { name: asset.name, price: type === "receive" ? asset.asset_purchase_cost : asset.asset_sales_cost, code: asset.asset_running_number }
+            : { name: "-", price: 0, code: "-" };
     };
 
     const getItemList = () => {
@@ -207,36 +233,14 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
 // Define styles for the PDF
 const styles = StyleSheet.create({
-    page: {
-        padding: 40,
-        fontFamily: "Roboto",
-    },
-    header: {
-        marginBottom: 20,
-        borderBottom: 1,
-        borderColor: "#e5e7eb",
-        paddingBottom: 10,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 10,
-    },
-    section: {
-        marginBottom: 15,
-    },
-    label: {
-        fontSize: 10,
-        color: "#6b7280",
-        marginBottom: 4,
-    },
-    value: {
-        fontSize: 12,
-        marginBottom: 8,
-    },
+    page: { padding: 40, fontSize: 11, fontFamily: "Helvetica" },
+    logo: { width: 250, height: 30, marginBottom: 25, alignSelf: "center" },
+    header: { fontSize: 16, marginBottom: 20, textAlign: "center", textTransform: "uppercase", fontWeight: "bold" },
+    section: { marginBottom: 10 },
+    label: { fontWeight: "bold" },
     table: {
         width: "100%",
-        marginTop: 20,
+        marginTop: 10,
         borderWidth: 1,
         borderColor: "#e5e7eb",
     },
@@ -263,6 +267,16 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
     },
+    signatureRow: {
+        flexDirection: "row",
+        marginTop: 30,
+        justifyContent: "space-between",
+    },
+    issuedBlock: { 
+        width: "45%",
+        fontStyle: "italic",
+    },
+    signatureBlock: { width: "45%" },
 });
 
 export default TransactionDetail;
