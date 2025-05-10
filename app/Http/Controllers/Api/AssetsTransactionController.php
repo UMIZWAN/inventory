@@ -249,8 +249,6 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_total_cost' => 'required|numeric',
                     'created_by' => 'required|integer|exists:users,id',
                     'created_at' => 'nullable|date',
-                    'assets_transaction_purpose' => 'nullable|array',
-                    'assets_transaction_purpose.*' => 'nullable|string',
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
@@ -270,7 +268,7 @@ class AssetsTransactionController extends Controller
                 $transaction = AssetsTransaction::create([
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
-                    'assets_shipping_option' => $request->assets_shipping_option,
+                    'assets_shipping_option_id' => $request->assets_shipping_option_id,
                     'assets_transaction_status' => 'IN-TRANSIT',
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_transaction_remark' => $request->assets_transaction_remark,

@@ -245,7 +245,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
           </div>
 
           {/* Purposes checkboxes */}
-          <div>
+          {/* <div>
             <label className="block font-medium mb-2">Purpose</label>
             <div className="flex flex-wrap gap-4">
               {purposes.map((purpose) => (
@@ -262,7 +262,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
                 </label>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Items Table */}
           <ItemsTable
