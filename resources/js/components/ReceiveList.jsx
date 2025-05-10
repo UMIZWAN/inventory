@@ -117,7 +117,7 @@ export default function ReceiveList() {
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
                             <th className="px-4 py-2 border">Running No</th>
-                            <th className="px-4 py-2 border">Type</th>
+                            {/* <th className="px-4 py-2 border">Type</th> */}
                             <th className="px-4 py-2 border">Branch</th>
                             <th className="px-4 py-2 border">Items</th>
                             <th className="px-4 py-2 border">Total Cost</th>
@@ -135,7 +135,7 @@ export default function ReceiveList() {
                                     >
                                         {txn.assets_transaction_running_number}
                                     </td>
-                                    <td className="px-4 py-2 border">{txn.assets_transaction_type}</td>
+                                    {/* <td className="px-4 py-2 border">{txn.assets_transaction_type}</td> */}
                                     <td className="px-4 py-2 border">{txn.assets_from_branch_name}</td>
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
