@@ -51,7 +51,10 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       key: "item",
       label: "Item",
       type: "select",
-      options: assets.map((a) => ({ value: a.id, label: a.name })),
+      options: assets.map((a) => ({
+        value: a.id, label: a.name,
+        qty: a.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'
+      })),
       width: "w-64"
     },
     { key: "category", label: "Category", readOnly: true },
