@@ -18,6 +18,10 @@ use App\Models\AccessLevel;
 use App\Models\Suppliers;
 use App\Observers\AccessLevelObserver;
 use App\Observers\SuppliersObserver;
+use App\Models\AssetsTransactionPurpose;
+use App\Observers\AssetsTransactionPurposeObserver;
+use App\Models\ShippingOption;
+use App\Observers\ShippingOptionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,5 +46,7 @@ class AppServiceProvider extends ServiceProvider
         AssetsBranchValues::observe(AssetsBranchValuesObserver::class);
         AccessLevel::observe(AccessLevelObserver::class);
         Suppliers::observe(SuppliersObserver::class);
+        AssetsTransactionPurpose::observe(AssetsTransactionPurposeObserver::class);
+        ShippingOption::observe(ShippingOptionObserver::class);
     }
 }
