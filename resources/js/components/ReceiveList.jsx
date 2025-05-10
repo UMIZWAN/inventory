@@ -83,7 +83,7 @@ export default function ReceiveList() {
                             onClick={() => setShowReceiveForm(true)}
                             className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"
                         >
-                            + Receive Asset
+                            + Receive Items
                         </button>
                     )}
                 </div>
