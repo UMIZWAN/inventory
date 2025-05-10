@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
+import { useOptions } from "../context/OptionContext";
 
 export default function CheckoutForm({ setShowCheckoutForm }) {
     const { user } = useAuth();
+    const { fetchInvType, invType } = useOptions();
     const { assets, createStockOut } = useAssetMeta();
     const [type, setType] = useState("sold");
     const [branch, setBranch] = useState(user?.branch_id || "");
@@ -17,6 +19,10 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
         EventsRoadshows: false,
         SpecialRQ: false,
     });
+
+    useEffect(() => {
+        fetchInvType();
+    }, [])
 
     const [items, setItems] = useState([
         { assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },
@@ -65,7 +71,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             setItems(updated);
         }
     };
-    
+
     const columns = [
         {
             key: "item",
@@ -175,9 +181,10 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                             onChange={(e) => handleChange('status', e.target.value)}
                             className="w-full border border-gray-300 rounded px-3 py-2"
                         >
-                            <option value="">[select]</option>
-                            <option value="IN-TRANSIT">Cash</option>
-                            <option value="RECEIVED">Received</option>
+                            <option value="">[Select Type]</option>
+                            {invType.map((inv) => (
+                                <option key={inv.id} value={inv.id}>{inv.asset_transaction_purpose_name}</option>
+                            ))}
                         </select>
                     </div>
                 </div>

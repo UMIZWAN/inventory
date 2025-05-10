@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
+import { useOptions } from "../context/OptionContext";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
   const { allAssets, assets, branches } = useAssetMeta();
+  const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     requester: user?.id || "",
@@ -20,6 +22,10 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     remarks: "",
     purpose: [],
   });
+
+  useEffect(() => {
+    fetchShipping();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -220,13 +226,18 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
             <div>
               <label className="block font-medium mb-1">Shipping Option</label>
-              <input
+              <select
                 type="text"
                 name="shipping"
                 value={form.shipping}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              />
+              >
+                <option value="">[Select Shipping]</option>
+                {shipping.map((s) => (
+                  <option key={s.id} value={s.id}>{s.shipping_option_name}</option>
+                ))}
+              </select>
             </div>
           </div>
 

@@ -26,21 +26,21 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                 <View style={styles.section}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                         <Text>
+                            <Text style={styles.label}>Branch:</Text> {transaction?.assets_from_branch_name}
+                        </Text>
+                        <Text style={{ width: 180, textAlign: "left" }}>
                             <Text style={styles.label}>Date:</Text>{" "}
                             {new Date(transaction?.created_at).toLocaleDateString()}
                         </Text>
-                        <Text style={{ marginRight: 40 }}>
-                            <Text style={styles.label}>Ref. No.:</Text>{" "}
-                            {transaction?.assets_transaction_running_number}
-                        </Text>
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                        <Text>
-                            <Text style={styles.label}>Branch:</Text> {transaction?.assets_from_branch_name}
-                        </Text>
                         <Text style={{ marginRight: 40 }}>
                             <Text style={styles.label}>Purpose:</Text>{" "}
                             {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}
+                        </Text>
+                        <Text style={{ width: 180, textAlign: "left" }}>
+                            <Text style={styles.label}>Ref. No.:</Text>{" "}
+                            {transaction?.assets_transaction_running_number}
                         </Text>
                     </View>
 
@@ -234,7 +234,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 // Define styles for the PDF
 const styles = StyleSheet.create({
     page: { padding: 40, fontSize: 11, fontFamily: "Helvetica" },
-    logo: { width: 250, height: 30, marginBottom: 25, alignSelf: "center" },
+    logo: { width: 250, height: 26, marginBottom: 25, alignSelf: "center" },
     header: { fontSize: 16, marginBottom: 20, textAlign: "center", textTransform: "uppercase", fontWeight: "bold" },
     section: { marginBottom: 10 },
     label: { fontWeight: "bold" },
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
         marginTop: 30,
         justifyContent: "space-between",
     },
-    issuedBlock: { 
+    issuedBlock: {
         width: "45%",
         fontStyle: "italic",
     },
