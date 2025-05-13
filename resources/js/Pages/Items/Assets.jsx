@@ -10,7 +10,7 @@ import { Head } from "@inertiajs/react";
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, fetchAssets, fetchBranches, branches, loading } = useAssetMeta();
+    const { assets, fetchAssets, fetchBranches, fetchBranchAssets, loading } = useAssetMeta();
     const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
@@ -21,6 +21,7 @@ const Assets = () => {
         location: '',
         status: '',
     });
+    console.log(assets)
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
@@ -29,6 +30,7 @@ const Assets = () => {
         if (user?.branch_id) {
             fetchAssets(user?.branch_id);
             fetchBranches();
+            fetchBranchAssets();
         }
     }, [user]);
 
@@ -202,7 +204,8 @@ const Assets = () => {
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         <img className="h-10 w-10 rounded"
-                                                            src={asset.asset_image ? `http://universalmotor.synology.me:30000/${asset.asset_image}` : placeholder}
+                                                            src={asset.asset_image ? `http://127.0.0.1:8000/${asset.asset_image}` : placeholder}
+                                                            // src={asset.asset_image || placeholder}
                                                             alt={asset.name}
                                                             onError={(e) => {
                                                                 e.target.onerror = null;
@@ -228,10 +231,10 @@ const Assets = () => {
                                                 RM {Number(asset.asset_sales_cost).toFixed(2) || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
+                                                {asset.branch_values[0].asset_branch_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                {asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'}
+                                                {asset.branch_values[0].asset_current_unit || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {new Date(asset.created_at).toLocaleDateString()}
