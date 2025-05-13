@@ -1,30 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
+import { useOptions } from "../context/OptionContext";
 
 export default function CheckoutForm({ setShowCheckoutForm }) {
     const { user } = useAuth();
+    const { fetchInvType, invType } = useOptions();
     const { assets, createStockOut } = useAssetMeta();
     const [type, setType] = useState("sold");
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [recipient, setRecipient] = useState('');
     const [remarks, setRemarks] = useState('');
-    const [purposes, setPurposes] = useState({
-        CSI: false,
-        Insurance: false,
-        EventsRoadshows: false,
-        SpecialRQ: false,
-    });
+    const [purposes, setPurposes] = useState();
+
+    useEffect(() => {
+        fetchInvType();
+    }, [])
 
     const [items, setItems] = useState([
         { assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },
     ]);
 
-    const handlePurposeChange = (key) => {
-        setPurposes((prev) => ({ ...prev, [key]: !prev[key] }));
-    };
+    // const handlePurposeChange = (key) => {
+    //     setPurposes((prev) => ({ ...prev, [key]: !prev[key] }));
+    // };
 
     const handleChange = (index, field, value) => {
         const updated = [...items];
@@ -65,7 +66,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             setItems(updated);
         }
     };
-    
+
     const columns = [
         {
             key: "item",
@@ -94,7 +95,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                 recipient,
                 remarks,
                 type,
-                purpose: type === "sold" ? ["SELL"] : Object.keys(purposes).filter(key => purposes[key]),
+                purposes,
                 items,
                 totalAmount,
             };
@@ -121,6 +122,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             setRecipient("");
             setItems([{ assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },]);
             setRemarks("");
+            setPurposes("");
             // setShowCheckoutForm(false);
         } catch (error) {
             console.error(error);
@@ -171,36 +173,17 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                     <div>
                         <label className="block mb-1 font-medium">INV</label>
                         <select
-                            // value={filters.status}
-                            onChange={(e) => handleChange('status', e.target.value)}
+                            value={purposes}
+                            onChange={(e) => setPurposes(e.target.value)}
                             className="w-full border border-gray-300 rounded px-3 py-2"
                         >
-                            <option value="">[select]</option>
-                            <option value="IN-TRANSIT">Cash</option>
-                            <option value="RECEIVED">Received</option>
+                            <option value="">[Select Type]</option>
+                            {invType.map((inv) => (
+                                <option key={inv.id} value={inv.id}>{inv.asset_transaction_purpose_name}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
-
-                {/* Purposes (for normal checkout) */}
-                {type === "normal" && (
-                    <div>
-                        <label className="block mb-2 font-medium">Purpose</label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            {Object.entries(purposes).map(([key, value]) => (
-                                <label key={key} className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={value}
-                                        onChange={() => handlePurposeChange(key)}
-                                        className="w-4 h-4"
-                                    />
-                                    <span className="capitalize">{key}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
                 {/* Items Table */}
                 <div>

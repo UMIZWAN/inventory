@@ -75,7 +75,7 @@ class ShippingOptionController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'asset_transaction_purpose_name' => 'required|unique:assets_transaction_purpose,asset_transaction_purpose_name,' . $id,
+            'shipping_option_name' => 'required|unique:shipping_option,shipping_option_name,' . $id,
         ]);
 
         if ($validator->fails()) {

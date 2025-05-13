@@ -14,7 +14,7 @@ import {
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 11, fontFamily: "Helvetica" },
-  logo: { width: 250, height: 25, marginBottom: 25, alignSelf: "center" },
+  logo: { width: 250, height: 26, marginBottom: 25, alignSelf: "center" },
   header: { fontSize: 16, marginBottom: 20, textAlign: "center", textTransform: "uppercase", fontWeight: "bold" },
   section: { marginBottom: 20 },
   label: { fontWeight: "bold" },
@@ -44,6 +44,10 @@ const styles = StyleSheet.create({
     marginTop: 30,
     justifyContent: "space-between",
   },
+  issuedBlock: {
+    width: "45%",
+    fontStyle: "italic",
+  },
   signatureBlock: { width: "45%" },
 });
 
@@ -54,24 +58,24 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
       <Text style={styles.header}>Transfer Note</Text>
 
       <View style={styles.section}>
-        <Text style={{ marginBottom: 8 }}>
-          <Text style={styles.label}>Running Number:</Text>{" "}
-          {data?.assets_transaction_running_number}
-        </Text>
-        <Text style={{ marginBottom: 8 }}>
-          <Text style={styles.label}>Date:</Text>{" "}
-          {new Date(data?.created_at).toLocaleDateString()}
-        </Text>
-        <Text style={{ marginBottom: 8 }}>
-          <Text style={styles.label}>Transfer From:</Text> {data?.assets_from_branch_name}
-        </Text>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
           <Text>
-            <Text style={styles.label}>Transfer To:</Text> {data?.assets_to_branch_name}
+            <Text style={styles.label}>From:</Text> {data?.assets_from_branch_name}{" "}
+            <Text style={styles.label}>To:</Text> {data?.assets_to_branch_name}
           </Text>
-          <Text style={{ marginRight: 40 }}>
+          <Text style={{ width: 180, textAlign: "left" }}>
+            <Text style={styles.label}>Date:</Text>{" "}
+            {new Date(data?.created_at).toLocaleDateString()}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+          <Text>
             <Text style={styles.label}>Shipping Option:</Text>{" "}
             {data?.assets_shipping_option}
+          </Text>
+          <Text style={{ width: 180, textAlign: "left" }}>
+            <Text style={styles.label}>Ref. No.:</Text>{" "}
+            {data?.assets_transaction_running_number}
           </Text>
         </View>
       </View>
@@ -98,9 +102,12 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
       </View>
 
       <View style={styles.signatureRow}>
-        <View style={styles.signatureBlock}>
-          <Text style={{ marginBottom: 20 }}>Issued By:</Text>
-          <Text> {data?.created_by_name}
+        <View style={styles.issuedBlock}>
+          <Text style={{ marginBottom: 10, textTransform: "capitalize" }}>
+            <Text>Issued by</Text> {data?.created_by_name}
+          </Text>
+          <Text>
+            <Text>{data?.assets_from_branch_name}</Text>
           </Text>
         </View>
         <View style={styles.signatureBlock}>

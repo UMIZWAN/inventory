@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
+import { useOptions } from "../context/OptionContext";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
   const { allAssets, assets, branches } = useAssetMeta();
+  const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     requester: user?.id || "",
@@ -20,6 +22,10 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     remarks: "",
     purpose: [],
   });
+
+  useEffect(() => {
+    fetchShipping();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -45,7 +51,10 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       key: "item",
       label: "Item",
       type: "select",
-      options: assets.map((a) => ({ value: a.id, label: a.name })),
+      options: assets.map((a) => ({
+        value: a.id, label: a.name,
+        qty: a.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'
+      })),
       width: "w-64"
     },
     { key: "category", label: "Category", readOnly: true },
@@ -220,18 +229,23 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
             <div>
               <label className="block font-medium mb-1">Shipping Option</label>
-              <input
+              <select
                 type="text"
                 name="shipping"
                 value={form.shipping}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              />
+              >
+                <option value="">[Select Shipping]</option>
+                {shipping.map((s) => (
+                  <option key={s.id} value={s.id}>{s.shipping_option_name}</option>
+                ))}
+              </select>
             </div>
           </div>
 
           {/* Purposes checkboxes */}
-          <div>
+          {/* <div>
             <label className="block font-medium mb-2">Purpose</label>
             <div className="flex flex-wrap gap-4">
               {purposes.map((purpose) => (
@@ -248,7 +262,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
                 </label>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Items Table */}
           <ItemsTable
