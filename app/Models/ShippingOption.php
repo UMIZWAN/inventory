@@ -14,4 +14,9 @@ class ShippingOption extends Model
     protected $fillable = [
         'shipping_option_name',
     ];
+
+    public function assetsTransactions()
+    {
+        return $this->hasMany(AssetsTransaction::class, 'assets_shipping_option_id');
+    }
 }

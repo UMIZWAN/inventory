@@ -55,6 +55,15 @@ class AssetsTransaction extends Model
         return $this->belongsTo(Suppliers::class, 'supplier_id');
     }
 
+    public function shippingOption()
+    {
+        return $this->belongsTo(ShippingOption::class, 'assets_shipping_option_id');
+    }
+    public function purpose()
+    {
+        return $this->belongsTo(AssetsTransactionPurpose::class, 'assets_transaction_purpose_id');
+    }
+
     public function fromBranch()
     {
         return $this->belongsTo(AssetsBranch::class, 'assets_from_branch_id');
