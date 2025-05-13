@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tag Routes
     Route::apiResource('assets-tag', AssetsTagController::class);
     // Assets Routes
+    Route::get('assets/get-by-branch', [AssetsController::class, 'getByBranch']);
     Route::apiResource('assets', AssetsController::class);
 
     Route::apiResource('shipping', ShippingOptionController::class);
@@ -76,7 +77,4 @@ Route::middleware('auth:sanctum')->group(function () {
 // Route::apiResource('assets-transaction', AssetsTransactionController::class);
 
 // Access Level Routes
-Route::middleware('auth:sanctum')->group(function () {
-
-    
-});
+Route::middleware('auth:sanctum')->group(function () {});
