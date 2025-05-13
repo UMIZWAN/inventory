@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
 import CheckoutList from "../../components/CheckoutList";
@@ -9,13 +9,16 @@ import { Head } from "@inertiajs/react";
 
 function StockTransfer() {
   const { user } = useAuth();
-  const { assetTransfer, fetchAssetTransaction } = useAssetMeta();
+  const { assetTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
 
   useEffect(() => {
       if (user?.branch_id) {
         fetchAssetTransaction();
+        fetchBranchAssets();
       }
     }, [user]);
+
+    
 
   const incomingTransfersCount = assetTransfer.filter(
     (txn) =>
@@ -25,13 +28,13 @@ function StockTransfer() {
 
   const tabs = [
     ...(user?.receive_transaction
-      ? [{ key: "asset_in", label: "Asset In" }]
+      ? [{ key: "asset_in", label: "Marketing In" }]
       : []),
     {
       key: "asset_transfer",
       label: (
         <>
-          Asset Transfer{" "}
+          Marketing Transfer{" "}
           {incomingTransfersCount > 0 && (
             <span className="ml-2 bg-red-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
               {incomingTransfersCount}
@@ -40,7 +43,7 @@ function StockTransfer() {
         </>
       )
     },
-    { key: "asset_out", label: "Asset Out" },
+    { key: "asset_out", label: "Invoice" },
   ];
 
   const [activeTab, setActiveTab] = useState(tabs[0].key);

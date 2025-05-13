@@ -81,17 +81,18 @@ class AssetsTransactionController extends Controller
                     'errors' => 'Assets transaction type is required'
                 ], 422);
             }
+            $request['assets_transaction_running_number'] = $this->generateNextRunningNumber();
+
             if ($request->assets_transaction_type == 'ASSET OUT') {
 
                 $validator = Validator::make($request->all(), [
-                    'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
+                    // 'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
                     'assets_recipient_name' => 'nullable|string',
                     'assets_from_branch_id' => 'required|integer',
                     'created_by' => 'required|integer|exists:users,id',
                     'created_at' => 'nullable|date',
-                    'assets_transaction_purpose' => 'nullable|array',
-                    'assets_transaction_purpose.*' => 'nullable|string',
+                    'assets_transaction_purpose_id' => 'required|integer',
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
@@ -113,13 +114,13 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_type' => $request->assets_transaction_type,
                     'assets_recipient_name' => $request->assets_recipient_name,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
-                    'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
+                    'assets_transaction_purpose_id' => $request->assets_transaction_purpose_id,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
                     'assets_transaction_total_cost' => $request->assets_transaction_total_cost,
                     'created_by' => $request->created_by,
                     'created_at' => $request->created_at,
                 ]);
-                
+
                 foreach ($request->assets_transaction_item_list as $item) {
                     AssetsTransactionItemList::create([
                         'asset_transaction_id' => $transaction->id,
@@ -144,7 +145,7 @@ class AssetsTransactionController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' created successfully',
-                    'data' => $transaction->load('transactionItems')
+                    'data' => $transaction->load('transactionItems', 'fromBranch', 'purpose', 'createdBy')
                 ], 201);
             }
 
@@ -248,8 +249,6 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_total_cost' => 'required|numeric',
                     'created_by' => 'required|integer|exists:users,id',
                     'created_at' => 'nullable|date',
-                    'assets_transaction_purpose' => 'nullable|array',
-                    'assets_transaction_purpose.*' => 'nullable|string',
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
@@ -269,7 +268,7 @@ class AssetsTransactionController extends Controller
                 $transaction = AssetsTransaction::create([
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
-                    'assets_shipping_option' => $request->assets_shipping_option,
+                    'assets_shipping_option_id' => $request->assets_shipping_option_id,
                     'assets_transaction_status' => 'IN-TRANSIT',
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
@@ -380,6 +379,75 @@ class AssetsTransactionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the latest asset transaction running number
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getLatestRunningNo()
+    {
+        try {
+            $latestTransaction = AssetsTransaction::orderBy('assets_transaction_running_number', 'desc')->first();
+
+            // If no transactions exist yet, return a default format
+            if (!$latestTransaction) {
+                $today = now()->format('Ymd'); // Current date in YYYYMMDD format
+                $defaultRunningNo = "AST-{$today}-0001";
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No existing transactions, returning default running number',
+                    'data' => [
+                        'running_number' => $defaultRunningNo
+                    ]
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Latest Running Number Retrieved',
+                'data' => $latestTransaction
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve latest running number: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate the next running number based on the format AST-YYYYMMDD-XXXX
+     * 
+     * @return string The next running number
+     */
+    public function generateNextRunningNumber()
+    {
+        try {
+            $latestTransaction = AssetsTransaction::orderBy('assets_transaction_running_number', 'desc')->first();
+
+            if (!$latestTransaction) {
+                $nextNumber = 1;
+            } else {
+                // Extract numeric part (e.g., "MKT-00123" => 123)
+                $latestNumber = (int) str_replace('MKT-', '', $latestTransaction->assets_transaction_running_number);
+                $nextNumber = $latestNumber + 1;
+            }
+
+            // Format with a minimum of 5 digits, more if needed
+            $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            $nextRunningNumber = 'MKT-' . $numberPart;
+
+            return $nextRunningNumber;
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate next running number: ' . $e->getMessage(),
+                'data' => null
             ], 500);
         }
     }

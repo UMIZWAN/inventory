@@ -6,7 +6,9 @@ use App\Models\AssetsTransaction;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\AssetsBranch;
+use App\Models\ShippingOption;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\AssetsTransactionPurpose;
 
 class AssetsTransactionFactory extends Factory
 {
@@ -27,6 +29,8 @@ class AssetsTransactionFactory extends Factory
             $purpose = $this->getRandomPurposes();
         }
 
+        static $counter = 1;
+
         // Get random existing records
         $purchaseOrder = PurchaseOrder::inRandomOrder()->first();
         $fromBranch = AssetsBranch::inRandomOrder()->first();
@@ -37,18 +41,18 @@ class AssetsTransactionFactory extends Factory
         $approvedByUser = User::inRandomOrder()->first();
 
         return [
-            'assets_transaction_running_number' => 'TRX-' . $this->faker->unique()->numerify('######'),
+            'assets_transaction_running_number' => 'MKT-' . str_pad($counter++, 5, '0', STR_PAD_LEFT),
             'supplier_id' => $transactionType === 'ASSET IN' ?
                 ($purchaseOrder ? $purchaseOrder->supplier_id : null) : null,
             'assets_transaction_type' => $transactionType,
             'assets_recipient_name' => $transactionType === 'ASSET OUT' ?
                 $this->faker->name() : null,
-            'assets_shipping_option' => $transactionType === 'ASSET TRANSFER' ?
-                $this->faker->randomElement(['AIR', 'SEA', 'ROAD', 'RAIL']) : null,
+            'assets_shipping_option_id' => $transactionType === 'ASSET TRANSFER' ?
+                ShippingOption::inRandomOrder()->first()->id : null,
 
             'assets_transaction_status' => $status,
-            'assets_transaction_purpose' => $transactionType === 'ASSET OUT' ?
-                json_encode($this->getRandomPurposes()) : null,
+            'assets_transaction_purpose_id' => $transactionType === 'ASSET OUT' ?
+                AssetsTransactionPurpose::inRandomOrder()->first()->id : null,
             'assets_from_branch_id' => 1,
             'assets_to_branch_id' => $transactionType === 'ASSET TRANSFER' ?
                 ($toBranch ? $toBranch->id : 1) : null,

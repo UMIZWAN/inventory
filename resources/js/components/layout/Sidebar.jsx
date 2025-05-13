@@ -1,15 +1,25 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaFileInvoice } from 'react-icons/fa';
 import { FiShield, FiUsers, FiMapPin, FiTag, FiPackage, FiTruck, FiList, FiRepeat } from 'react-icons/fi';
+import { TbBuildingCommunity } from "react-icons/tb";
 import { Link } from '@inertiajs/react';
 import { useAuth } from '../../context/AuthContext';
 import { useAssetMeta } from '../../context/AssetsContext';
 import moment from "moment";
 
 const Sidebar = () => {
-    const { user } = useAuth();
-    const { assets, assetTransfer, fetchAssets, loading } = useAssetMeta(); // Get branches and fetchAssets from context
+    const { user, fetchUser, setLoading } = useAuth();
+    const { assets, assetTransfer, fetchAssets } = useAssetMeta(); // Get branches and fetchAssets from context
     const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
+
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          fetchUser();
+        } else {
+          setLoading(false);
+        }
+      }, []);
 
     const hasLowOrCriticalStock = assets?.some((item) => {
         const total = item.total_units || 0;
@@ -179,8 +189,26 @@ const Sidebar = () => {
                     {user?.view_supplier && (
                         <Link href="/supplier">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiTruck className="text-sky-600" />
+                                <TbBuildingCommunity className="text-sky-600" />
                                 <span className="font-medium">Suppliers</span>
+                            </li>
+                        </Link>
+                    )}
+
+                    {user?.view_supplier && (
+                        <Link href="/shipping">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FiTruck className="text-sky-600" />
+                                <span className="font-medium">Shipping Option</span>
+                            </li>
+                        </Link>
+                    )}
+
+                    {user?.view_supplier && (
+                        <Link href="/purpose">
+                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                                <FaFileInvoice className="text-sky-600" />
+                                <span className="font-medium">Invoice Purpose </span>
                             </li>
                         </Link>
                     )}

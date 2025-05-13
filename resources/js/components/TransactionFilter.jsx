@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAssetMeta } from "../context/AssetsContext";
+import { useOptions } from "../context/OptionContext";
 
 function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
-    const { branches } = useAssetMeta();
+    const { branches, fetchBranches } = useAssetMeta();
+    const { invType } = useOptions();
 
     const [filters, setFilters] = useState({
         searchTerm: '',
@@ -14,6 +16,10 @@ function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
         fromBranch: '',
         toBranch: '',
     });
+
+    useEffect(() => {
+        fetchBranches();
+    }, []);
 
     useEffect(() => {
         onFilterChange(filters);
@@ -29,7 +35,7 @@ function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm text-gray-700 mb-4">
             {/* Running No */}
             <div>
-                <label className="block mb-1">Running No</label>
+                <label className="block mb-1">Reference No</label>
                 <input
                     type="text"
                     value={filters.searchTerm}
@@ -71,14 +77,17 @@ function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
             {/* Purpose (only for checkout) */}
             {filterType === "checkout" && (
                 <div>
-                    <label className="block mb-1">Purpose</label>
-                    <input
-                        type="text"
+                    <label className="block mb-1">Invoice Purpose</label>
+                    <select
                         value={filters.purpose}
                         onChange={(e) => handleChange('purpose', e.target.value)}
                         className={inputStyle}
-                        placeholder="e.g. Repair"
-                    />
+                    >
+                        <option value="">[select]</option>
+                        {invType.map(inv => (
+                            <option key={inv.id} value={inv.asset_transaction_purpose_name}>{inv.asset_transaction_purpose_name}</option>
+                        ))}
+                    </select>
                 </div>
             )}
 

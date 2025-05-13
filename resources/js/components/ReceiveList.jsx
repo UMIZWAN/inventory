@@ -8,7 +8,7 @@ import TransactionDetail from "./TransactionDetail";
 
 export default function ReceiveList() {
     const { user } = useAuth();
-    const { allAssets, assetIn } = useAssetMeta();
+    const { assets, assetIn } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showReceiveForm, setShowReceiveForm] = useState(false);
@@ -34,7 +34,7 @@ export default function ReceiveList() {
         const txnDate = txn.created_at.slice(0, 10);
 
         const assetNames = txn.assets_transaction_item_list.map(item => {
-            const asset = allAssets.find(a => a.id === item.asset_id);
+            const asset = assets.find(a => a.id === item.asset_id);
             return asset?.name?.toLowerCase() || '';
         });
 
@@ -83,7 +83,7 @@ export default function ReceiveList() {
                             onClick={() => setShowReceiveForm(true)}
                             className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"
                         >
-                            + Receive Asset
+                            + Receive Items
                         </button>
                     )}
                 </div>
@@ -100,7 +100,7 @@ export default function ReceiveList() {
                         "Branch": txn.assets_from_branch_name,
                         "Items": txn.assets_transaction_item_list
                             .map(item => {
-                                const asset = allAssets.find(a => a.id === item.asset_id);
+                                const asset = assets.find(a => a.id === item.asset_id);
                                 return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
                             })
                             .join(", "),
@@ -116,8 +116,8 @@ export default function ReceiveList() {
                 <table className="min-w-full text-sm text-left border border-gray-200">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
-                            <th className="px-4 py-2 border">Running No</th>
-                            <th className="px-4 py-2 border">Type</th>
+                            <th className="px-4 py-2 border">Reference No</th>
+                            {/* <th className="px-4 py-2 border">Type</th> */}
                             <th className="px-4 py-2 border">Branch</th>
                             <th className="px-4 py-2 border">Items</th>
                             <th className="px-4 py-2 border">Total Cost</th>
@@ -135,12 +135,12 @@ export default function ReceiveList() {
                                     >
                                         {txn.assets_transaction_running_number}
                                     </td>
-                                    <td className="px-4 py-2 border">{txn.assets_transaction_type}</td>
+                                    {/* <td className="px-4 py-2 border">{txn.assets_transaction_type}</td> */}
                                     <td className="px-4 py-2 border">{txn.assets_from_branch_name}</td>
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
-                                                const asset = allAssets.find(a => a.id === item.asset_id);
+                                                const asset = assets.find(a => a.id === item.asset_id);
                                                 return (
                                                     <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
                                                         <li>{asset?.name || 'Unknown'} — {item.asset_unit}</li>

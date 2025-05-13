@@ -10,9 +10,11 @@ use App\Http\Controllers\Api\AssetsTagController;
 use App\Http\Controllers\Api\AssetsController;
 use App\Http\Controllers\Api\AssetsTransactionController;
 use App\Http\Controllers\Api\AssetsTransactionItemListController;
+use App\Http\Controllers\Api\AssetsTransactionPurposeController;
 use App\Http\Controllers\Api\SuppliersController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\PurchaseOrderController;
+use App\Http\Controllers\Api\ShippingOptionController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -55,7 +57,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tag Routes
     Route::apiResource('assets-tag', AssetsTagController::class);
     // Assets Routes
+    Route::get('assets/get-by-branch', [AssetsController::class, 'getByBranch']);
     Route::apiResource('assets', AssetsController::class);
+
+    Route::apiResource('shipping', ShippingOptionController::class);
+    Route::apiResource('purpose', AssetsTransactionPurposeController::class);
 
     Route::apiResource('assets-transaction', AssetsTransactionController::class);
     Route::apiResource('purchase-order', PurchaseOrderController::class);
@@ -71,7 +77,4 @@ Route::middleware('auth:sanctum')->group(function () {
 // Route::apiResource('assets-transaction', AssetsTransactionController::class);
 
 // Access Level Routes
-Route::middleware('auth:sanctum')->group(function () {
-
-    
-});
+Route::middleware('auth:sanctum')->group(function () {});

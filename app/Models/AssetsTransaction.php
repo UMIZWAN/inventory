@@ -20,10 +20,10 @@ class AssetsTransaction extends Model
         'assets_transaction_running_number',
         'supplier_id',
         'assets_recipient_name',
-        'assets_shipping_option',
+        'assets_shipping_option_id',
         'assets_transaction_type',
         'assets_transaction_status',
-        'assets_transaction_purpose',
+        'assets_transaction_purpose_id',
         'assets_from_branch_id',
         'assets_to_branch_id',
         'assets_transaction_remark',
@@ -53,6 +53,15 @@ class AssetsTransaction extends Model
     public function supplier()
     {
         return $this->belongsTo(Suppliers::class, 'supplier_id');
+    }
+
+    public function shippingOption()
+    {
+        return $this->belongsTo(ShippingOption::class, 'assets_shipping_option_id');
+    }
+    public function purpose()
+    {
+        return $this->belongsTo(AssetsTransactionPurpose::class, 'assets_transaction_purpose_id');
     }
 
     public function fromBranch()

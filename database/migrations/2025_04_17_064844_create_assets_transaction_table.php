@@ -11,6 +11,18 @@ return new class extends Migration
    */
   public function up(): void
   {
+    Schema::create('shipping_option', function (Blueprint $table) {
+      $table->id();
+      $table->string('shipping_option_name');
+      $table->timestamps();
+    });
+
+    Schema::create('assets_transaction_purpose', function (Blueprint $table) {
+      $table->id();
+      $table->string('asset_transaction_purpose_name');
+      $table->timestamps();
+    });
+
     Schema::create('assets_transaction', function (Blueprint $table) {
       $table->id();
       $table->string('assets_transaction_running_number')->unique();
@@ -19,13 +31,13 @@ return new class extends Migration
 
       $table->enum('assets_transaction_type', ['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER']);
       $table->string('assets_recipient_name')->nullable();
-      $table->string('assets_shipping_option')->nullable();
+      $table->foreignId('assets_shipping_option_id')->nullable()->constrained('shipping_option')->nullOnDelete();
 
       // STATUS only relevant for ASSET TRANSFER
       $table->enum('assets_transaction_status', ['DRAFT', 'IN-TRANSIT', 'RECEIVED'])->nullable();
 
       // PURPOSE: allow multiple purposes (JSON)
-      $table->json('assets_transaction_purpose')->nullable();
+      $table->foreignId('assets_transaction_purpose_id')->nullable()->constrained('assets_transaction_purpose')->nullOnDelete();
 
       $table->foreignId('assets_from_branch_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();
       $table->foreignId('assets_to_branch_id')->nullable()->constrained('assets_branch')->cascadeOnDelete();

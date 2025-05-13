@@ -17,6 +17,10 @@ class DatabaseSeeder extends Seeder
         // Run UserSeeder next to create exactly 10 users
         $this->call(UserSeeder::class);
 
+        $this->call(ShippingOptionSeeder::class);
+
+        $this->call(AssetsTransactionPurposeSeeder::class);
+
         // $this->call(TaxSeeder::class);
         $this->call(AssetsCategorySeeder::class);
         // $this->call(AssetsTagSeeder::class);
@@ -26,7 +30,7 @@ class DatabaseSeeder extends Seeder
             AssetsSeeder::class,
             SuppliersSeeder::class,
             // PurchaseOrderSeeder::class,
-            // AssetsTransactionSeeder::class,
+            AssetsTransactionSeeder::class,
         ]);
     }
 }

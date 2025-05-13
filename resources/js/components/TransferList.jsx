@@ -10,7 +10,7 @@ import ExportButton from "./ExportButton";
 
 export default function TransferList({ status, mode }) {
   const { user } = useAuth();
-  const { allAssets, assetTransfer, createTransfer, fetchAssetTransaction, fetchAssets } = useAssetMeta();
+  const { assets, assetTransfer, createTransfer, fetchAssetTransaction, fetchAssets, fetchBranchAssets } = useAssetMeta();
 
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -90,14 +90,14 @@ export default function TransferList({ status, mode }) {
     }).then(() => {
       closeModal();
       fetchAssetTransaction();
-      fetchAssets();
+      fetchBranchAssets();
     }).catch((err) => {
       console.error("Update failed:", err);
     });
   };
 
   const getItemDetails = (item) => {
-    const asset = allAssets.find(a => a.id === item.asset_id);
+    const asset = assets.find(a => a.id === item.asset_id);
     return {
       name: asset?.name || 'Unknown Asset',
       price: asset?.asset_sales_cost || 0,
@@ -109,7 +109,7 @@ export default function TransferList({ status, mode }) {
   const filteredTransfers = assetTransfer.filter((txn) => {
     const txnDate = txn.created_at.slice(0, 10);
     const assetNames = txn.assets_transaction_item_list.map(item => {
-      const found = allAssets.find(a => a.id === item.asset_id);
+      const found = assets.find(a => a.id === item.asset_id);
       return found?.name?.toLowerCase() || '';
     });
 
@@ -228,7 +228,7 @@ export default function TransferList({ status, mode }) {
             "To Branch": txn.assets_to_branch_name,
             "Items": txn.assets_transaction_item_list
               .map(item => {
-                const asset = allAssets.find(a => a.id === item.asset_id);
+                const asset = assets.find(a => a.id === item.asset_id);
                 return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
               })
               .join(", "),
@@ -242,8 +242,8 @@ export default function TransferList({ status, mode }) {
         <table className="min-w-full text-sm text-left border border-gray-200">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
-              <th className="px-4 py-2 border">Running No</th>
-              <th className="px-4 py-2 border">Type</th>
+              <th className="px-4 py-2 border">Reference No</th>
+              {/* <th className="px-4 py-2 border">Type</th> */}
               <th className="px-4 py-2 border">From ➔ To Branch</th>
               <th className="px-4 py-2 border">Items</th>
               <th className="px-4 py-2 border">Date</th>
@@ -261,7 +261,7 @@ export default function TransferList({ status, mode }) {
                   >
                     {txn.assets_transaction_running_number}
                   </td>
-                  <td className="px-4 py-2 border">{txn.assets_transaction_type}</td>
+                  {/* <td className="px-4 py-2 border">{txn.assets_transaction_type}</td> */}
                   <td className="px-4 py-2 border">
                     {txn.assets_from_branch_name} ➔ {txn.assets_to_branch_name}
                   </td>
