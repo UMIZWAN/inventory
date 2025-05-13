@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tag Routes
     Route::apiResource('assets-tag', AssetsTagController::class);
     // Assets Routes
+    Route::post('/assets/{id}/copy', [AssetsController::class, 'copyItems']);
     Route::get('assets/get-by-branch', [AssetsController::class, 'getByBranch']);
     Route::apiResource('assets', AssetsController::class);
 
