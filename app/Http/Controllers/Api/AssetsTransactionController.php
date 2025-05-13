@@ -145,7 +145,7 @@ class AssetsTransactionController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' created successfully',
-                    'data' => $transaction->load('transactionItems')
+                    'data' => $transaction->load('transactionItems', 'fromBranch', 'purpose', 'createdBy')
                 ], 201);
             }
 

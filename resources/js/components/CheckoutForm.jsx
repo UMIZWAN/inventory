@@ -74,7 +74,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             type: "select",
             options: assets.map((a) => ({
                 value: a.id, label: a.name,
-                qty: a.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'
+                qty: a.branch_values[0].asset_current_unit
             })),
             width: "w-80",
         },
@@ -104,9 +104,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                 const asset = assets.find(a => a.id === Number(item));
                 if (!asset) return false;
 
-                const currentBranchStock = asset.branch_values?.find(
-                    (bv) => bv.asset_branch_id === user.branch_id
-                )?.asset_current_unit ?? 0;
+                const currentBranchStock = asset.branch_values[0].asset_current_unit ?? 0;
 
                 return quantity > currentBranchStock;
             });
@@ -180,7 +178,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                         >
                             <option value="">[Select Type]</option>
                             {invType.map((inv) => (
-                                <option key={inv.id} value={inv.id}>{inv.asset_transaction_purpose_name}</option>
+                                <option key={inv.id} value={inv.id} >{inv.asset_transaction_purpose_name}</option>
                             ))}
                         </select>
                     </div>
