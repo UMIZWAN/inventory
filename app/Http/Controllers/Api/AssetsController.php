@@ -370,4 +370,28 @@ class AssetsController extends Controller
             ], 500);
         }
     }
+    public function getByBranch()
+    {
+        try {
+            $branchId = Auth::user()->branch_id;
+
+            $assets = Assets::with(['category', 'tag'])
+                ->with(['branchValues' => function ($query) use ($branchId) {
+                    $query->where('asset_branch_id', $branchId);
+                }])
+                ->latest()
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'List Data Assets',
+                'data' => $assets
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
