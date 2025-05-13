@@ -9,6 +9,7 @@ use App\Models\AssetsBranch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 
 class AssetsBranchController extends Controller
@@ -16,7 +17,10 @@ class AssetsBranchController extends Controller
     public function index()
     {
         try {
-            $assetsBranch = AssetsBranch::latest()->get();
+            $branch_id = Auth::user()->branch_id;
+            $assetsBranch = AssetsBranch::select('id', 'name')
+            ->where('id', $branch_id)
+            ->get();
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Error: ' . $e->getMessage()
@@ -25,9 +29,7 @@ class AssetsBranchController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List Data Assets Branch',
-            'data' => Cache::remember('assets_branch_cache', 3600, function () use ($assetsBranch) {
-                return $assetsBranch;
-            })
+            'data' => $assetsBranch
         ], 200);
     }
 
