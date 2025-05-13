@@ -21,18 +21,14 @@ const Assets = () => {
         location: '',
         status: '',
     });
-    console.log(assets)
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
     useEffect(() => {
-        if (user?.branch_id) {
-            fetchAssets(user?.branch_id);
-            fetchBranches();
-            fetchBranchAssets();
-        }
-    }, [user]);
+        fetchBranchAssets();
+    }, []);
 
     const handleView = (asset) => setSelectedAsset(asset);
 

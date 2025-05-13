@@ -15,6 +15,7 @@ Font.register({
 // PDF Document Component
 const InvoicePDF = ({ transaction, getAssetDetails }) => {
 
+    const items = transaction?.transaction_items || transaction.assets_transaction_item_list || [];
     let totalAmount = 0;
 
     return (
@@ -26,7 +27,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                 <View style={styles.section}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                         <Text>
-                            <Text style={styles.label}>Branch:</Text> {transaction?.assets_from_branch_name}
+                            <Text style={styles.label}>Branch:</Text> {transaction?.assets_from_branch_name || transaction.from_branch.name}
                         </Text>
                         <Text style={{ width: 180, textAlign: "left" }}>
                             <Text style={styles.label}>Date:</Text>{" "}
@@ -36,7 +37,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                         <Text style={{ marginRight: 40 }}>
                             <Text style={styles.label}>Purpose:</Text>{" "}
-                            {transaction.assets_transaction_purpose ? JSON.parse(transaction.assets_transaction_purpose).join(", ") : "-"}
+                            {transaction?.asset_transaction_purpose_name || transaction?.purpose.asset_transaction_purpose_name}
                         </Text>
                         <Text style={{ width: 180, textAlign: "left" }}>
                             <Text style={styles.label}>Ref. No.:</Text>{" "}
@@ -44,10 +45,10 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                         </Text>
                     </View>
 
-                    <View style={{ marginTop: 20 }}>
+                    {/* <View style={{ marginTop: 20 }}>
                         <Text style={styles.label}>Bill to:</Text>
                         <Text style={{ marginTop: 8 }}>{transaction.assets_recipient_name}</Text>
-                    </View>
+                    </View> */}
                 </View>
 
                 <View style={styles.section}>
@@ -63,8 +64,8 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                         </View>
 
                         {/* Table Rows */}
-                        {transaction.assets_transaction_item_list.map((item, index) => {
-                            const { name, price } = getAssetDetails(item.asset_id);
+                        {items.map((item, index) => {
+                            const { name, price, code } = getAssetDetails(item.asset_id);
                             const quantity = item.asset_unit || 1;
                             const total = price * quantity;
                             totalAmount += total;
@@ -72,7 +73,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                             return (
                                 <View key={index} style={styles.tableRow}>
                                     {/* <Text style={styles.tableCell}>{index + 1}</Text> */}
-                                    <Text style={styles.tableCell}>{name}</Text>
+                                    <Text style={styles.tableCell}>{code}</Text>
                                     <Text style={styles.tableCell}>{name}</Text>
                                     <Text style={styles.tableCell}>{quantity}</Text>
                                     <Text style={styles.tableCell}>RM {Number(price).toFixed(2)}</Text>
@@ -91,10 +92,10 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                 <View style={styles.signatureRow}>
                     <View style={styles.issuedBlock}>
                         <Text style={{ marginBottom: 10, textTransform: "capitalize" }}>
-                            <Text>Issued by</Text> {transaction?.created_by_name}
+                            <Text>Issued by</Text> {transaction?.created_by_name || transaction?.created_by.name}
                         </Text>
                         <Text>
-                            <Text>{transaction?.assets_from_branch_name}</Text>
+                            <Text>{transaction?.assets_from_branch_name || transaction?.from_branch.name}</Text>
                         </Text>
                     </View>
                     <View style={styles.signatureBlock}>
@@ -162,7 +163,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                 <div className="bg-white p-6">
                     <div className="mb-6 space-y-1">
                         <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
-                        <p><strong>Branch:</strong> {transaction.branch_name || transaction.assets_from_branch_name}</p>
+                        <p><strong>Branch:</strong> {transaction.assets_from_branch_name || transaction.from_branch.name}</p>
 
                         {type === "transfer" && (
                             <>
@@ -170,7 +171,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                     JSON.parse(transaction.assets_transaction_purpose).includes("SELL") && (
                                         <p><strong>Recipient:</strong> {transaction.assets_recipient_name}</p>
                                     )}
-                                <p><strong>Purpose:</strong> {transaction.asset_transaction_purpose_name}</p>
+                                <p><strong>Purpose:</strong> {transaction.asset_transaction_purpose_name || transaction.purpose.asset_transaction_purpose_name}</p>
                                 <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
                                 <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString()}</p>
                             </>
@@ -188,7 +189,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                     <table className="min-w-full border border-gray-300">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="px-4 py-2 border">#</th>
+                                <th className="px-4 py-2 border">Code</th>
                                 <th className="px-4 py-2 border">Asset Name</th>
                                 <th className="px-4 py-2 border">Quantity</th>
                                 <th className="px-4 py-2 border">Price (Each)</th>
@@ -198,12 +199,12 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                         <tbody>
                             {getItemList().map((item, index) => {
                                 const id = item.asset_id;
-                                const { name, price } = getAssetDetails(id);
+                                const { name, price, code } = getAssetDetails(id);
                                 const quantity = item.asset_unit || 1;
                                 const total = price * quantity;
                                 return (
                                     <tr key={index}>
-                                        <td className="px-4 py-2 border text-center">{index + 1}</td>
+                                        <td className="px-4 py-2 border text-center">{code}</td>
                                         <td className="px-4 py-2 border">{name}</td>
                                         <td className="px-4 py-2 border text-center">{quantity}</td>
                                         <td className="px-4 py-2 border text-right">RM {Number(price).toFixed(2)}</td>

@@ -28,41 +28,7 @@ export const AssetMetaProvider = ({ children }) => {
       .then(response => {
         if (response.data.success) {
           const allAssets = response.data.data;
-
-          // Filter assets that have at least one branch_value for the current user's branch
-          const userBranchAssets = allAssets.filter(asset =>
-            asset.branch_values?.some(bv => bv.asset_branch_id === user?.branch_id)
-          );
-          setAllAssets(allAssets); // Store all assets for later use
-          // setAssets(userBranchAssets);
-  
-          // const processedAssets = branchId 
-          //   ? allAssets
-          //       // Filter assets that exist in this branch
-          //       .filter(asset => 
-          //         asset.branch_values?.some(bv => 
-          //           bv.asset_branch_id === parseInt(branchId)
-          //         )
-          //       )
-          //       // Transform to show only the selected branch's data
-          //       .map(asset => {
-          //         const branchData = asset.branch_values.find(
-          //           bv => bv.asset_branch_id === parseInt(branchId)
-          //         );
-          //         return {
-          //           ...asset,
-          //           // Override asset-wide properties with branch-specific ones
-          //           asset_current_unit: branchData.asset_current_unit,
-          //           asset_location_id: branchData.asset_location_id,
-          //           asset_location_name: branchData.asset_location_name,
-          //           // Keep only the selected branch's data
-          //           branch_values: [branchData]
-          //         };
-          //       })
-          //   : allAssets;
-  
-          // setAllAssets(allAssets);
-          // setAssets(processedAssets);
+          setAllAssets(allAssets);
         }
       })
       .catch(error => {
@@ -78,7 +44,6 @@ export const AssetMetaProvider = ({ children }) => {
     api.get('/api/assets/get-by-branch')
       .then(response => {
         if (response.data.success) {
-          console.log(response.data.data)
           setAssets(response.data.data);
         }
       })
