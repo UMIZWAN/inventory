@@ -385,7 +385,7 @@ class AssetsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'List Data Assets',
-                'data' => $assets
+                'data' => AssetsResource::collection($assets),
             ], 200);
         } catch (Exception $e) {
             return response()->json([
