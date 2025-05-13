@@ -6,7 +6,6 @@ import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
 
 const ItemDetails = ({ asset, onClose }) => {
-    console.log('Asset Details:', asset);
     const { user } = useAuth();
     const { updateAsset, categories, tags, branches } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);

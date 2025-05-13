@@ -74,7 +74,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             type: "select",
             options: assets.map((a) => ({
                 value: a.id, label: a.name,
-                qty: a.branch_values[0].asset_current_unit
+                qty: a.branch_values[0]?.asset_current_unit
             })),
             width: "w-80",
         },

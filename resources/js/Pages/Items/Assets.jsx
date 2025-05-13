@@ -10,7 +10,7 @@ import { Head } from "@inertiajs/react";
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, fetchAssets, fetchBranches, fetchBranchAssets, loading } = useAssetMeta();
+    const { assets, fetchAssets, fetchCategories, fetchBranchAssets, loading } = useAssetMeta();
     const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
@@ -28,6 +28,7 @@ const Assets = () => {
 
     useEffect(() => {
         fetchBranchAssets();
+        fetchCategories();
     }, []);
 
     const handleView = (asset) => setSelectedAsset(asset);
@@ -227,10 +228,10 @@ const Assets = () => {
                                                 RM {Number(asset.asset_sales_cost).toFixed(2) || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values[0].asset_branch_name || '—'}
+                                                {asset.branch_values[0]?.asset_branch_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                {asset.branch_values[0].asset_current_unit || '—'}
+                                                {asset.branch_values[0]?.asset_current_unit || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {new Date(asset.created_at).toLocaleDateString()}
