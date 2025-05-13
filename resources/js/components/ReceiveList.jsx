@@ -116,7 +116,7 @@ export default function ReceiveList() {
                 <table className="min-w-full text-sm text-left border border-gray-200">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
-                            <th className="px-4 py-2 border">Running No</th>
+                            <th className="px-4 py-2 border">Reference No</th>
                             {/* <th className="px-4 py-2 border">Type</th> */}
                             <th className="px-4 py-2 border">Branch</th>
                             <th className="px-4 py-2 border">Items</th>
