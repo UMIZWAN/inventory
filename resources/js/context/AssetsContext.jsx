@@ -9,7 +9,6 @@ export const AssetMetaProvider = ({ children }) => {
   const [assets, setAssets] = useState([]);
   const [allAssets, setAllAssets] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [tags, setTags] = useState([]);
   const [branches, setBranches] = useState([]);
   const [assetIn, setAssetIn] = useState([]);
   const [assetOut, setAssetOut] = useState([]);
@@ -35,7 +34,7 @@ export const AssetMetaProvider = ({ children }) => {
             asset.branch_values?.some(bv => bv.asset_branch_id === user?.branch_id)
           );
           setAllAssets(allAssets); // Store all assets for later use
-          setAssets(userBranchAssets);
+          // setAssets(userBranchAssets);
   
           // const processedAssets = branchId 
           //   ? allAssets
@@ -74,6 +73,23 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
+  const fetchBranchAssets = (branchId) => {
+    setLoading(true);
+    api.get('/api/assets/get-by-branch')
+      .then(response => {
+        if (response.data.success) {
+          console.log(response.data.data)
+          setAssets(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching assets:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
   const getOneAsset = (id) => {
     api.get(`/api/assets/${id}`)
       .then(response => {
@@ -100,6 +116,7 @@ export const AssetMetaProvider = ({ children }) => {
       });
 
       fetchAssets(); // Refresh the list after update
+      fetchBranchAssets();
     } catch (err) {
       console.error('Failed to update asset:', err);
       throw err;
@@ -196,38 +213,6 @@ export const AssetMetaProvider = ({ children }) => {
   const getCategoryById = (id) => categories.find(c => c.id === id);
 
   // --------------------------------------------------------------------------------
-  // Tag functions
-  // --------------------------------------------------------------------------------
-  const fetchTags = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/api/assets-tag');
-      const data = res.data?.data;
-      setTags(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      setTags([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addTag = async (name) => {
-    await api.post('/api/assets-tag', { name });
-    fetchTags();
-  };
-
-  const updateTag = async (id, name) => {
-    await api.put(`/api/assets-tag/${id}`, { name });
-    fetchTags();
-  };
-
-  const deleteTag = async (id) => {
-    await api.delete(`/api/assets-tag/${id}`);
-    fetchTags();
-  };
-
-  // --------------------------------------------------------------------------------
   // Asset Transaction functions
   // --------------------------------------------------------------------------------
   const fetchAssetTransaction = async () => {
@@ -261,11 +246,11 @@ export const AssetMetaProvider = ({ children }) => {
         assets_transaction_status: form.status.toUpperCase(), // make sure it's uppercase
         assets_from_branch_id: parseInt(form.fromBranch),
         assets_to_branch_id: parseInt(form.toBranch),
-        assets_shipping_option: form.shipping,
+        assets_shipping_option_id: form.shipping,
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
-        assets_transaction_purpose: form.purpose,
+        // assets_transaction_purpose: form.purpose,
         assets_transaction_total_cost: totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
@@ -277,7 +262,7 @@ export const AssetMetaProvider = ({ children }) => {
       const res = await api.post("api/assets-transaction", payload);
 
       fetchAssetTransaction();
-      fetchAssets();
+      fetchBranchAssets();
       return res.data;
     } catch (error) {
       console.error("Failed to create transfer:", error);
@@ -286,23 +271,23 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   // Optional simple running number generator (for frontend demo only)
-  const generateRunningNumber = () => {
-    const now = new Date();
-    return `AST-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}-${Math.floor(Math.random() * 9000 + 1000)}`;
-  };
+  // const generateRunningNumber = () => {
+  //   const now = new Date();
+  //   return `MKT-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}-${Math.floor(Math.random() * 9000 + 1000)}`;
+  // };
 
   const createStockOut = async (form) => {
     console.log("Creating stock out with form:", form);
     try {
       const payload = {
-        assets_transaction_running_number: generateRunningNumber(),
+        // assets_transaction_running_number: generateRunningNumber(),
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
         assets_from_branch_id: user?.branch_id,
         assets_recipient_name: form.recipient,
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
-        assets_transaction_purpose: form.purpose,
+        assets_transaction_purpose_id: form.purposes,
         assets_transaction_total_cost: form.totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
@@ -314,7 +299,7 @@ export const AssetMetaProvider = ({ children }) => {
       const res = await api.post("/api/assets-transaction", payload);
 
       fetchAssetTransaction(); // Refresh the list after update
-      fetchAssets(); // Refresh the assets list
+      fetchBranchAssets(); // Refresh the assets list
       return res.data;
     } catch (error) {
       console.error("Failed to create stock out:", error);
@@ -347,7 +332,7 @@ export const AssetMetaProvider = ({ children }) => {
 
       const res = await api.post("/api/assets-transaction", payload);
       fetchAssetTransaction(); // Refresh the list after update
-      fetchAssets(); // Refresh the assets list
+      fetchBranchAssets(); // Refresh the assets list
       return res.data;
     } catch (error) {
       console.error("Failed to create asset in transaction:", error);
@@ -359,6 +344,7 @@ export const AssetMetaProvider = ({ children }) => {
     <AssetsContext.Provider
       value={{
         assets,
+        fetchBranchAssets,
         fetchAssets,
         addAsset,
         updateAsset,
@@ -368,10 +354,6 @@ export const AssetMetaProvider = ({ children }) => {
         updateCategory,
         deleteCategory,
         getCategoryById,
-        tags,
-        addTag,
-        updateTag,
-        deleteTag,
         branches,
         fetchBranches,
         addBranch,
