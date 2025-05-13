@@ -48,7 +48,7 @@ export default function CheckoutList() {
             assetNames.some(name => name.includes(filters.itemName.toLowerCase()));
 
         const matchesPurpose =
-            !filters.purpose || txn.asset_transaction_purpose_id == filters.purpose;
+            !filters.purpose || txn.asset_transaction_purpose_name == filters.purpose;
 
         const matchesDate =
             (!filters.fromDate || txnDate >= filters.fromDate) &&

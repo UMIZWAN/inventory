@@ -85,7 +85,7 @@ function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
                     >
                         <option value="">[select]</option>
                         {invType.map(inv => (
-                            <option key={inv.id} value={inv.id}>{inv.asset_transaction_purpose_name}</option>
+                            <option key={inv.id} value={inv.asset_transaction_purpose_name}>{inv.asset_transaction_purpose_name}</option>
                         ))}
                     </select>
                 </div>
