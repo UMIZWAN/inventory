@@ -14,4 +14,9 @@ class AssetsTransactionPurpose extends Model
     protected $fillable = [
         'asset_transaction_purpose_name',
     ];
+
+    public function assetsTransactions()
+    {
+        return $this->hasMany(AssetsTransaction::class, 'assets_transaction_purpose_id');
+    }
 }
