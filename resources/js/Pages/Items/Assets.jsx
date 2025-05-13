@@ -79,22 +79,22 @@ const Assets = () => {
         const range = [];
         const rangeWithDots = [];
         let l;
-        
+
         // Always include page 1
         range.push(1);
-        
+
         // Calculate the range of pages to show around current page
         for (let i = currentPage - delta; i <= currentPage + delta; i++) {
             if (i > 1 && i < totalPages) {
                 range.push(i);
             }
         }
-        
+
         // Always include the last page if there are more than 1 pages
         if (totalPages > 1) {
             range.push(totalPages);
         }
-        
+
         // Add dots where needed
         for (let i of range) {
             if (l) {
@@ -107,7 +107,7 @@ const Assets = () => {
             rangeWithDots.push(i);
             l = i;
         }
-        
+
         return rangeWithDots;
     };
 
@@ -174,7 +174,7 @@ const Assets = () => {
                                         </th>
                                         {user?.add_edit_asset && (
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            unit Cost
+                                                unit Cost
                                             </th>
                                         )}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -257,11 +257,10 @@ const Assets = () => {
                                 <button
                                     onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
                                     disabled={currentPage === 1}
-                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
-                                        currentPage === 1
+                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === 1
                                             ? "text-gray-400 cursor-not-allowed"
                                             : "text-gray-700 hover:bg-gray-50"
-                                    }`}
+                                        }`}
                                 >
                                     Previous
                                 </button>
@@ -275,11 +274,10 @@ const Assets = () => {
                                             <button
                                                 key={`page-${number}`}
                                                 onClick={() => paginate(number)}
-                                                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
-                                                    currentPage === number
+                                                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${currentPage === number
                                                         ? "bg-blue-600 text-white"
                                                         : "text-gray-700 hover:bg-gray-50"
-                                                }`}
+                                                    }`}
                                             >
                                                 {number}
                                             </button>
@@ -289,11 +287,10 @@ const Assets = () => {
                                 <button
                                     onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
                                     disabled={currentPage === totalPages || totalPages === 0}
-                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
-                                        currentPage === totalPages || totalPages === 0
+                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === totalPages || totalPages === 0
                                             ? "text-gray-400 cursor-not-allowed"
                                             : "text-gray-700 hover:bg-gray-50"
-                                    }`}
+                                        }`}
                                 >
                                     Next
                                 </button>
@@ -308,7 +305,10 @@ const Assets = () => {
                     {selectedAsset && (
                         <ItemDetails
                             asset={selectedAsset}
-                            onClose={() => setSelectedAsset(null)}
+                            onClose={() => {
+                                setSelectedAsset(null);
+                                fetchAssets(selectedBranch === "all" ? null : selectedBranch); // refresh list
+                            }}
                         />
                     )}
                 </div>

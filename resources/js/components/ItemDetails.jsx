@@ -4,6 +4,7 @@ import { MdOutlineCancel } from "react-icons/md";
 import { useAssetMeta } from '../context/AssetsContext';
 import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/api';
 
 const ItemDetails = ({ asset, onClose }) => {
     const { user } = useAuth();
@@ -100,6 +101,27 @@ const ItemDetails = ({ asset, onClose }) => {
             <span>{asset[field] ?? '—'}</span>
         );
 
+    const handleDuplicate = async () => {
+        if (!asset?.id) return;
+
+        try {
+            await api.post(`/api/assets/${asset.id}/copy`, form, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              });
+
+            setToast('Asset duplicated successfully!');
+            setTimeout(() => {
+                setToast(null);
+                onClose(); // close modal
+            }, 2000);
+        } catch (error) {
+            alert('Error duplicating asset: ' + error.message);
+        }
+    };
+
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/60">
             {toast && (
@@ -146,14 +168,22 @@ const ItemDetails = ({ asset, onClose }) => {
                                 </button>
                             </>
                         ) : (
-                            user?.add_edit_transaction && (
-                                <button
-                                    onClick={() => setEditMode(true)}
-                                    className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-6"
-                                >
-                                    <FaEdit className="inline-block mr-1 mb-1" />
-                                    Edit
-                                </button>
+                            user?.add_edit_asset && (
+                                <>
+                                    <button
+                                        onClick={() => setEditMode(true)}
+                                        className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-2"
+                                    >
+                                        <FaEdit className="inline-block mr-1 mb-1" />
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={handleDuplicate}
+                                        className="bg-white shadow-sm shadow-purple-600/30 px-2 py-1 rounded-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 focus:outline-2"
+                                    >
+                                        Duplicate
+                                    </button>
+                                </>
                             )
                         )}
                     </div>
