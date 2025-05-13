@@ -8,7 +8,7 @@ import TransactionDetail from "./TransactionDetail";
 
 export default function ReceiveList() {
     const { user } = useAuth();
-    const { allAssets, assetIn } = useAssetMeta();
+    const { assets, assetIn } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showReceiveForm, setShowReceiveForm] = useState(false);
@@ -34,7 +34,7 @@ export default function ReceiveList() {
         const txnDate = txn.created_at.slice(0, 10);
 
         const assetNames = txn.assets_transaction_item_list.map(item => {
-            const asset = allAssets.find(a => a.id === item.asset_id);
+            const asset = assets.find(a => a.id === item.asset_id);
             return asset?.name?.toLowerCase() || '';
         });
 
@@ -100,7 +100,7 @@ export default function ReceiveList() {
                         "Branch": txn.assets_from_branch_name,
                         "Items": txn.assets_transaction_item_list
                             .map(item => {
-                                const asset = allAssets.find(a => a.id === item.asset_id);
+                                const asset = assets.find(a => a.id === item.asset_id);
                                 return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
                             })
                             .join(", "),
@@ -140,7 +140,7 @@ export default function ReceiveList() {
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
-                                                const asset = allAssets.find(a => a.id === item.asset_id);
+                                                const asset = assets.find(a => a.id === item.asset_id);
                                                 return (
                                                     <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
                                                         <li>{asset?.name || 'Unknown'} — {item.asset_unit}</li>

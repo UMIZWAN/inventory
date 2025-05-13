@@ -10,7 +10,7 @@ import ExportButton from "./ExportButton";
 
 export default function TransferList({ status, mode }) {
   const { user } = useAuth();
-  const { allAssets, assetTransfer, createTransfer, fetchAssetTransaction, fetchAssets } = useAssetMeta();
+  const { assets, assetTransfer, createTransfer, fetchAssetTransaction, fetchAssets, fetchBranchAssets } = useAssetMeta();
 
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -90,14 +90,14 @@ export default function TransferList({ status, mode }) {
     }).then(() => {
       closeModal();
       fetchAssetTransaction();
-      fetchAssets();
+      fetchBranchAssets();
     }).catch((err) => {
       console.error("Update failed:", err);
     });
   };
 
   const getItemDetails = (item) => {
-    const asset = allAssets.find(a => a.id === item.asset_id);
+    const asset = assets.find(a => a.id === item.asset_id);
     return {
       name: asset?.name || 'Unknown Asset',
       price: asset?.asset_sales_cost || 0,
@@ -109,7 +109,7 @@ export default function TransferList({ status, mode }) {
   const filteredTransfers = assetTransfer.filter((txn) => {
     const txnDate = txn.created_at.slice(0, 10);
     const assetNames = txn.assets_transaction_item_list.map(item => {
-      const found = allAssets.find(a => a.id === item.asset_id);
+      const found = assets.find(a => a.id === item.asset_id);
       return found?.name?.toLowerCase() || '';
     });
 
@@ -228,7 +228,7 @@ export default function TransferList({ status, mode }) {
             "To Branch": txn.assets_to_branch_name,
             "Items": txn.assets_transaction_item_list
               .map(item => {
-                const asset = allAssets.find(a => a.id === item.asset_id);
+                const asset = assets.find(a => a.id === item.asset_id);
                 return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
               })
               .join(", "),

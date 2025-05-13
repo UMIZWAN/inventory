@@ -6,7 +6,7 @@ import { useOptions } from "../context/OptionContext";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
-  const { allAssets, assets, branches } = useAssetMeta();
+  const { assets, branches } = useAssetMeta();
   const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({

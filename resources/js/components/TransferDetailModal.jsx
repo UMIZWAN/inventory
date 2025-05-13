@@ -6,12 +6,12 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import TransferDeliveryOrderPDF from "./TransferDeliveryOrderPDF";
 
 export default function TransferDetailModal({ isOpen, onClose, data, buttons, mode }) {
-  const { getCategoryById, allAssets } = useAssetMeta();
+  const { getCategoryById, assets } = useAssetMeta();
   const { user } = useAuth();
 
   // Get asset details for each item in the transfer
   const getItemDetails = (item) => {
-    const asset = allAssets.find(a => a.id === item.asset_id);
+    const asset = assets.find(a => a.id === item.asset_id);
     return {
       code: asset?.asset_running_number || 'Unknown Code',
       name: asset?.name || 'Unknown Asset',
@@ -64,12 +64,12 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                 </Dialog.Title>
 
                 <div className="mt-4 space-y-2">
-                  <p><span className="font-semibold">Running Number:</span> {data?.assets_transaction_running_number}</p>
+                  <p><span className="font-semibold">Reference Number:</span> {data?.assets_transaction_running_number}</p>
                   <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
                   <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                   <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
                   <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
-                  <p><span className="font-semibold">Shipping Option:</span> {data?.assets_shipping_option}</p>
+                  <p><span className="font-semibold">Shipping Option:</span> {data?.assets_shipping_option_name}</p>
                   
                   <div className="mt-4">
                     <h4 className="font-semibold">Items:</h4>

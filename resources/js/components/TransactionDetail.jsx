@@ -109,10 +109,11 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 
 // Main Component
 function TransactionDetail({ transaction, onClose, type = "transfer" }) {
-    const { allAssets, suppliers } = useAssetMeta();
+
+    const { assets, suppliers } = useAssetMeta();
     console.log("Transaction Detail", transaction, type);
     const getAssetDetails = (assetId) => {
-        const asset = allAssets.find((a) => a.id === assetId);
+        const asset = assets.find((a) => a.id === assetId);
         return asset
             ? { name: asset.name, price: type === "receive" ? asset.asset_purchase_cost : asset.asset_sales_cost, code: asset.asset_running_number }
             : { name: "-", price: 0, code: "-" };
@@ -122,7 +123,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
         // if (type === "receive") {
         //     return transaction.items || [];
         // } else {
-        return transaction.assets_transaction_item_list || [];
+        return transaction.assets_transaction_item_list || transaction.transaction_items || [];
         // }
     };
 
@@ -169,11 +170,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                     JSON.parse(transaction.assets_transaction_purpose).includes("SELL") && (
                                         <p><strong>Recipient:</strong> {transaction.assets_recipient_name}</p>
                                     )}
-                                <p><strong>Purpose:</strong>
-                                    {transaction.assets_transaction_purpose
-                                        ? JSON.parse(transaction.assets_transaction_purpose).join(", ")
-                                        : "-"}
-                                </p>
+                                <p><strong>Purpose:</strong> {transaction.asset_transaction_purpose_name}</p>
                                 <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
                                 <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString()}</p>
                             </>

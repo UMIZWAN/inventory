@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 
 function ReceiveForm({ setShowReceiveForm, onSubmit }) {
   const { user } = useAuth();
-  const { assets, branches, createAssetIn } = useAssetMeta();
+  const { assets, fetchBranchAssets, createAssetIn } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
   const [isUsingPO, setIsUsingPO] = useState(false);
   const [submitting, setSubmitting] = useState(false);

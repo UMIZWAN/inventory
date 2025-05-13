@@ -3,6 +3,7 @@ import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import { useOptions } from "../context/OptionContext";
+import TransactionDetail from "./TransactionDetail";
 
 export default function CheckoutForm({ setShowCheckoutForm }) {
     const { user } = useAuth();
@@ -14,6 +15,8 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
     const [recipient, setRecipient] = useState('');
     const [remarks, setRemarks] = useState('');
     const [purposes, setPurposes] = useState();
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [createdStockOut, setCreatedStockOut] = useState(null);
 
     useEffect(() => {
         fetchInvType();
@@ -23,9 +26,6 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
         { assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },
     ]);
 
-    // const handlePurposeChange = (key) => {
-    //     setPurposes((prev) => ({ ...prev, [key]: !prev[key] }));
-    // };
 
     const handleChange = (index, field, value) => {
         const updated = [...items];
@@ -117,8 +117,9 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                 return;
             }
 
-            await createStockOut(form);
-            alert('Stock Out created successfully!');
+            const result = await createStockOut(form); // Ensure it returns full stock out detail
+            setCreatedStockOut(result);
+            setShowDetailModal(true);
             setRecipient("");
             setItems([{ assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },]);
             setRemarks("");
@@ -212,28 +213,6 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                     ></textarea>
                 </div>
 
-                {/* Issued By */}
-                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-1 font-medium">Issued By</label>
-            <input
-              type="text"
-              value={currentUser.name}
-              disabled
-              className="w-full bg-gray-100 text-gray-700 border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Email</label>
-            <input
-              type="email"
-              value={currentUser.email}
-              disabled
-              className="w-full bg-gray-100 text-gray-700 border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-        </div> */}
-
                 {/* Submit */}
                 <div className="text-right mt-4">
                     <button
@@ -242,18 +221,29 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                     >
                         Submit
                     </button>
-                    <button
+                    {/* <button
                         type="button"
                         onClick={() => setShowCheckoutForm(false)}
                         className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded"
                     >
                         Cancel
-                    </button>
+                    </button> */}
                 </div>
 
             </div>
             {/* </div>
         </div> */}
+
+            {showDetailModal && createdStockOut && (
+                <TransactionDetail
+                    isOpen={showDetailModal}
+                    onClose={() => setShowDetailModal(false)}
+                    transaction={createdStockOut.data}
+                    type="transfer"
+                    
+                />
+            )}
+
         </>
     );
 }

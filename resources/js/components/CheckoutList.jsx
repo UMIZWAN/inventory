@@ -8,7 +8,7 @@ import TransactionDetail from "./TransactionDetail";
 
 export default function CheckoutList() {
     const { user } = useAuth();
-    const { allAssets, assetOut, createStockOut } = useAssetMeta();
+    const { assets, assetOut, createStockOut } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -35,13 +35,9 @@ export default function CheckoutList() {
         const txnDate = txn.created_at.slice(0, 10);
 
         const assetNames = txn.assets_transaction_item_list.map(item => {
-            const asset = allAssets.find(a => a.id === item.asset_id);
+            const asset = assets.find(a => a.id === item.asset_id);
             return asset?.name?.toLowerCase() || '';
         });
-
-        const purposeArray = txn.assets_transaction_purpose
-            ? JSON.parse(txn.assets_transaction_purpose)
-            : [];
 
         const matchesSearch =
             !filters.searchTerm ||
@@ -52,8 +48,7 @@ export default function CheckoutList() {
             assetNames.some(name => name.includes(filters.itemName.toLowerCase()));
 
         const matchesPurpose =
-            !filters.purpose ||
-            purposeArray.some(p => p.toLowerCase().includes(filters.purpose.toLowerCase()));
+            !filters.purpose || txn.asset_transaction_purpose_id == filters.purpose;
 
         const matchesDate =
             (!filters.fromDate || txnDate >= filters.fromDate) &&
@@ -112,13 +107,11 @@ export default function CheckoutList() {
                         "Branch": txn.assets_from_branch_name,
                         "Items": txn.assets_transaction_item_list
                             .map(item => {
-                                const asset = allAssets.find(a => a.id === item.asset_id);
+                                const asset = assets.find(a => a.id === item.asset_id);
                                 return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
                             })
                             .join(", "),
-                        "Purpose": txn.assets_transaction_purpose
-                            ? JSON.parse(txn.assets_transaction_purpose).join(", ")
-                            : "-",
+                        "Purpose": txn.asset_transaction_purpose_name,
                         "Date": new Date(txn.created_at).toLocaleDateString(),
                     }))}
                     filename="AssetOut"
@@ -152,7 +145,7 @@ export default function CheckoutList() {
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
-                                                const asset = allAssets.find(a => a.id === item.asset_id);
+                                                const asset = assets.find(a => a.id === item.asset_id);
                                                 return (
                                                     <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
                                                         <li>{asset?.name || 'Unknown'} — {item.asset_unit}</li>
@@ -161,11 +154,7 @@ export default function CheckoutList() {
                                             })}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-2 border">
-                                        {txn.assets_transaction_purpose
-                                            ? JSON.parse(txn.assets_transaction_purpose).join(", ")
-                                            : "-"}
-                                    </td>
+                                    <td className="px-4 py-2 border">{txn.asset_transaction_purpose_name}</td>
                                     <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2 border">
                                         <button

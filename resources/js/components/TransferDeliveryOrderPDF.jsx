@@ -71,7 +71,7 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
           <Text>
             <Text style={styles.label}>Shipping Option:</Text>{" "}
-            {data?.assets_shipping_option}
+            {data?.assets_shipping_option_name}
           </Text>
           <Text style={{ width: 180, textAlign: "left" }}>
             <Text style={styles.label}>Ref. No.:</Text>{" "}

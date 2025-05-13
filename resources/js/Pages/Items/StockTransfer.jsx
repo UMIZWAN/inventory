@@ -9,12 +9,12 @@ import { Head } from "@inertiajs/react";
 
 function StockTransfer() {
   const { user } = useAuth();
-  const { assetTransfer, fetchAssetTransaction, fetchAssets } = useAssetMeta();
+  const { assetTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
 
   useEffect(() => {
       if (user?.branch_id) {
         fetchAssetTransaction();
-        fetchAssets();
+        fetchBranchAssets();
       }
     }, [user]);
 
