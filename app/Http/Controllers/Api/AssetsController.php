@@ -376,6 +376,9 @@ class AssetsController extends Controller
             $branchId = Auth::user()->branch_id;
 
             $assets = Assets::with(['category', 'tag'])
+                ->whereHas('branchValues', function ($query) use ($branchId) {
+                    $query->where('asset_branch_id', $branchId);
+                })
                 ->with(['branchValues' => function ($query) use ($branchId) {
                     $query->where('asset_branch_id', $branchId);
                 }])
