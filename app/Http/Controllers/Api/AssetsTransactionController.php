@@ -332,8 +332,9 @@ class AssetsTransactionController extends Controller
                     ], 400);
                 }
 
-                DB::beginTransaction();
+
                 if ($request->assets_transaction_status == 'REJECTED' && $transaction->assets_transaction_status == 'REQUESTED') {
+                    DB::beginTransaction();
                     $transaction->update([
                         'assets_transaction_status' => $request->assets_transaction_status,
                         'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
@@ -349,6 +350,7 @@ class AssetsTransactionController extends Controller
                     ], 200);
                 }
                 if ($request->assets_transaction_status == 'APPROVED' && $transaction->assets_transaction_status == 'REQUESTED') {
+                    DB::beginTransaction();
                     $transaction->update([
                         'assets_transaction_status' => $request->assets_transaction_status,
                         'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
@@ -364,7 +366,7 @@ class AssetsTransactionController extends Controller
                     ], 200);
                 }
                 if ($request->assets_transaction_status == 'IN-TRANSIT' && $transaction->assets_transaction_status == 'APPROVED') {
-
+                    DB::beginTransaction();
                     try {
                         $transaction->update([
                             'assets_transaction_status' => $request->assets_transaction_status,
@@ -449,7 +451,6 @@ class AssetsTransactionController extends Controller
                 'status' => $transaction->assets_transaction_status,
             ], 422);
         } catch (Exception $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
