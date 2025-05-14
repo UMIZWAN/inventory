@@ -269,7 +269,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
                     'assets_shipping_option_id' => $request->assets_shipping_option_id,
-                    'assets_transaction_status' => 'IN-TRANSIT',
+                    'assets_transaction_status' => 'REQUESTED',
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
@@ -288,17 +288,6 @@ class AssetsTransactionController extends Controller
                     ]);
                 }
 
-                if ($request->assets_transaction_status == 'IN-TRANSIT') {
-                    foreach ($request->assets_transaction_item_list as $item) {
-                        $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
-                            ->where('asset_id', $item['asset_id'])
-                            ->first();
-
-                        if ($assetBranchFromValue) {
-                            $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
-                        }
-                    }
-                }
                 DB::commit();
 
                 return response()->json([
@@ -319,23 +308,95 @@ class AssetsTransactionController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $validator = Validator::make($request->all(), [
+                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ], 422);
+            }
+
             $transaction = AssetsTransaction::findOrFail($id);
 
-            if ($transaction->assets_transaction_type == 'ASSET TRANSFER' && $transaction->assets_transaction_status == 'IN-TRANSIT') {
+            if ($transaction->assets_transaction_type == 'ASSET TRANSFER') {
+                if ($request->assets_transaction_status == $transaction->assets_transaction_status) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Asset transfer already ' . $transaction->assets_transaction_status
+                    ], 400);
+                }
+
                 DB::beginTransaction();
+                if ($request->assets_transaction_status == 'REJECTED' && $transaction->assets_transaction_status == 'REQUESTED') {
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'rejected_by' => Auth::user()->id,
+                        'rejected_at' => Carbon::now()
+                    ]);
 
+                    DB::commit();
 
-                $oldStatus = $transaction->assets_transaction_status;
-                $newStatus = 'RECEIVED';
+                    return response()->json([
+                        'message' => 'Asset Rejected successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
+                }
+                if ($request->assets_transaction_status == 'APPROVED' && $transaction->assets_transaction_status == 'REQUESTED') {
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'approved_by' => Auth::user()->id,
+                        'approved_at' => Carbon::now()
+                    ]);
 
-                $transaction->update([
-                    'assets_transaction_status' => $newStatus,
-                    'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
-                    'received_by' => Auth::user()->id,
-                    'received_at' => Carbon::now()
-                ]);
+                    DB::commit();
 
-                if ($oldStatus == 'IN-TRANSIT' && $newStatus == 'RECEIVED') {
+                    return response()->json([
+                        'message' => 'Asset Approved successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
+                }
+                if ($request->assets_transaction_status == 'IN-TRANSIT' && $transaction->assets_transaction_status == 'APPROVED') {
+
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'updated_by' => Auth::user()->id,
+                        'updated_at' => Carbon::now()
+                    ]);
+
+                    $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+
+                    foreach ($transactionItems as $item) {
+                        $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                            ->where('asset_id', $item['asset_id'])
+                            ->first();
+
+                        if ($assetBranchFromValue) {
+                            $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
+                        }
+                    }
+
+                    DB::commit();
+
+                    return response()->json([
+                        'message' => 'Asset Sent successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
+                }
+
+                if ($request->assets_transaction_status == 'RECEIVED' && $transaction->assets_transaction_status == 'IN-TRANSIT') {
+
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'received_by' => Auth::user()->id,
+                        'received_at' => Carbon::now()
+                    ]);
                     $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
 
                     foreach ($transactionItems as $item) {
@@ -359,15 +420,13 @@ class AssetsTransactionController extends Controller
                             ]);
                         }
                     }
+                    DB::commit();
+
+                    return response()->json([
+                        'message' => 'Asset received successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
                 }
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' updated successfully',
-                    'data' => $transaction->fresh()->load('transactionItems')
-                ]);
             }
             return response()->json([
                 'success' => false,

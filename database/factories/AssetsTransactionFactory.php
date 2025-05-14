@@ -21,7 +21,7 @@ class AssetsTransactionFactory extends Factory
         // Set status depending on type
         $status = null;
         if ($transactionType === 'ASSET TRANSFER') {
-            $status = $this->faker->randomElement(['DRAFT', 'IN-TRANSIT', 'RECEIVED']);
+            $status = $this->faker->randomElement(['REQUESTED', 'REJECTED', 'APPROVED', 'IN-TRANSIT', 'RECEIVED']);
         }
 
         $purpose = null;
@@ -39,9 +39,11 @@ class AssetsTransactionFactory extends Factory
         $updatedByUser = User::inRandomOrder()->first();
         $receivedByUser = User::inRandomOrder()->first();
         $approvedByUser = User::inRandomOrder()->first();
+        $rejectedByUser = User::inRandomOrder()->first();
 
         return [
-            'assets_transaction_running_number' => 'MKT-' . str_pad($counter++, 5, '0', STR_PAD_LEFT),
+            'assets_transaction_running_number' => $transactionType === 'ASSET TRANSFER' ?
+                ('MKT-' . str_pad($counter++, 5, '0', STR_PAD_LEFT)) : ('INV-' . str_pad($counter++, 5, '0', STR_PAD_LEFT)),
             'supplier_id' => $transactionType === 'ASSET IN' ?
                 ($purchaseOrder ? $purchaseOrder->supplier_id : null) : null,
             'assets_transaction_type' => $transactionType,
@@ -68,12 +70,16 @@ class AssetsTransactionFactory extends Factory
                 ($receivedByUser ? $receivedByUser->id : 1) : null,
             'approved_by' => $this->faker->boolean(60) ?
                 ($approvedByUser ? $approvedByUser->id : 1) : null,
+            'rejected_by' => $this->faker->boolean(10) ?
+                ($rejectedByUser ? $rejectedByUser->id : 1) : null,
             'created_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
             'updated_at' => $this->faker->dateTimeBetween('-5 months', 'now'),
             'received_at' => $this->faker->boolean(70) ?
                 $this->faker->dateTimeBetween('-4 months', 'now') : null,
             'approved_at' => $this->faker->boolean(60) ?
                 $this->faker->dateTimeBetween('-3 months', 'now') : null,
+            'rejected_at' => $this->faker->boolean(10) ?
+                $this->faker->dateTimeBetween('-2 months', 'now') : null,
         ];
     }
 

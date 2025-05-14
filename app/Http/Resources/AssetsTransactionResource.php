@@ -37,17 +37,21 @@ class AssetsTransactionResource extends JsonResource
             'created_by_name' => $this->createdBy->name ?? null,
             'created_at' => $this->created_at,
 
-            // 'updated_by' => $this->updated_by,
-            // 'updated_by_name' => $this->updatedByUser->name ?? null,
-            // 'updated_at' => $this->updated_at,
+            'updated_by' => $this->updated_by,
+            'updated_by_name' => $this->updatedBy->name ?? null,
+            'updated_at' => $this->updated_at,
 
             'received_by' => $this->received_by,
             'received_by_name' => $this->receivedBy->name ?? null,
             'received_at' => $this->received_at,
 
-            // 'approved_by' => $this->approved_by,
-            // 'approved_by_name' => $this->approvedByUser->name ?? null,
-            // 'approved_at' => $this->approved_at,
+            'approved_by' => $this->approved_by,
+            'approved_by_name' => $this->approvedBy->name ?? null,
+            'approved_at' => $this->approved_at,
+
+            'rejected_by' => $this->rejected_by,
+            'rejected_by_name' => $this->rejectedBy->name ?? null,
+            'rejected_at' => $this->rejected_at,
 
             'assets_transaction_item_list' => AssetsTransactionItemListResource::collection($this->whenLoaded('transactionItems')),
         ];

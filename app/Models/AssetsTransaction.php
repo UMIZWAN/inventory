@@ -10,8 +10,8 @@ class AssetsTransaction extends Model
 {
     use HasFactory, HasApiTokens;
 
-    public const TYPES = ['ASSET IN', 'ASSET OUT'];
-    public const STATUSES = ['DRAFT', 'IN-TRANSIT', 'RECEIVED'];
+    public const TYPES = ['ASSET IN', 'ASSET OUT', 'ASSET TRANSFER'];
+    public const STATUSES = ['REQUESTED', 'REJECTED', 'APPROVED', 'IN-TRANSIT', 'RECEIVED'];
     public const PURPOSES = ['INSURANCE', 'CSI', 'EVENT/ ROADSHOW', 'SPECIAL REQUEST'];
 
     protected $table = 'assets_transaction';
@@ -33,10 +33,12 @@ class AssetsTransaction extends Model
         'updated_by',
         'received_by',
         'approved_by',
+        'rejected_by',
         'created_at',
         'updated_at',
         'received_at',
         'approved_at',
+        'rejected_at',
     ];
 
     protected $casts = [
@@ -92,6 +94,11 @@ class AssetsTransaction extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
     public function transactionItems()
