@@ -358,6 +358,18 @@ class AssetsController extends Controller
 
             ]);
 
+            $branches = DB::table('assets_branch')->get();
+
+            // Create an entry in assets_branch_values for each branch
+            foreach ($branches as $branch) {
+                AssetsBranchValues::create([
+                    'asset_id' => $newAsset->id,
+                    'asset_branch_id' => $branch->id,
+                    'asset_location_id' => null, // Default to null, can be updated later
+                    'asset_current_unit' => 0,   // Initialize with 0 quantity
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Asset copied successfully',
@@ -376,6 +388,9 @@ class AssetsController extends Controller
             $branchId = Auth::user()->branch_id;
 
             $assets = Assets::with(['category', 'tag'])
+                ->whereHas('branchValues', function ($query) use ($branchId) {
+                    $query->where('asset_branch_id', $branchId);
+                })
                 ->with(['branchValues' => function ($query) use ($branchId) {
                     $query->where('asset_branch_id', $branchId);
                 }])

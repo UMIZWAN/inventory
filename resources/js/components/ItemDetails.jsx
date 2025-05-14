@@ -6,7 +6,6 @@ import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
 
 const ItemDetails = ({ asset, onClose }) => {
-    console.log('Asset Details:', asset);
     const { user } = useAuth();
     const { updateAsset, categories, tags, branches } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
@@ -147,14 +146,16 @@ const ItemDetails = ({ asset, onClose }) => {
                                 </button>
                             </>
                         ) : (
-                            user?.add_edit_transaction && (
-                                <button
-                                    onClick={() => setEditMode(true)}
-                                    className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-6"
-                                >
-                                    <FaEdit className="inline-block mr-1 mb-1" />
-                                    Edit
-                                </button>
+                            user?.add_edit_asset && (
+                                <>
+                                    <button
+                                        onClick={() => setEditMode(true)}
+                                        className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-2"
+                                    >
+                                        <FaEdit className="inline-block mr-1 mb-1" />
+                                        Edit
+                                    </button>
+                                </>
                             )
                         )}
                     </div>

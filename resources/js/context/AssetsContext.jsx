@@ -88,6 +88,24 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
+  // const copyAsset = async (form) => {
+  //   console.log('Adding asset:', form);
+
+  //   try {
+  //     await api.post('/api/assets', form, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //       },
+  //     });
+
+  //     fetchAssets(); // Refresh the list after update
+  //     fetchBranchAssets();
+  //   } catch (err) {
+  //     console.error('Failed to update asset:', err);
+  //     throw err;
+  //   }
+  // };
+
   const updateAsset = async (id, data) => {
     try {
       let config = {};
@@ -206,7 +224,6 @@ export const AssetMetaProvider = ({ children }) => {
   const createTransfer = async (form, totalAmount) => {
     try {
       const payload = {
-        assets_transaction_running_number: generateRunningNumber(), // we'll create this below
         assets_transaction_type: 'ASSET TRANSFER',
         assets_transaction_status: form.status.toUpperCase(), // make sure it's uppercase
         assets_from_branch_id: parseInt(form.fromBranch),
@@ -235,17 +252,10 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
-  // Optional simple running number generator (for frontend demo only)
-  // const generateRunningNumber = () => {
-  //   const now = new Date();
-  //   return `MKT-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}-${Math.floor(Math.random() * 9000 + 1000)}`;
-  // };
-
   const createStockOut = async (form) => {
     console.log("Creating stock out with form:", form);
     try {
       const payload = {
-        // assets_transaction_running_number: generateRunningNumber(),
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
         assets_from_branch_id: user?.branch_id,
         assets_recipient_name: form.recipient,

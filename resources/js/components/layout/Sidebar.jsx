@@ -9,8 +9,7 @@ import moment from "moment";
 
 const Sidebar = () => {
     const { user, fetchUser, setLoading } = useAuth();
-    const { assets, assetTransfer, fetchAssets } = useAssetMeta(); // Get branches and fetchAssets from context
-    const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
+    const { assets, assetTransfer, fetchAssets } = useAssetMeta(); 
 
     useEffect(() => {
         const token = localStorage.getItem("access_token");
@@ -125,25 +124,6 @@ const Sidebar = () => {
 
     return (
         <div className="w-64 bg-white p-2 shadow-md h-full overflow-y-auto">
-            {/* Branch Selector */}
-            {/* <div className="mb-4">
-                <label htmlFor="branch-select" className="block text-sm font-medium text-gray-700 mb-1">
-                    View Branch Assets
-                </label>
-                <select
-                    id="branch-select"
-                    value={selectedBranch || ''}
-                    onChange={handleBranchChange}
-                    disabled={loading}
-                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                    {branches.map((branch) => (
-                        <option key={branch.id} value={branch.id.toString()}>
-                            {branch.name}
-                        </option>
-                    ))}
-                </select>
-            </div> */}
             <div className="mb-2 rounded px-2">
                 <div className="border-b border-gray-300 my-2 py-2">
                     <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3">Administration</label>
@@ -250,6 +230,19 @@ const Sidebar = () => {
                               }`}
                             />
                           )}
+                        </li>
+                      </Link>
+                    )}
+                </ul>
+                <div className="border-b border-gray-300 my-2 py-2">
+                    <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3 mt-3">Manage Report</label>
+                </div>
+                <ul className="space-y-1">
+                    {user?.view_transaction && (
+                        <Link href="/inv-list">
+                        <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                          <FiRepeat className="text-sky-600" />
+                          <span className="font-medium">Invoice</span>
                         </li>
                       </Link>
                     )}

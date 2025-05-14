@@ -34,7 +34,7 @@ return new class extends Migration
       $table->foreignId('assets_shipping_option_id')->nullable()->constrained('shipping_option')->nullOnDelete();
 
       // STATUS only relevant for ASSET TRANSFER
-      $table->enum('assets_transaction_status', ['DRAFT', 'IN-TRANSIT', 'RECEIVED'])->nullable();
+      $table->enum('assets_transaction_status', ['REQUESTED', 'REJECTED', 'APPROVED', 'IN-TRANSIT', 'RECEIVED'])->nullable();
 
       // PURPOSE: allow multiple purposes (JSON)
       $table->foreignId('assets_transaction_purpose_id')->nullable()->constrained('assets_transaction_purpose')->nullOnDelete();
@@ -50,11 +50,13 @@ return new class extends Migration
       $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
       $table->foreignId('received_by')->nullable()->constrained('users')->nullOnDelete();
       $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+      $table->foreignId('rejected_by')->nullable()->constrained('users')->nullOnDelete();
 
       $table->dateTime('created_at')->nullable();
       $table->dateTime('updated_at')->nullable();
       $table->dateTime('received_at')->nullable();
       $table->dateTime('approved_at')->nullable();
+      $table->dateTime('rejected_at')->nullable();
     });
 
     Schema::create('assets_transaction_item_list', function (Blueprint $table) {

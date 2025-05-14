@@ -39,10 +39,15 @@ Route::get('/purpose', function () {
     return inertia('PurposePage');
 });
 
+Route::get('/inv-list', function () {
+    return inertia('Report/CheckoutList');
+});
+
 Route::prefix('items')->group(function () {
     Route::get('/master-list', fn() => Inertia::render('Items/MasterListPage'));
     Route::get('/item-list', fn() => Inertia::render('Items/Assets'));
     Route::get('/asset-transaction', fn() => Inertia::render('Items/StockTransfer'));
+    Route::get('/asset-transfer', fn() => Inertia::render('Items/TransferForm'));
 });
 
 Route::prefix('purchase')->group(function () {

@@ -28,12 +28,30 @@ export const SuppliersProvider = ({ children }) => {
     }
   };
 
+  const updateSupplier = async (id, data) => {
+    try {
+      await api.put(`/api/suppliers/${id}`, data);
+      fetchSuppliers();
+    } catch (err) {
+      console.error('Failed to update supplier:', err);
+      throw err;
+    }
+  }
+
   // useEffect(() => {
   //   fetchSuppliers();
   // }, []);
 
   return (
-    <SuppliersContext.Provider value={{ fetchSuppliers, suppliers, loading, addSupplier }}>
+    <SuppliersContext.Provider
+      value={{
+        fetchSuppliers,
+        suppliers,
+        loading,
+        addSupplier,
+        updateSupplier
+      }}
+    >
       {children}
     </SuppliersContext.Provider>
   );

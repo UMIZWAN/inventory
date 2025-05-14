@@ -1,14 +1,15 @@
-import { useState } from "react";
-import CheckoutForm from "./CheckoutForm";
-import TransactionFilter from "./TransactionFilter";
-import { useAssetMeta } from "../context/AssetsContext";
-import { useAuth } from "../context/AuthContext";
-import ExportButton from "./ExportButton";
-import TransactionDetail from "./TransactionDetail";
+import { useEffect, useState } from "react";
+import CheckoutForm from "../../components/CheckoutForm";
+import TransactionFilter from "../../components/TransactionFilter";
+import { useAssetMeta } from "../../context/AssetsContext";
+import { useAuth } from "../../context/AuthContext";
+import ExportButton from "../../components/ExportButton";
+import TransactionDetail from "../../components/TransactionDetail";
+import Layout from "../../components/layout/Layout";
 
 export default function CheckoutList() {
     const { user } = useAuth();
-    const { assets, assetOut, createStockOut } = useAssetMeta();
+    const { assets, assetOut, createStockOut, fetchAssetTransaction } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -20,6 +21,10 @@ export default function CheckoutList() {
         purpose: '',
         itemName: '',
     });
+
+    useEffect(() => {
+        fetchAssetTransaction();
+    }, []);
 
     const openModal = (txn) => {
         setSelected(txn);
@@ -67,7 +72,7 @@ export default function CheckoutList() {
     });
 
     return (
-        <>
+        <Layout>
             {/* {showCheckoutForm && (
                 <CheckoutForm
                     setShowCheckoutForm={setShowCheckoutForm}
@@ -75,13 +80,13 @@ export default function CheckoutList() {
                 />
             )} */}
 
-            <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
+            {/* <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
                 {user?.add_edit_transaction && (
                     <div>
                         <CheckoutForm onSubmit={createStockOut} />
                     </div>
                 )}
-            </div>
+            </div> */}
             <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4 mt-4">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">Invoice List</h1>
@@ -145,10 +150,9 @@ export default function CheckoutList() {
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
-                                                const asset = assets.find(a => a.id === item.asset_id);
                                                 return (
                                                     <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
-                                                        <li>{asset?.name || 'Unknown'} — {item.asset_unit}</li>
+                                                        <li>{item.asset_name} — {item.asset_unit}</li>
                                                     </ul>
                                                 );
                                             })}
@@ -184,6 +188,6 @@ export default function CheckoutList() {
                 // />
                 <TransactionDetail transaction={selected} onClose={closeModal} type="transfer" />
             )}
-        </>
+        </Layout>
     );
 }

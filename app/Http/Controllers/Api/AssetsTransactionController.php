@@ -81,7 +81,10 @@ class AssetsTransactionController extends Controller
                     'errors' => 'Assets transaction type is required'
                 ], 422);
             }
-            $request['assets_transaction_running_number'] = $this->generateNextRunningNumber();
+            if ($request->assets_transaction_type != 'ASSET IN') {
+                $request['assets_transaction_running_number'] = $this->generateNextRunningNumber($request->assets_transaction_type);
+            }
+
 
             if ($request->assets_transaction_type == 'ASSET OUT') {
 
@@ -269,7 +272,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_running_number' => $request->assets_transaction_running_number,
                     'assets_transaction_type' => $request->assets_transaction_type,
                     'assets_shipping_option_id' => $request->assets_shipping_option_id,
-                    'assets_transaction_status' => 'IN-TRANSIT',
+                    'assets_transaction_status' => 'REQUESTED',
                     'assets_transaction_purpose' => $request->has('assets_transaction_purpose') ? json_encode($request->assets_transaction_purpose) : null,
                     'assets_transaction_remark' => $request->assets_transaction_remark,
                     'assets_from_branch_id' => $request->assets_from_branch_id,
@@ -288,17 +291,6 @@ class AssetsTransactionController extends Controller
                     ]);
                 }
 
-                if ($request->assets_transaction_status == 'IN-TRANSIT') {
-                    foreach ($request->assets_transaction_item_list as $item) {
-                        $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
-                            ->where('asset_id', $item['asset_id'])
-                            ->first();
-
-                        if ($assetBranchFromValue) {
-                            $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
-                        }
-                    }
-                }
                 DB::commit();
 
                 return response()->json([
@@ -319,23 +311,114 @@ class AssetsTransactionController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $validator = Validator::make($request->all(), [
+                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ], 422);
+            }
+
             $transaction = AssetsTransaction::findOrFail($id);
 
-            if ($transaction->assets_transaction_type == 'ASSET TRANSFER' && $transaction->assets_transaction_status == 'IN-TRANSIT') {
-                DB::beginTransaction();
+            if ($transaction->assets_transaction_type == 'ASSET TRANSFER') {
+                if ($request->assets_transaction_status == $transaction->assets_transaction_status) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Asset transfer already ' . $transaction->assets_transaction_status
+                    ], 400);
+                }
 
 
-                $oldStatus = $transaction->assets_transaction_status;
-                $newStatus = 'RECEIVED';
+                if ($request->assets_transaction_status == 'REJECTED' && $transaction->assets_transaction_status == 'REQUESTED') {
+                    DB::beginTransaction();
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'rejected_by' => Auth::user()->id,
+                        'rejected_at' => Carbon::now()
+                    ]);
 
-                $transaction->update([
-                    'assets_transaction_status' => $newStatus,
-                    'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
-                    'received_by' => Auth::user()->id,
-                    'received_at' => Carbon::now()
-                ]);
+                    DB::commit();
 
-                if ($oldStatus == 'IN-TRANSIT' && $newStatus == 'RECEIVED') {
+                    return response()->json([
+                        'message' => 'Asset Rejected successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
+                }
+                if ($request->assets_transaction_status == 'APPROVED' && $transaction->assets_transaction_status == 'REQUESTED') {
+                    DB::beginTransaction();
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'approved_by' => Auth::user()->id,
+                        'approved_at' => Carbon::now()
+                    ]);
+
+                    DB::commit();
+
+                    return response()->json([
+                        'message' => 'Asset Approved successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
+                }
+                if ($request->assets_transaction_status == 'IN-TRANSIT' && $transaction->assets_transaction_status == 'APPROVED') {
+                    DB::beginTransaction();
+                    try {
+                        $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+
+                        foreach ($transactionItems as $item) {
+                            $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                                ->where('asset_id', $item['asset_id'])
+                                ->first();
+
+                            if (!$assetBranchFromValue || $assetBranchFromValue->asset_current_unit < $item['asset_unit']) {
+                                throw new Exception('Insufficient asset units in the source branch.');
+                            }
+                        }
+
+                        // All checks passed, now update status and decrement
+                        $transaction->update([
+                            'assets_transaction_status' => $request->assets_transaction_status,
+                            'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                            'updated_by' => Auth::id(),
+                            'updated_at' => Carbon::now()
+                        ]);
+
+                        foreach ($transactionItems as $item) {
+                            $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                                ->where('asset_id', $item['asset_id'])
+                                ->first();
+
+                            $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
+                        }
+
+                        DB::commit();
+
+                        return response()->json([
+                            'message' => 'Asset Sent successfully',
+                            'data' => new AssetsTransactionResource($transaction)
+                        ], 200);
+                    } catch (Exception $e) {
+                        DB::rollback();
+                        return response()->json([
+                            'message' => 'An error occurred while sending the asset.',
+                            'error' => $e->getMessage()
+                        ], 500);
+                    }
+                }
+
+                if ($request->assets_transaction_status == 'RECEIVED' && $transaction->assets_transaction_status == 'IN-TRANSIT') {
+
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'received_by' => Auth::user()->id,
+                        'received_at' => Carbon::now()
+                    ]);
                     $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
 
                     foreach ($transactionItems as $item) {
@@ -359,15 +442,13 @@ class AssetsTransactionController extends Controller
                             ]);
                         }
                     }
+                    DB::commit();
+
+                    return response()->json([
+                        'message' => 'Asset received successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
                 }
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' updated successfully',
-                    'data' => $transaction->fresh()->load('transactionItems')
-                ]);
             }
             return response()->json([
                 'success' => false,
@@ -375,7 +456,6 @@ class AssetsTransactionController extends Controller
                 'status' => $transaction->assets_transaction_status,
             ], 422);
         } catch (Exception $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
@@ -425,22 +505,56 @@ class AssetsTransactionController extends Controller
      * 
      * @return string The next running number
      */
-    public function generateNextRunningNumber()
+    public function generateNextRunningNumber($transactionType)
     {
         try {
-            $latestTransaction = AssetsTransaction::orderBy('assets_transaction_running_number', 'desc')->first();
+            if ($transactionType == 'ASSET OUT') {
+                $latestTransaction = AssetsTransaction::where('assets_transaction_type', 'ASSET OUT')->orderBy('assets_transaction_running_number', 'desc')->first();
 
-            if (!$latestTransaction) {
-                $nextNumber = 1;
-            } else {
-                // Extract numeric part (e.g., "MKT-00123" => 123)
-                $latestNumber = (int) str_replace('MKT-', '', $latestTransaction->assets_transaction_running_number);
-                $nextNumber = $latestNumber + 1;
+                if (!$latestTransaction) {
+                    $nextNumber = 1;
+                } else {
+                    // Extract numeric part (e.g., "MKT-00123" => 123)
+                    $latestNumber = (int) str_replace('INV-', '', $latestTransaction->assets_transaction_running_number);
+                    $nextNumber = $latestNumber + 1;
+                }
+
+                // Format with a minimum of 5 digits, more if needed
+                $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                $nextRunningNumber = 'INV-' . $numberPart;
             }
 
-            // Format with a minimum of 5 digits, more if needed
-            $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-            $nextRunningNumber = 'MKT-' . $numberPart;
+            if ($transactionType == 'ASSET TRANSFER') {
+                $latestTransaction = AssetsTransaction::where('assets_transaction_type', 'ASSET TRANSFER')->orderBy('assets_transaction_running_number', 'desc')->first();
+
+                if (!$latestTransaction) {
+                    $nextNumber = 1;
+                } else {
+                    // Extract numeric part (e.g., "MKT-00123" => 123)
+                    $latestNumber = (int) str_replace('MKT-', '', $latestTransaction->assets_transaction_running_number);
+                    $nextNumber = $latestNumber + 1;
+                }
+
+                // Format with a minimum of 5 digits, more if needed
+                $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                $nextRunningNumber = 'MKT-' . $numberPart;
+            }
+
+            // if ($transactionType == 'ASSET IN') {
+            //     $latestTransaction = AssetsTransaction::where('assets_transaction_type', 'ASSET IN')->orderBy('assets_transaction_running_number', 'desc')->first();
+
+            //     if (!$latestTransaction) {
+            //         $nextNumber = 1;
+            //     } else {
+            //         // Extract numeric part (e.g., "MKT-00123" => 123)
+            //         $latestNumber = (int) str_replace('MKTIN-', '', $latestTransaction->assets_transaction_running_number);
+            //         $nextNumber = $latestNumber + 1;
+            //     }
+
+            //     // Format with a minimum of 5 digits, more if needed
+            //     $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            //     $nextRunningNumber = 'MKTIN-' . $numberPart;
+            // }
 
             return $nextRunningNumber;
         } catch (Exception $e) {

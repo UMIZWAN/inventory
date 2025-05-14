@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
-import ItemsTable from "./ItemsTable";
-import { useAssetMeta } from "../context/AssetsContext";
-import { useAuth } from "../context/AuthContext";
-import { useOptions } from "../context/OptionContext";
+import ItemsTable from "../../components/ItemsTable";
+import { useAssetMeta } from "../../context/AssetsContext";
+import { useAuth } from "../../context/AuthContext";
+import { useOptions } from "../../context/OptionContext";
+import { router } from "@inertiajs/react";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
-  const { assets, branches } = useAssetMeta();
+  const { assets, branches, fetchBranchAssets, fetchBranches, createTransfer } = useAssetMeta();
   const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     requester: user?.id || "",
     department: "",
     date: new Date().toISOString().slice(0, 10),
-    status: "IN-TRANSIT",
+    status: "REQUEST",
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: "",
@@ -25,6 +26,8 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
   useEffect(() => {
     fetchShipping();
+    fetchBranchAssets();
+    fetchBranches();
   }, []);
 
   useEffect(() => {
@@ -33,7 +36,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         requester: user?.id || "",
         department: "",
         date: initialData.date || new Date().toISOString().slice(0, 10),
-        status: initialData.status || "IN-TRANSIT",
+        status: initialData.status || "REQUEST",
         transaction_type: "ASSET_TRANSFER",
         fromBranch: initialData.fromBranch || user?.branch_id || "",
         toBranch: initialData.toBranch || "",
@@ -44,8 +47,6 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     }
   }, [initialData, user]);
 
-  const purposes = ["CSI", "Insurance", "Event & Roadshow", "Special RQ"];
-
   const columns = [
     {
       key: "item",
@@ -53,7 +54,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       type: "select",
       options: assets.map((a) => ({
         value: a.id, label: a.name,
-        qty: a.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'
+        qty: a.branch_values[0]?.asset_current_unit
       })),
       width: "w-64"
     },
@@ -61,6 +62,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     { key: "unitMeasure", label: "Unit of Measure", readOnly: true },
     { key: "quantity", label: "Quantity", type: "number", min: 1, align: "text-right" },
     { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right", readOnly: true },
+    { key: "amount", label: "Total Price", type: "number", min: 0, step: "0.01", align: "text-right", readOnly: true },
   ];
 
   const addItem = () => {
@@ -90,6 +92,10 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
           ? parseFloat(value)
           : value;
     }
+
+    const quantity = parseFloat(updatedItems[index].quantity) || 0;
+    const price = parseFloat(updatedItems[index].price) || 0;
+    updatedItems[index].amount = quantity * price;
 
     setForm({ ...form, items: updatedItems });
   };
@@ -135,8 +141,9 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     }
 
     try {
-      await onSubmit(form, totalAmount);
-      setShowTransferForm(false);
+      await createTransfer(form, totalAmount);
+      router.visit("/items/asset-transaction")
+      // setShowTransferForm(false);
     } catch (error) {
       console.error("Submission failed:", error);
       alert("Submission failed. Please try again.");
@@ -147,7 +154,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
 
         <button
           onClick={() => setShowTransferForm(false)}
@@ -243,26 +250,6 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
               </select>
             </div>
           </div>
-
-          {/* Purposes checkboxes */}
-          {/* <div>
-            <label className="block font-medium mb-2">Purpose</label>
-            <div className="flex flex-wrap gap-4">
-              {purposes.map((purpose) => (
-                <label key={purpose} className="inline-flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="purpose"
-                    value={purpose}
-                    checked={form.purpose.includes(purpose)}
-                    onChange={handleChange}
-                    className="form-checkbox rounded text-blue-600"
-                  />
-                  {purpose}
-                </label>
-              ))}
-            </div>
-          </div> */}
 
           {/* Items Table */}
           <ItemsTable

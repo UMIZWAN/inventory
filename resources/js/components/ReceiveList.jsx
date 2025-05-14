@@ -140,10 +140,9 @@ export default function ReceiveList() {
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
-                                                const asset = assets.find(a => a.id === item.asset_id);
                                                 return (
                                                     <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
-                                                        <li>{asset?.name || 'Unknown'} — {item.asset_unit}</li>
+                                                        <li>{item.asset_name} — {item.asset_unit}</li>
                                                     </ul>
                                                 );
                                             })}
