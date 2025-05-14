@@ -177,7 +177,7 @@ const MasterListPage = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Category
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Total Quantity
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -205,9 +205,10 @@ const MasterListPage = () => {
                                                         {item.asset_category_name || "N/A"}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     <div className="text-sm text-gray-500">
-                                                        {item.total_units || 0} / {item.asset_stable_unit || 0} {item.asset_unit_measure}
+                                                        {item.total_units || 0} 
+                                                        {/* {item.asset_stable_unit || 0} {item.asset_unit_measure} */}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">

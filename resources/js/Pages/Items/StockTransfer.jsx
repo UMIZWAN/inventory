@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
-import CheckoutList from "../../components/CheckoutList";
+import CheckoutForm from "../../components/CheckoutForm";
 import ReceiveList from "../../components/ReceiveList";
 import { useAuth } from "../../context/AuthContext";
 import { useAssetMeta } from "../../context/AssetsContext";
@@ -72,7 +72,7 @@ function StockTransfer() {
         {activeTab === "asset_transfer" && (
           <TransferList status={null} mode="both" />
         )}
-        {activeTab === "asset_out" && <CheckoutList />}
+        {activeTab === "asset_out" && <CheckoutForm />}
       </div>
     </Layout>
   );

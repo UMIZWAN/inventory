@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import api from "../api/api";
-import TransferForm from "./TransferForm";
+import TransferForm from "../Pages/Items/TransferForm";
 import TransferDetailModal from "./TransferDetailModal";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
@@ -83,17 +83,22 @@ export default function TransferList({ status, mode }) {
     }
   };
 
-  const handleAction = (txn, newStatus) => {
-    api.put(`/api/assets-transaction/${txn.id}`, {
-      ...txn,
-      assets_transaction_status: newStatus,
-    }).then(() => {
+  const handleAction = async (txn, newStatus) => {
+
+    try {
+      const payload = {
+        assets_transaction_status: newStatus,
+        assets_transaction_remark: txn.assets_transaction_remark || "",
+      };
+
+      const res = await api.put(`/api/assets-transaction/${txn.id}`, payload);
       closeModal();
       fetchAssetTransaction();
       fetchBranchAssets();
-    }).catch((err) => {
+    } catch (err) {
       console.error("Update failed:", err);
-    });
+      alert(err.response.data.error)
+    }
   };
 
   const getItemDetails = (item) => {
@@ -156,32 +161,81 @@ export default function TransferList({ status, mode }) {
     );
   });
 
+  const getAvailableActions = (txn, user) => {
+    const status = txn.assets_transaction_status;
+    const actions = [];
+
+    if (status === "IN-TRANSIT" && txn.assets_to_branch_id === user?.branch_id) {
+      actions.push({
+        label: "Receive",
+        status: "RECEIVED",
+        color: "bg-white shadow-sm shadow-lime-600/30 px-2 rounded text-lime-600 hover:bg-lime-100",
+        icon: <IoMdCheckmarkCircleOutline className="inline-block mr-1 mb-1" />,
+      });
+    }
+
+    if (status === "REQUESTED" && txn.assets_from_branch_id === user?.branch_id) {
+      actions.push({
+        label: "Approve",
+        status: "APPROVED",
+        color: "bg-white shadow-sm shadow-blue-600/30 px-2 rounded text-blue-600 hover:bg-blue-100",
+      });
+      actions.push({
+        label: "Reject",
+        status: "REJECTED",
+        color: "bg-white shadow-sm shadow-red-600/30 px-2 rounded text-red-600 hover:bg-red-100",
+      });
+    }
+
+    if (status === "APPROVED" && txn.assets_from_branch_id === user?.branch_id) {
+      actions.push({
+        label: "Send",
+        status: "IN-TRANSIT",
+        color: "bg-white shadow-sm shadow-indigo-600/30 px-2 rounded text-indigo-600 hover:bg-indigo-100",
+      });
+    }
+
+    return actions;
+  };
 
   const getModalButtons = () => {
     if (!selected) return null;
-    switch (selected.assets_transaction_status) {
-      case "DRAFT":
-        return {
-          primary: {
-            label: "Start Transfer",
-            action: () => handleAction("IN-TRANSFER"),
-            color: "bg-blue-600 hover:bg-blue-700"
-          }
-        };
-      case "IN-TRANSIT":
-        return {
-          primary: {
-            label: "Mark as Received",
-            action: () => handleAction("RECEIVED"),
-            color: "bg-green-600 hover:bg-green-700"
-          }
-        };
-      default:
-        return null;
-    }
+    const actions = getAvailableActions(selected, user);
+    if (actions.length === 0) return null;
+
+    const [primary, secondary] = actions;
+    return {
+      primary: primary && {
+        label: primary.label,
+        action: () => handleAction(selected, primary.status),
+        color: primary.color,
+      },
+      secondary: secondary && {
+        label: secondary.label,
+        action: () => handleAction(selected, secondary.status),
+        color: secondary.color,
+      },
+    };
   };
 
   const modalButtons = getModalButtons();
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "REQUESTED":
+        return "bg-yellow-100 text-yellow-800";
+      case "REJECTED":
+        return "bg-red-100 text-red-800";
+      case "APPROVED":
+        return "bg-blue-100 text-blue-800";
+      case "IN-TRANSIT":
+        return "bg-indigo-100 text-indigo-800";
+      case "RECEIVED":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <>
@@ -193,25 +247,34 @@ export default function TransferList({ status, mode }) {
         />
       )}
 
-      {isEditing && selected && (
+      {/* {isEditing && selected && (
         <TransferForm
           setShowTransferForm={setIsEditing}
           initialData={selected}
           onSubmit={handleUpdateDraft}
           isEditMode={true}
         />
-      )}
+      )} */}
 
       <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Transfer List</h1>
           {user?.add_edit_transaction && (
-            <button
-              onClick={() => setShowTransferForm(true)}
-              className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2"
+            <a
+              href="/items/asset-transfer" // Change this to your actual transfer page route
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                e.preventDefault(); // Prevent default to allow JS handling
+                setShowTransferForm(true); // Opens modal if not right-clicked
+              }}
+              onContextMenu={() => {
+                // Allow right-click to open in new tab naturally
+              }}
+              className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2 cursor-pointer"
             >
               + New Transfer
-            </button>
+            </a>
           )}
         </div>
 
@@ -279,10 +342,7 @@ export default function TransferList({ status, mode }) {
                   </td>
                   <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-2 border">
-                    <span className={`px-2 py-1 rounded-full text-xs ${txn.assets_transaction_status === "DRAFT" ? "bg-yellow-100 text-yellow-800" :
-                      txn.assets_transaction_status === "IN-TRANSIT" ? "bg-blue-100 text-blue-800" :
-                        "bg-green-100 text-green-800"
-                      }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusStyle(txn.assets_transaction_status)}`}>
                       {txn.assets_transaction_status}
                     </span>
                   </td>
@@ -293,17 +353,19 @@ export default function TransferList({ status, mode }) {
                     >
                       View
                     </button>
-                    {txn.assets_transaction_status === "IN-TRANSIT" &&
-                      txn.assets_to_branch_id === user?.branch_id && (
-                        <button
-                          onClick={() => handleAction(txn, "RECEIVED")}
-                          className="bg-white shadow-sm shadow-lime-600/30 px-2 rounded text-lime-600 hover:bg-lime-100"
-                        >
-                          <IoMdCheckmarkCircleOutline className="inline-block mr-1 mb-1" />
-                          Receive
-                        </button>
-                      )}
+
+                    {getAvailableActions(txn, user).map((action, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleAction(txn, action.status)}
+                        className={action.color}
+                      >
+                        {action.icon}
+                        {action.label}
+                      </button>
+                    ))}
                   </td>
+
                 </tr>
               ))
             ) : (

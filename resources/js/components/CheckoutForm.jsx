@@ -81,7 +81,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
         { key: "quantity", label: "Qty", type: "number", placeholder: "1" },
         { key: "unit", label: "Unit", type: "readonly" },
         { key: "price", label: "Price", type: "readonly" },
-        { key: "amount", label: "Amount", type: "readonly" },
+        { key: "amount", label: "Total Price", type: "readonly" },
     ];
 
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
@@ -141,96 +141,98 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                 >
                     &times;
                 </button> */}
-            <h1 className="text-2xl font-bold mb-6">Invoice Form</h1>
+            <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
+                <h1 className="text-2xl font-bold mb-6 text-center">Invoice Form</h1>
+                <div className="flex justify-between items-center">
 
-            <div className="rounded-lg p-4 space-y-6">
+                    <div className="rounded-lg p-4 space-y-6">
 
-                {/* Form Inputs */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block mb-1 font-medium">Branch</label>
-                        <input
-                            type="text"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
-                            placeholder="Branch"
-                            value={user?.branch_name}
-                            onChange={(e) => setBranch(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-1 font-medium">Invoice Date</label>
-                        <input
-                            type="date"
-                            className="w-full border border-gray-300 rounded px-3 py-2"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                        />
-                    </div>
-                </div>
+                        {/* Form Inputs */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block mb-1 font-medium">Branch</label>
+                                <input
+                                    type="text"
+                                    className="w-full border border-gray-300 rounded px-3 py-2"
+                                    placeholder="Branch"
+                                    value={user?.branch_name}
+                                    onChange={(e) => setBranch(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-1 font-medium">Invoice Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full border border-gray-300 rounded px-3 py-2"
+                                    value={date}
+                                    onChange={(e) => setDate(e.target.value)}
+                                />
+                            </div>
+                        </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block mb-1 font-medium">INV</label>
-                        <select
-                            value={purposes}
-                            onChange={(e) => setPurposes(e.target.value)}
-                            className="w-full border border-gray-300 rounded px-3 py-2"
-                        >
-                            <option value="">[Select Type]</option>
-                            {invType.map((inv) => (
-                                <option key={inv.id} value={inv.id} >{inv.asset_transaction_purpose_name}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block mb-1 font-medium">INV</label>
+                                <select
+                                    value={purposes}
+                                    onChange={(e) => setPurposes(e.target.value)}
+                                    className="w-full border border-gray-300 rounded px-3 py-2"
+                                >
+                                    <option value="">[Select Type]</option>
+                                    {invType.map((inv) => (
+                                        <option key={inv.id} value={inv.id} >{inv.asset_transaction_purpose_name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
 
-                {/* Items Table */}
-                <div>
-                    <label className="block mb-2 font-medium">Item Details</label>
-                    <ItemsTable
-                        columns={columns}
-                        items={items}
-                        onChange={handleChange}
-                        onAdd={addItem}
-                        onRemove={removeItem}
-                    />
+                        {/* Items Table */}
+                        <div>
+                            <label className="block mb-2 font-medium">Item Details</label>
+                            <ItemsTable
+                                columns={columns}
+                                items={items}
+                                onChange={handleChange}
+                                onAdd={addItem}
+                                onRemove={removeItem}
+                            />
 
-                    <div className="text-right mt-4">
-                        <span className="font-semibold text-lg">
-                            Total: RM {totalAmount.toFixed(2)}
-                        </span>
-                    </div>
-                </div>
+                            <div className="text-right mt-4">
+                                <span className="font-semibold text-lg">
+                                    Total: RM {totalAmount.toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
 
-                <div>
-                    <label className="block text-sm font-medium">Remarks:</label>
-                    <textarea
-                        className="w-full border rounded p-2 mt-1 h-24"
-                        value={remarks}
-                        onChange={(e) => setRemarks(e.target.value)}
-                    ></textarea>
-                </div>
+                        <div>
+                            <label className="block text-sm font-medium">Remarks:</label>
+                            <textarea
+                                className="w-full border rounded p-2 mt-1 h-24"
+                                value={remarks}
+                                onChange={(e) => setRemarks(e.target.value)}
+                            ></textarea>
+                        </div>
 
-                {/* Submit */}
-                <div className="text-right mt-4">
-                    <button
-                        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-2"
-                        onClick={handleSubmit}
-                    >
-                        Submit
-                    </button>
-                    {/* <button
+                        {/* Submit */}
+                        <div className="text-right mt-4">
+                            <button
+                                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-2"
+                                onClick={handleSubmit}
+                            >
+                                Submit
+                            </button>
+                            {/* <button
                         type="button"
                         onClick={() => setShowCheckoutForm(false)}
                         className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded"
                     >
                         Cancel
                     </button> */}
-                </div>
+                        </div>
 
+                    </div>
+                </div>
             </div>
-            {/* </div>
-        </div> */}
 
             {showDetailModal && createdStockOut && (
                 <TransactionDetail
@@ -238,7 +240,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                     onClose={() => setShowDetailModal(false)}
                     transaction={createdStockOut.data}
                     type="transfer"
-                    
+
                 />
             )}
 
