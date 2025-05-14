@@ -368,13 +368,6 @@ class AssetsTransactionController extends Controller
                 if ($request->assets_transaction_status == 'IN-TRANSIT' && $transaction->assets_transaction_status == 'APPROVED') {
                     DB::beginTransaction();
                     try {
-                        $transaction->update([
-                            'assets_transaction_status' => $request->assets_transaction_status,
-                            'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
-                            'updated_by' => Auth::user()->id,
-                            'updated_at' => Carbon::now()
-                        ]);
-
                         $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
 
                         foreach ($transactionItems as $item) {
@@ -382,13 +375,25 @@ class AssetsTransactionController extends Controller
                                 ->where('asset_id', $item['asset_id'])
                                 ->first();
 
-                            if ($assetBranchFromValue->asset_current_unit < $item['asset_unit']) {
+                            if (!$assetBranchFromValue || $assetBranchFromValue->asset_current_unit < $item['asset_unit']) {
                                 throw new Exception('Insufficient asset units in the source branch.');
                             }
+                        }
 
-                            if ($assetBranchFromValue) {
-                                $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
-                            }
+                        // All checks passed, now update status and decrement
+                        $transaction->update([
+                            'assets_transaction_status' => $request->assets_transaction_status,
+                            'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                            'updated_by' => Auth::id(),
+                            'updated_at' => Carbon::now()
+                        ]);
+
+                        foreach ($transactionItems as $item) {
+                            $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                                ->where('asset_id', $item['asset_id'])
+                                ->first();
+
+                            $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
                         }
 
                         DB::commit();
