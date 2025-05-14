@@ -81,7 +81,7 @@ class AssetsTransactionController extends Controller
                     'errors' => 'Assets transaction type is required'
                 ], 422);
             }
-            $request['assets_transaction_running_number'] = $this->generateNextRunningNumber();
+            $request['assets_transaction_running_number'] = $this->generateNextRunningNumber($request->assets_transaction_type);
 
             if ($request->assets_transaction_type == 'ASSET OUT') {
 
@@ -425,22 +425,56 @@ class AssetsTransactionController extends Controller
      * 
      * @return string The next running number
      */
-    public function generateNextRunningNumber()
+    public function generateNextRunningNumber($transactionType)
     {
         try {
-            $latestTransaction = AssetsTransaction::orderBy('assets_transaction_running_number', 'desc')->first();
+            if ($transactionType == 'ASSET OUT') {
+                $latestTransaction = AssetsTransaction::where('assets_transaction_type', 'ASSET OUT')->orderBy('assets_transaction_running_number', 'desc')->first();
 
-            if (!$latestTransaction) {
-                $nextNumber = 1;
-            } else {
-                // Extract numeric part (e.g., "MKT-00123" => 123)
-                $latestNumber = (int) str_replace('MKT-', '', $latestTransaction->assets_transaction_running_number);
-                $nextNumber = $latestNumber + 1;
+                if (!$latestTransaction) {
+                    $nextNumber = 1;
+                } else {
+                    // Extract numeric part (e.g., "MKT-00123" => 123)
+                    $latestNumber = (int) str_replace('INV-', '', $latestTransaction->assets_transaction_running_number);
+                    $nextNumber = $latestNumber + 1;
+                }
+
+                // Format with a minimum of 5 digits, more if needed
+                $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                $nextRunningNumber = 'INV-' . $numberPart;
             }
 
-            // Format with a minimum of 5 digits, more if needed
-            $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-            $nextRunningNumber = 'MKT-' . $numberPart;
+            if ($transactionType == 'ASSET TRANSFER') {
+                $latestTransaction = AssetsTransaction::where('assets_transaction_type', 'ASSET TRANSFER')->orderBy('assets_transaction_running_number', 'desc')->first();
+
+                if (!$latestTransaction) {
+                    $nextNumber = 1;
+                } else {
+                    // Extract numeric part (e.g., "MKT-00123" => 123)
+                    $latestNumber = (int) str_replace('MKT-', '', $latestTransaction->assets_transaction_running_number);
+                    $nextNumber = $latestNumber + 1;
+                }
+
+                // Format with a minimum of 5 digits, more if needed
+                $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                $nextRunningNumber = 'MKT-' . $numberPart;
+            }
+
+            if ($transactionType == 'ASSET IN') {
+                $latestTransaction = AssetsTransaction::where('assets_transaction_type', 'ASSET IN')->orderBy('assets_transaction_running_number', 'desc')->first();
+
+                if (!$latestTransaction) {
+                    $nextNumber = 1;
+                } else {
+                    // Extract numeric part (e.g., "MKT-00123" => 123)
+                    $latestNumber = (int) str_replace('MKTIN-', '', $latestTransaction->assets_transaction_running_number);
+                    $nextNumber = $latestNumber + 1;
+                }
+
+                // Format with a minimum of 5 digits, more if needed
+                $numberPart = str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                $nextRunningNumber = 'MKTIN-' . $numberPart;
+            }
 
             return $nextRunningNumber;
         } catch (Exception $e) {
