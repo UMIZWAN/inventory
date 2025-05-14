@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import AddAsset from '../../components/AddAsset';
 import ItemDetails from '../../components/ItemDetails';
-import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2, FiCopy } from 'react-icons/fi';
 import Layout from '../../components/layout/Layout';
 import { useAssetMeta } from '../../context/AssetsContext';
 import placeholder from '../../assets/image/placeholder.png';
 import { useAuth } from '../../context/AuthContext';
 import { Head } from "@inertiajs/react";
+import api from '../../api/api';
 
 const Assets = () => {
     const { user } = useAuth();
@@ -25,6 +26,7 @@ const Assets = () => {
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         fetchBranchAssets();
@@ -111,10 +113,36 @@ const Assets = () => {
         return rangeWithDots;
     };
 
+    const handleDuplicate = async (asset) => {
+        if (!asset?.id) return;
+
+        try {
+            await api.post(`/api/assets/${asset.id}/copy`, null, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            setToast('Asset duplicated successfully!');
+            setTimeout(() => {
+                setToast(null);
+            }, 2000);
+
+            fetchBranchAssets();
+        } catch (error) {
+            alert('Error duplicating asset: ' + error.message);
+        }
+    };
+
     return (
         <>
             <Layout>
                 <Head title="Item List" />
+                {toast && (
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white text-sm px-4 py-2 rounded shadow">
+                        {toast}
+                    </div>
+                )}
                 <div className="p-6 max-w-9xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold">Assets List</h1>
@@ -193,7 +221,11 @@ const Assets = () => {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {currentItems.map((asset) => (
-                                        <tr key={asset.id} className="hover:bg-gray-50" onClick={() => handleView(asset)}>
+                                        <tr
+                                            key={asset.id}
+                                            className="hover:bg-gray-50 group cursor-pointer"
+                                            onClick={() => handleView(asset)}
+                                        >
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_running_number || '—'}
                                             </td>
@@ -210,10 +242,23 @@ const Assets = () => {
                                                             }}
                                                         />
                                                     </div>
-                                                    <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900">{asset.name}</div>
-                                                        <div className="text-xs text-gray-500">{asset.asset_type}</div>
+                                                    <div className="flex justify-between items-center w-full ml-2">
+                                                        <div>
+                                                            <div className="text-sm font-medium text-gray-900">{asset.name}</div>
+                                                            <div className="text-xs text-gray-500">{asset.asset_type}</div>
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDuplicate(asset);
+                                                            }}
+                                                            title="Duplicate"
+                                                            className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1"
+                                                        >
+                                                            <FiCopy className="w-4 h-4" />
+                                                        </button>
                                                     </div>
+
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -258,8 +303,8 @@ const Assets = () => {
                                     onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
                                     disabled={currentPage === 1}
                                     className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === 1
-                                            ? "text-gray-400 cursor-not-allowed"
-                                            : "text-gray-700 hover:bg-gray-50"
+                                        ? "text-gray-400 cursor-not-allowed"
+                                        : "text-gray-700 hover:bg-gray-50"
                                         }`}
                                 >
                                     Previous
@@ -275,8 +320,8 @@ const Assets = () => {
                                                 key={`page-${number}`}
                                                 onClick={() => paginate(number)}
                                                 className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${currentPage === number
-                                                        ? "bg-blue-600 text-white"
-                                                        : "text-gray-700 hover:bg-gray-50"
+                                                    ? "bg-blue-600 text-white"
+                                                    : "text-gray-700 hover:bg-gray-50"
                                                     }`}
                                             >
                                                 {number}
@@ -288,8 +333,8 @@ const Assets = () => {
                                     onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
                                     disabled={currentPage === totalPages || totalPages === 0}
                                     className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === totalPages || totalPages === 0
-                                            ? "text-gray-400 cursor-not-allowed"
-                                            : "text-gray-700 hover:bg-gray-50"
+                                        ? "text-gray-400 cursor-not-allowed"
+                                        : "text-gray-700 hover:bg-gray-50"
                                         }`}
                                 >
                                     Next

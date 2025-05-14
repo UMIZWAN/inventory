@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CheckoutForm from "../../components/CheckoutForm";
 import TransactionFilter from "../../components/TransactionFilter";
 import { useAssetMeta } from "../../context/AssetsContext";
@@ -9,7 +9,7 @@ import Layout from "../../components/layout/Layout";
 
 export default function CheckoutList() {
     const { user } = useAuth();
-    const { assets, assetOut, createStockOut } = useAssetMeta();
+    const { assets, assetOut, createStockOut, fetchAssetTransaction } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -21,6 +21,10 @@ export default function CheckoutList() {
         purpose: '',
         itemName: '',
     });
+
+    useEffect(() => {
+        fetchAssetTransaction();
+    }, []);
 
     const openModal = (txn) => {
         setSelected(txn);
@@ -146,10 +150,9 @@ export default function CheckoutList() {
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
-                                                const asset = assets.find(a => a.id === item.asset_id);
                                                 return (
                                                     <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
-                                                        <li>{asset?.name || 'Unknown'} — {item.asset_unit}</li>
+                                                        <li>{item.asset_name} — {item.asset_unit}</li>
                                                     </ul>
                                                 );
                                             })}

@@ -101,16 +101,6 @@ export default function TransferList({ status, mode }) {
     }
   };
 
-  const getItemDetails = (item) => {
-    const asset = assets.find(a => a.id === item.asset_id);
-    return {
-      name: asset?.name || 'Unknown Asset',
-      price: asset?.asset_sales_cost || 0,
-      category: asset?.asset_category_name || 'Unknown',
-      ...item
-    };
-  };
-
   const filteredTransfers = assetTransfer.filter((txn) => {
     const txnDate = txn.created_at.slice(0, 10);
     const assetNames = txn.assets_transaction_item_list.map(item => {
@@ -331,10 +321,9 @@ export default function TransferList({ status, mode }) {
                   <td className="px-4 py-2 border">
                     <div className="space-y-4 mt-2">
                       {txn.assets_transaction_item_list.map((item, index) => {
-                        const i = getItemDetails(item);
                         return (
                           <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
-                            <li>{i.name} — {i.asset_unit}</li>
+                            <li>{item.asset_name} — {item.asset_unit}</li>
                           </ul>
                         );
                       })}
