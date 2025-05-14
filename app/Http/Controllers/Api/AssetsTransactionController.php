@@ -365,31 +365,43 @@ class AssetsTransactionController extends Controller
                 }
                 if ($request->assets_transaction_status == 'IN-TRANSIT' && $transaction->assets_transaction_status == 'APPROVED') {
 
-                    $transaction->update([
-                        'assets_transaction_status' => $request->assets_transaction_status,
-                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
-                        'updated_by' => Auth::user()->id,
-                        'updated_at' => Carbon::now()
-                    ]);
+                    try {
+                        $transaction->update([
+                            'assets_transaction_status' => $request->assets_transaction_status,
+                            'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                            'updated_by' => Auth::user()->id,
+                            'updated_at' => Carbon::now()
+                        ]);
 
-                    $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+                        $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
 
-                    foreach ($transactionItems as $item) {
-                        $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
-                            ->where('asset_id', $item['asset_id'])
-                            ->first();
+                        foreach ($transactionItems as $item) {
+                            $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                                ->where('asset_id', $item['asset_id'])
+                                ->first();
 
-                        if ($assetBranchFromValue) {
-                            $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
+                            if ($assetBranchFromValue->asset_current_unit < $item['asset_unit']) {
+                                throw new Exception('Insufficient asset units in the source branch.');
+                            }
+
+                            if ($assetBranchFromValue) {
+                                $assetBranchFromValue->decrement('asset_current_unit', $item['asset_unit']);
+                            }
                         }
+
+                        DB::commit();
+
+                        return response()->json([
+                            'message' => 'Asset Sent successfully',
+                            'data' => new AssetsTransactionResource($transaction)
+                        ], 200);
+                    } catch (Exception $e) {
+                        DB::rollback();
+                        return response()->json([
+                            'message' => 'An error occurred while sending the asset.',
+                            'error' => $e->getMessage()
+                        ], 500);
                     }
-
-                    DB::commit();
-
-                    return response()->json([
-                        'message' => 'Asset Sent successfully',
-                        'data' => new AssetsTransactionResource($transaction)
-                    ], 200);
                 }
 
                 if ($request->assets_transaction_status == 'RECEIVED' && $transaction->assets_transaction_status == 'IN-TRANSIT') {
