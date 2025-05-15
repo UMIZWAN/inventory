@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('access_level', function (Blueprint $table) {
-            $table->boolean('settings')->default(false);
+            $table->boolean('settings')->default(false)->after('name');
         });
     }
 
