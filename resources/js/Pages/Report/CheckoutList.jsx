@@ -8,8 +8,8 @@ import TransactionDetail from "../../components/TransactionDetail";
 import Layout from "../../components/layout/Layout";
 
 export default function CheckoutList() {
-    const { user } = useAuth();
-    const { assets, assetOut, createStockOut, fetchAssetTransaction } = useAssetMeta();
+    // const { user } = useAuth();
+    const { assets, assetOut, createStockOut, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -24,6 +24,7 @@ export default function CheckoutList() {
 
     useEffect(() => {
         fetchAssetTransaction();
+        fetchBranchAssets();
     }, []);
 
     const openModal = (txn) => {

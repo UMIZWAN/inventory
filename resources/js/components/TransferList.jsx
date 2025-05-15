@@ -59,29 +59,29 @@ export default function TransferList({ status, mode }) {
     setSelected(null);
   };
 
-  const handleUpdateDraft = async (updatedForm) => {
-    try {
-      const payload = {
-        ...selected,
-        assets_transaction_status: updatedForm.status,
-        assets_from_branch_id: updatedForm.fromBranch,
-        assets_to_branch_id: updatedForm.toBranch,
-        created_at: updatedForm.date,
-        assets_transaction_remark: updatedForm.remarks,
-        assets_transaction_purpose: updatedForm.purpose.join(", "),
-        assets_transaction_item_list: updatedForm.items.map((item) => ({
-          asset_id: parseInt(item.item),
-          asset_unit: parseInt(item.quantity),
-          status: null,
-        })),
-      };
+  // const handleUpdateDraft = async (updatedForm) => {
+  //   try {
+  //     const payload = {
+  //       ...selected,
+  //       assets_transaction_status: updatedForm.status,
+  //       assets_from_branch_id: updatedForm.fromBranch,
+  //       assets_to_branch_id: updatedForm.toBranch,
+  //       created_at: updatedForm.date,
+  //       assets_transaction_remark: updatedForm.remarks,
+  //       assets_transaction_purpose: updatedForm.purpose.join(", "),
+  //       assets_transaction_item_list: updatedForm.items.map((item) => ({
+  //         asset_id: parseInt(item.item),
+  //         asset_unit: parseInt(item.quantity),
+  //         status: null,
+  //       })),
+  //     };
 
-      await api.put(`/api/assets-transaction/${selected.id}`, payload);
-      closeModal();
-    } catch (err) {
-      console.error("Update failed:", err);
-    }
-  };
+  //     await api.put(`/api/assets-transaction/${selected.id}`, payload);
+  //     closeModal();
+  //   } catch (err) {
+  //     console.error("Update failed:", err);
+  //   }
+  // };
 
   const handleAction = async (txn, newStatus) => {
 
@@ -164,7 +164,7 @@ export default function TransferList({ status, mode }) {
       });
     }
 
-    if (status === "REQUESTED" && txn.assets_from_branch_id === user?.branch_id) {
+    if (status === "REQUESTED" && txn.assets_from_branch_id === user?.branch_id && user.approve_reject_transaction) {
       actions.push({
         label: "Approve",
         status: "APPROVED",
@@ -177,7 +177,7 @@ export default function TransferList({ status, mode }) {
       });
     }
 
-    if (status === "APPROVED" && txn.assets_from_branch_id === user?.branch_id) {
+    if (status === "APPROVED" && txn.assets_from_branch_id === user?.branch_id && user.approve_reject_transaction) {
       actions.push({
         label: "Send",
         status: "IN-TRANSIT",

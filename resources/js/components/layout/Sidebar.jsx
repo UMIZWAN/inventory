@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FaChevronDown, FaChevronRight, FaFileInvoice } from 'react-icons/fa';
 import { FiShield, FiUsers, FiMapPin, FiTag, FiPackage, FiTruck, FiList, FiRepeat } from 'react-icons/fi';
-import { TbBuildingCommunity } from "react-icons/tb";
+import { TbBuildingCommunity, TbReportMoney } from "react-icons/tb";
 import { Link } from '@inertiajs/react';
 import { useAuth } from '../../context/AuthContext';
 import { useAssetMeta } from '../../context/AssetsContext';
@@ -9,7 +9,7 @@ import moment from "moment";
 
 const Sidebar = () => {
     const { user, fetchUser, setLoading } = useAuth();
-    const { assets, assetTransfer, fetchAssets } = useAssetMeta(); 
+    const { assets, assetTransfer } = useAssetMeta(); 
 
     useEffect(() => {
         const token = localStorage.getItem("access_token");
@@ -106,14 +106,6 @@ const Sidebar = () => {
         // Save to localStorage whenever openSections changes
         localStorage.setItem('sidebarOpenSections', JSON.stringify(openSections));
     }, [openSections]);
-
-    // Handle branch change
-    const handleBranchChange = (e) => {
-        const branchId = e.target.value;
-        console.log("Changing to branch:", branchId);
-        setSelectedBranch(branchId);
-        fetchAssets(branchId === "all" ? null : branchId);
-    };
 
     const toggleSection = (title) => {
         setOpenSections((prev) => ({
@@ -238,10 +230,10 @@ const Sidebar = () => {
                     <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3 mt-3">Manage Report</label>
                 </div>
                 <ul className="space-y-1">
-                    {user?.view_transaction && (
+                    {user?.view_reports && (
                         <Link href="/inv-list">
                         <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                          <FiRepeat className="text-sky-600" />
+                          <TbReportMoney className="text-sky-600" />
                           <span className="font-medium">Invoice</span>
                         </li>
                       </Link>
