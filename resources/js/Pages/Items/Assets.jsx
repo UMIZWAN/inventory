@@ -236,6 +236,7 @@ const Assets = () => {
                                                             <div className="text-sm font-medium text-gray-900">{asset.name}</div>
                                                             <div className="text-xs text-gray-500">{asset.asset_type}</div>
                                                         </div>
+                                                        {user?.add_edit_asset && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -246,6 +247,7 @@ const Assets = () => {
                                                         >
                                                             <FiCopy className="w-4 h-4" />
                                                         </button>
+                                                        )}
                                                     </div>
 
                                                 </div>

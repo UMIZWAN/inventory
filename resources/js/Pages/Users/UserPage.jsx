@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
+import { MdAlternateEmail } from "react-icons/md";
+import { FiMapPin } from 'react-icons/fi';
+import { FaUserShield } from "react-icons/fa6";
 import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
 import AddUserModal from './AddUserModal';
@@ -107,11 +110,8 @@ const UserPage = ({ auth }) => {
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Access Level</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
                                                 {user?.add_edit_user && (
                                                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                                 )}
@@ -127,26 +127,27 @@ const UserPage = ({ auth }) => {
                                                             <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleUserClick(u)}
-                                                            >{u.id}</td>
-                                                            <td
-                                                                className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(u)}
                                                             >{u.name}</td>
                                                             <td
                                                                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                                                                 onClick={() => handleUserClick(u)}
-                                                            >{u.email}</td>
-                                                            <td
-                                                                className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(u)}
-                                                            >{u.branch_name}</td>
-                                                            <td
-                                                                className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(u)}
                                                             >
-                                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                                    {u.access_level_name}
-                                                                </span>
+                                                                <div>
+                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
+                                                                        <MdAlternateEmail className="self-center" />
+                                                                        {u.email}
+                                                                    </div>
+                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
+                                                                        <FiMapPin className="self-center" />
+                                                                        {u.branch_name}
+                                                                    </div>
+                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
+                                                                        <FaUserShield className="self-center" />
+                                                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                                            {u.access_level_name}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
                                                             </td>
                                                             {user?.add_edit_user && (
                                                                 <td className="px-4 py-4 whitespace-nowrap text-center">
