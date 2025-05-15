@@ -299,8 +299,9 @@ export const AssetMetaProvider = ({ children }) => {
         assets_transaction_total_cost: form.totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
-          asset_unit: parseFloat(item.recvQty),
-          // asset_unit_cost: parseFloat(item.unitCost),
+          asset_unit: parseInt(item.recvQty),
+          asset_purchase_cost: parseFloat(item.unitCost),
+          asset_sales_cost: parseFloat(item.price),
           status: null,
         })),
       };

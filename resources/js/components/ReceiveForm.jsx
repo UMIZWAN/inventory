@@ -39,7 +39,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
     { key: "unitMeasure", label: "Unit of Measure", align: "text-center" },
     { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-center" },
     { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-center" },
-    { key: "price", label: "Price", type: "number", min: 0, step: "0.01", align: "text-center" },
+    { key: "price", label: "Selling Price", type: "number", min: 0, step: "0.01", align: "text-center" },
   ];
 
   const handleChange = (index, field, value) => {
