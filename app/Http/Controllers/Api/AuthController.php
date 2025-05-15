@@ -20,9 +20,7 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // Log::info($request->all());
         if (!Auth::attempt($request->only('email', 'password'))) {
-            // Log::info('Login failed for:', $request->only('email')); // Don't log password
             return response()->json([
                 'message' => 'Invalid login credentials'
             ], 401);

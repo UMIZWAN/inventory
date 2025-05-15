@@ -13,6 +13,8 @@ class AccessLevel extends Model
 
     protected $fillable = [
         'name',
+        // Settings
+        'settings',
         // Role
         'add_edit_role',
         'view_role',
@@ -46,6 +48,7 @@ class AccessLevel extends Model
     ];
 
     protected $casts = [
+        'settings' => 'boolean',
         'add_edit_role' => 'boolean',
         'view_role' => 'boolean',
         'add_edit_user' => 'boolean',

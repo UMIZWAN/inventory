@@ -28,6 +28,9 @@ class AccessLevelFactory extends Factory
         return [
             'name' => $this->faker->unique()->jobTitle(),
 
+            // Settings
+            'settings' => $this->faker->boolean(),
+
             // Role
             'add_edit_role' => $this->faker->boolean(),
             'view_role' => $this->faker->boolean(),

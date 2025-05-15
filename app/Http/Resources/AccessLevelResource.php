@@ -17,6 +17,9 @@ class AccessLevelResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            // Settings
+            'settings' => (bool) $this->settings,
+            // Role
             'add_edit_role' => (bool) $this->add_edit_role,
             'view_role' => (bool) $this->view_role,
             'add_edit_user' => (bool) $this->add_edit_user,
