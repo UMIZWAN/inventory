@@ -67,9 +67,11 @@ function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
                         className={inputStyle}
                     >
                         <option value="">-</option>
-                        {/* <option value="DRAFT">Draft</option> */}
-                        <option value="IN-TRANSIT">In-Transit</option>
-                        <option value="RECEIVED">Received</option>
+                        <option value="REQUESTED">REQUESTED</option>
+                        <option value="APPROVED">APPROVED</option>
+                        <option value="REJECTED">REJECTED</option>
+                        <option value="IN-TRANSIT">IN-TRANSIT</option>
+                        <option value="RECEIVED">RECEIVED</option>
                     </select>
                 </div>
             )}

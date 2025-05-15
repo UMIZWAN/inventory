@@ -6,9 +6,8 @@ import { useAuth } from "../context/AuthContext";
 
 function ReceiveForm({ setShowReceiveForm, onSubmit }) {
   const { user } = useAuth();
-  const { assets, fetchBranchAssets, createAssetIn } = useAssetMeta();
+  const { assets, createAssetIn } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
-  const [isUsingPO, setIsUsingPO] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
   const [referenceNo, setReferenceNo] = useState("");
@@ -21,6 +20,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
       unitMeasure: '',
       recvQty: 1,
       unitCost: 0,
+      price: 0,
     },
   ]);
 
@@ -36,9 +36,10 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
       options: assets.map((a) => ({ value: a.id, label: a.name })),
       width: "w-80"
     },
-    { key: "unitMeasure", label: "Unit of Measure" },
-    { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-right" },
-    { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-right" },
+    { key: "unitMeasure", label: "Unit of Measure", align: "text-center" },
+    { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-center" },
+    { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-center" },
+    { key: "price", label: "Price", type: "number", min: 0, step: "0.01", align: "text-center" },
   ];
 
   const handleChange = (index, field, value) => {
@@ -50,6 +51,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
 
       if (selectedAsset) {
         updated[index].unitCost = parseFloat(selectedAsset.asset_purchase_cost || 0);
+        updated[index].price = parseFloat(selectedAsset.asset_sales_cost || 0);
         updated[index].unitMeasure = selectedAsset.asset_unit_measure || '';
       }
     } else {
@@ -70,6 +72,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
         unitMeasure: '',
         recvQty: 0,
         unitCost: 0,
+        price: 0,
       },
     ]);
   };
@@ -105,7 +108,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
 
         <button
           onClick={() => setShowReceiveForm(false)}
@@ -118,24 +121,6 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
         <h1 className="text-2xl font-bold mb-6">Receive Stock</h1>
 
         <div className="flex items-center gap-4">
-          {/* <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="receive_type"
-              checked={!isUsingPO}
-              onChange={() => setIsUsingPO(false)}
-            />
-            <span>Specific Items</span>
-          </label> */}
-          {/* <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              name="receive_type"
-              checked={isUsingPO}
-              onChange={() => setIsUsingPO(true)}
-            />
-            <span>Purchase Order</span>
-          </label> */}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -152,14 +137,6 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
               ))}
             </select>
           </div>
-          {/* {isUsingPO && (
-            <div>
-              <label className="block text-sm font-medium">Order</label>
-              <select className="w-full border rounded p-2 mt-1">
-                <option value="">[Select Order]</option>
-              </select>
-            </div>
-          )} */}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -211,7 +188,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
 
         <div className="flex justify-end-safe">
           <div>
-            <label className="block text-sm font-medium">Total Amount (RM)</label>
+            <label className="block text-sm font-medium">Total Cost (RM)</label>
             <input
               type="text"
               className="w-full border rounded p-2 mt-1 text-right bg-gray-100"
@@ -229,11 +206,6 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
             onChange={(e) => setNote(e.target.value)}
           />
         </div>
-
-        {/* <div className="flex items-center gap-2">
-          <input type="checkbox" id="mark-fully-received" />
-          <label htmlFor="mark-fully-received" className="text-sm">Mark order as fully received</label>
-        </div> */}
 
         <div className="flex justify-end gap-3 pt-4">
           <button

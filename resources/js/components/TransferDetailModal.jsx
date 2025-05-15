@@ -1,5 +1,5 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import { PDFDownloadLink } from "@react-pdf/renderer";
@@ -21,13 +21,6 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
     };
   };
 
-  // Only show receive button if:
-  // 1. We're in incoming mode (to branch is user's branch)
-  // 2. The transfer status is IN-TRANSIT
-  const shouldShowReceiveButton = mode === 'incoming' &&
-    data?.assets_transaction_status === 'IN-TRANSIT' &&
-    data?.assets_to_branch_id === user?.branch_id;
-
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={onClose}>
@@ -44,7 +37,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          
+
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child
               as={Fragment}
@@ -55,13 +48,47 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all relative">
+                <button
+                  type="button"
+                  className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                  aria-label="Close"
+                  onClick={onClose}
                 >
-                  Transfer Details
-                </Dialog.Title>
+                  &times;
+                </button>
+
+                <div className="flex justify-between">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900"
+                  >
+                    Transfer Details
+                  </Dialog.Title>
+
+                  <div className="flex gap-2 mr-5">
+                    {data && (
+                      <PDFDownloadLink
+                        document={
+                          <TransferDeliveryOrderPDF
+                            data={data}
+                            items={data.assets_transaction_item_list?.map(getItemDetails) || []}
+                          />
+                        }
+                        fileName={`DeliveryOrder_${data.assets_transaction_running_number}.pdf`}
+                      >
+                        {({ loading }) => (
+                          <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                          >
+                            {loading ? "Preparing PDF..." : "Download"}
+                          </button>
+                        )}
+                      </PDFDownloadLink>
+                    )}
+                  </div>
+                </div>
 
                 <div className="mt-4 space-y-2">
                   <p><span className="font-semibold">Reference Number:</span> {data?.assets_transaction_running_number}</p>
@@ -70,7 +97,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
                   <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
                   <p><span className="font-semibold">Shipping Option:</span> {data?.assets_shipping_option_name}</p>
-                  
+
                   <div className="mt-4">
                     <h4 className="font-semibold">Items:</h4>
                     <div className="overflow-x-auto">
@@ -82,11 +109,15 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Category</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Price</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Quantity</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Total Price</th>
                           </tr>
                         </thead>
                         <tbody>
                           {data?.assets_transaction_item_list?.map((item, index) => {
                             const details = getItemDetails(item);
+                            const quantity = item.asset_unit || 1;
+                            const total = item.price * item.asset_unit;
+                            // totalAmount += total;
                             return (
                               <tr key={index} className="hover:bg-gray-50">
                                 <td className="px-4 py-2 border">{details.code}</td>
@@ -94,6 +125,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                                 <td className="px-4 py-2 border">{details.category}</td>
                                 <td className="px-4 py-2 border">{Number(details.price).toFixed(2)}</td>
                                 <td className="px-4 py-2 border">{details.asset_unit}</td>
+                                <td className="px-4 py-2 border">{Number(total).toFixed(2)}</td>
                               </tr>
                             );
                           })}
@@ -104,44 +136,27 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                 </div>
 
                 <div className="mt-4 flex justify-end space-x-2">
-                  {data && (
-                    <PDFDownloadLink
-                      document={
-                        <TransferDeliveryOrderPDF
-                          data={data}
-                          items={data.assets_transaction_item_list?.map(getItemDetails) || []}
-                        />
-                      }
-                      fileName={`DeliveryOrder_${data.assets_transaction_running_number}.pdf`}
-                    >
-                      {({ loading }) => (
-                        <button
-                          type="button"
-                          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                        >
-                          {loading ? "Preparing PDF..." : "Download"}
-                        </button>
-                      )}
-                    </PDFDownloadLink>
-                  )}
 
-                  <button
-                    type="button"
-                    className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-                    onClick={onClose}
-                  >
-                    Close
-                  </button>
-
-                  {shouldShowReceiveButton && buttons?.primary && (
+                  {buttons?.secondary && (
                     <button
                       type="button"
-                      className={`inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white ${buttons.primary.color} focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2`}
+                      className={`inline-flex justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium ${buttons.secondary.color} focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2`}
+                      onClick={buttons.secondary.action}
+                    >
+                      {buttons.secondary.label}
+                    </button>
+                  )}
+
+                  {buttons?.primary && (
+                    <button
+                      type="button"
+                      className={`inline-flex justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium ${buttons.primary.color} focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2`}
                       onClick={buttons.primary.action}
                     >
                       {buttons.primary.label}
                     </button>
                   )}
+
                 </div>
               </Dialog.Panel>
             </Transition.Child>

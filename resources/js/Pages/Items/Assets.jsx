@@ -11,8 +11,7 @@ import api from '../../api/api';
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, fetchAssets, fetchCategories, fetchBranchAssets, loading } = useAssetMeta();
-    const [selectedBranch, setSelectedBranch] = useState(user?.branch_id?.toString()); // Default to user's branch
+    const { assets, fetchCategories, fetchBranchAssets, loading } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -35,22 +34,12 @@ const Assets = () => {
 
     const handleView = (asset) => setSelectedAsset(asset);
 
-    // Handle branch change
-    const handleBranchChange = (e) => {
-        const branchId = e.target.value;
-        console.log("Changing to branch:", branchId);
-        setSelectedBranch(branchId);
-        fetchAssets(branchId === "all" ? null : branchId);
-    };
-
     const filteredAssets = assets.filter(asset => {
         const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             asset.asset_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             asset.asset_type?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesCategory = filters.category ? asset.asset_category_name === filters.category : true;
-        const matchesTag = filters.tag ? asset.asset_tag_name === filters.tag : true;
-        const matchesLocation = filters.location ? asset.assets_location_name === filters.location : true;
 
         const current = Number(asset.asset_current_value);
         const stable = Number(asset.asset_stable_value);
@@ -61,7 +50,7 @@ const Assets = () => {
 
         const matchesStatus = filters.status ? computedStatus === filters.status : true;
 
-        return matchesSearch && matchesCategory && matchesTag && matchesLocation && matchesStatus;
+        return matchesSearch && matchesCategory && matchesStatus;
     });
 
     // Get current items for pagination
@@ -352,7 +341,6 @@ const Assets = () => {
                             asset={selectedAsset}
                             onClose={() => {
                                 setSelectedAsset(null);
-                                fetchAssets(selectedBranch === "all" ? null : selectedBranch); // refresh list
                             }}
                         />
                     )}

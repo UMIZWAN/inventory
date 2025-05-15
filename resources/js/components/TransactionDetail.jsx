@@ -112,7 +112,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
     const { assets, suppliers } = useAssetMeta();
-    console.log("Transaction Detail", transaction, type);
+
     const getAssetDetails = (assetId) => {
         const asset = assets.find((a) => a.id === assetId);
         return asset
@@ -136,12 +136,12 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full relative">
-                <button onClick={onClose} className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl">
+            <div className="bg-white rounded-lg shadow-lg p-4 max-w-4xl w-full relative">
+                <button onClick={onClose} className="absolute top-2 right-3 text-gray-500 hover:text-black text-2xl">
                     &times;
                 </button>
 
-                <div className="flex justify-between items-center mb-4 mr-6">
+                <div className="flex justify-between items-center m-4">
                     <h2 className="text-2xl font-bold">{type === "receive" ? "Receive Details" : "Transaction Invoice"}</h2>
                     {type === "transfer" && (
                         <PDFDownloadLink
@@ -153,14 +153,14 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 />
                             }
                             fileName={`${type === "receive" ? "Receive" : "Invoice"}_${transaction.assets_transaction_running_number}.pdf`}
-                            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm"
+                            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm mr-6"
                         >
                             {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
                         </PDFDownloadLink>
                     )}
                 </div>
 
-                <div className="bg-white p-6">
+                <div className="bg-white p-4">
                     <div className="mb-6 space-y-1">
                         <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
                         <p><strong>Branch:</strong> {transaction.assets_from_branch_name || transaction.from_branch.name}</p>
@@ -190,10 +190,10 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                         <thead className="bg-gray-100">
                             <tr>
                                 <th className="px-4 py-2 border">Code</th>
-                                <th className="px-4 py-2 border">Asset Name</th>
+                                <th className="px-4 text-left py-2 border">Asset Name</th>
                                 <th className="px-4 py-2 border">Quantity</th>
-                                <th className="px-4 py-2 border">Price (Each)</th>
-                                <th className="px-4 py-2 border">Total</th>
+                                <th className="px-4 py-2 border">Price</th>
+                                <th className="px-4 py-2 border">Total Price</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -205,10 +205,10 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 return (
                                     <tr key={index}>
                                         <td className="px-4 py-2 border text-center">{code}</td>
-                                        <td className="px-4 py-2 border">{name}</td>
+                                        <td className="px-4 py-2 border w-60">{name}</td>
                                         <td className="px-4 py-2 border text-center">{quantity}</td>
-                                        <td className="px-4 py-2 border text-right">RM {Number(price).toFixed(2)}</td>
-                                        <td className="px-4 py-2 border text-right">RM {Number(total).toFixed(2)}</td>
+                                        <td className="px-4 py-2 border text-center">RM {Number(price).toFixed(2)}</td>
+                                        <td className="px-4 py-2 border text-center">RM {Number(total).toFixed(2)}</td>
                                     </tr>
                                 );
                             })}
