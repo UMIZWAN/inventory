@@ -140,7 +140,7 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    {user?.view_user && (
+                    {user?.view_branch && (
                         <Link href="/branch">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                                 <FiMapPin className="text-sky-600" />
@@ -149,7 +149,7 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    {user?.view_supplier && (
+                    {user?.settings && (
                         <Link href="/categories">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                                 <FiTag className="text-sky-600" />
@@ -158,7 +158,7 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    {user?.view_supplier && (
+                    {user?.settings && (
                         <Link href="/supplier">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                                 <TbBuildingCommunity className="text-sky-600" />
@@ -167,7 +167,7 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    {user?.view_supplier && (
+                    {user?.settings && (
                         <Link href="/shipping">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                                 <FiTruck className="text-sky-600" />
@@ -176,7 +176,7 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    {user?.view_supplier && (
+                    {user?.settings && (
                         <Link href="/purpose">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                                 <FaFileInvoice className="text-sky-600" />

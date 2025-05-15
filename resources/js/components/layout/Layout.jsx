@@ -25,7 +25,7 @@ const Layout = ({ children }) => {
         <div className="flex flex-col h-screen">
             {/* Topbar */}
             <header className="bg-white px-6 py-4 shadow-md flex justify-between items-center">
-                <h1 className="text-lg font-bold">Inventory System</h1>
+                <h1 className="text-lg font-bold">Marketing Inventory System</h1>
                 {user && (
                     <div className="flex items-center gap-4">
                         <span className="text-gray-600">{user.name}</span>

@@ -37,7 +37,7 @@ const SuppliersPage = () => {
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold">Suppliers</h1>
-                        {user?.add_edit_supplier && (
+                        {user?.settings && (
                             <button
                                 className="bg-blue-600 text-white px-4 py-2 rounded"
                                 onClick={handleAdd}
@@ -82,12 +82,14 @@ const SuppliersPage = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
+                                                    {user?.settings && (
                                                         <button
                                                             className="text-blue-600 hover:underline"
                                                             onClick={() => handleEdit(s)}
                                                         >
                                                             Edit
                                                         </button>
+                                                    )}
                                                     </td>
                                                 </tr>
                                             ))}
