@@ -273,7 +273,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
               />
             </div>
 
-            {/* {form.status !== "REQUEST" && ( */}
+            {form.status !== "REQUEST" && (
               <div>
                 <label className="block font-medium mb-1">Shipping Option</label>
                 <select
@@ -288,7 +288,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
                   ))}
                 </select>
               </div>
-          
+            )}
           </div>
 
           {/* Items Table */}
