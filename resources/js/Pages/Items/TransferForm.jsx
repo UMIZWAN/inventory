@@ -17,7 +17,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     status: "REQUEST",
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
-    toBranch: "",
+    toBranch: user?.branch_id || "",
     shipping: "",
     items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
@@ -123,21 +123,23 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     e.preventDefault();
     setSubmitting(true);
 
-    const invalidItem = form.items.find(({ item, quantity }) => {
-      const asset = assets.find(a => a.id === Number(item));
-      if (!asset) return false;
+    if (form.status === "IN-TRANSIT") {
+      const invalidItem = form.items.find(({ item, quantity }) => {
+        const asset = assets.find(a => a.id === Number(item));
+        if (!asset) return false;
 
-      const currentBranchStock = asset.branch_values?.find(
-        (bv) => bv.asset_branch_id === user.branch_id
-      )?.asset_current_unit ?? 0;
+        const currentBranchStock = asset.branch_values?.find(
+          (bv) => bv.asset_branch_id === user.branch_id
+        )?.asset_current_unit ?? 0;
 
-      return quantity > currentBranchStock;
-    });
+        return quantity > currentBranchStock;
+      });
 
-    if (invalidItem) {
-      const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
-      alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
-      return;
+      if (invalidItem) {
+        const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
+        alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
+        return;
+      }
     }
 
     try {
@@ -165,32 +167,98 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         </button>
 
         <h2 className="text-2xl font-semibold mb-4 text-center">
-          {isEditMode ? "Edit Transfer " : "Stock Transfer "}
+          {/* {isEditMode ? "Edit Transfer " : "Stock Transfer "} */}
+          Transfer Request
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">From Branch</label>
-              <input
-                name="fromBranch"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                value={user?.branch_name}
-                readOnly
-              />
-            </div>
+            {form.status === "REQUEST" ? (
+              <>
+                <div>
+                  <label className="block font-medium mb-1">From Branch</label>
+                  <select
+                    name="fromBranch"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    value={form.fromBranch}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">[Select Branch]</option>
+                    {branches.map((br) => (
+                      <option key={br.id} value={br.id}>{br.name}</option>
+                    ))}
+                  </select>
+                </div>
 
+                <div>
+                  <label className="block font-medium mb-1">To Branch</label>
+                  <input
+                    name="toBranch"
+                    value={user?.branch_name}
+                    readOnly
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block font-medium mb-1">From Branch</label>
+                  <input
+                    name="fromBranch"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
+                    value={user?.branch_name}
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">To Branch</label>
+                  <select
+                    name="toBranch"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    value={form.toBranch}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">[Select Branch]</option>
+                    {branches.map((br) => (
+                      <option key={br.id} value={br.id}>{br.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-medium mb-1">Transfer By</label>
+              <label className="block font-medium mb-1">{form.status === "REQUEST" ? ("Requested By") : ("Transfered By")}</label>
               <input
                 type="text"
                 name="requester"
                 value={user?.name}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
                 readOnly
               />
             </div>
+
+            <div>
+              <label className="block font-medium mb-1">Status</label>
+              <input
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
+                readOnly
+              />
+                {/* <option value="REQUEST">REQUEST</option>
+                <option value="IN-TRANSIT">IN-TRANSIT</option>
+              </select> */}
+            </div>
+
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -205,50 +273,22 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
               />
             </div>
 
-            <div>
-              <label className="block font-medium mb-1">Status</label>
-              <input
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                readOnly
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">To Branch</label>
-              <select
-                name="toBranch"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                value={form.toBranch}
-                onChange={handleChange}
-                required
-              >
-                <option value="">[Select Branch]</option>
-                {branches.map((br) => (
-                  <option key={br.id} value={br.id}>{br.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Shipping Option</label>
-              <select
-                type="text"
-                name="shipping"
-                value={form.shipping}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-              >
-                <option value="">[Select Shipping]</option>
-                {shipping.map((s) => (
-                  <option key={s.id} value={s.id}>{s.shipping_option_name}</option>
-                ))}
-              </select>
-            </div>
+            {/* {form.status !== "REQUEST" && ( */}
+              <div>
+                <label className="block font-medium mb-1">Shipping Option</label>
+                <select
+                  name="shipping"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  value={form.shipping}
+                  onChange={handleChange}
+                >
+                  <option value="">[Select Shipping]</option>
+                  {shipping.map((s) => (
+                    <option key={s.id} value={s.id}>{s.shipping_option_name}</option>
+                  ))}
+                </select>
+              </div>
+          
           </div>
 
           {/* Items Table */}
