@@ -6,9 +6,11 @@ import { useAuth } from "../../context/AuthContext";
 import ExportButton from "../../components/ExportButton";
 import TransactionDetail from "../../components/TransactionDetail";
 import Layout from "../../components/layout/Layout";
+import { useOptions } from "../../context/OptionContext";
 
 export default function CheckoutList() {
     const { user } = useAuth();
+    const { fetchInvType } = useOptions();
     const { assets, assetOut, createStockOut, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +27,7 @@ export default function CheckoutList() {
     useEffect(() => {
         fetchAssetTransaction();
         fetchBranchAssets();
+        fetchInvType();
     }, []);
 
     const openModal = (txn) => {
