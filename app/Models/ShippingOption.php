@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class ShippingOption extends Model
+
 {
     // use HasFactory;
 
@@ -14,6 +16,13 @@ class ShippingOption extends Model
     protected $fillable = [
         'shipping_option_name',
     ];
+
+    protected function shippingOptionName(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => strtoupper($value)
+        );
+    }
 
     public function assetsTransactions()
     {

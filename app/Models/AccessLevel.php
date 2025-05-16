@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class AccessLevel extends Model
 {
@@ -46,6 +47,13 @@ class AccessLevel extends Model
         'view_reports',
         'download_reports',
     ];
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => strtoupper($value)
+        );
+    }
 
     protected $casts = [
         'settings' => 'boolean',

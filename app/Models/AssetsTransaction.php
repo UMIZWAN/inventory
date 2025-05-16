@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Laravel\Sanctum\HasApiTokens;
 
 class AssetsTransaction extends Model
@@ -49,6 +50,13 @@ class AssetsTransaction extends Model
         'received_at' => 'datetime',
         'approved_at' => 'datetime',
     ];
+
+    protected function assetsTransactionRunningNumber(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => strtoupper($value)
+        );
+    }
 
     // Relationships
 
