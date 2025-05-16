@@ -157,6 +157,10 @@ const AccessLevelsPage = ({ auth }) => {
                                                                                 {renderPermissionStatus(accessLevel.view_role)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
+                                                                                <span>Settings:</span>
+                                                                                {renderPermissionStatus(accessLevel.settings)}
+                                                                            </div>
+                                                                            <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit User:</span>
                                                                                 {renderPermissionStatus(accessLevel.add_edit_user)}
                                                                             </div>
@@ -183,10 +187,6 @@ const AccessLevelsPage = ({ auth }) => {
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Branch:</span>
                                                                                 {renderPermissionStatus(accessLevel.view_branch)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Settings:</span>
-                                                                                {renderPermissionStatus(accessLevel.settings)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Transaction:</span>

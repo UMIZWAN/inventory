@@ -175,6 +175,10 @@ const UserPage = ({ auth }) => {
                                                                                 {renderPermissionStatus(u.view_role)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
+                                                                                <span>Settings:</span>
+                                                                                {renderPermissionStatus(u.settings)}
+                                                                            </div>
+                                                                            <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit User:</span>
                                                                                 {renderPermissionStatus(u.add_edit_user)}
                                                                             </div>
@@ -189,6 +193,10 @@ const UserPage = ({ auth }) => {
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Asset:</span>
                                                                                 {renderPermissionStatus(u.view_asset)}
+                                                                            </div>
+                                                                            <div className="flex justify-between border-b pb-2">
+                                                                                <span>View Asset Masterlist:</span>
+                                                                                {renderPermissionStatus(u.view_asset_masterlist)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Branch:</span>
