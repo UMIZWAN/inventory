@@ -395,11 +395,15 @@ class AssetsTransactionController extends Controller
                             if (!$assetBranchFromValue || $assetBranchFromValue->asset_current_unit < $item['asset_unit']) {
                                 throw new Exception('Insufficient asset units in the source branch.');
                             }
+                            if ($request->assets_shipping_option_id == null) {
+                                throw new Exception("Shipping option ID cannot be empty.");
+                            }
                         }
 
                         // All checks passed, now update status and decrement
                         $transaction->update([
                             'assets_transaction_status' => $request->assets_transaction_status,
+                            'assets_shipping_option_id' => $request->assets_shipping_option_id,
                             'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
                             'updated_by' => Auth::id(),
                             'updated_at' => Carbon::now()

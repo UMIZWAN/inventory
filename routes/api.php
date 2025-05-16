@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\SuppliersController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ShippingOptionController;
+use Illuminate\Support\Facades\Cache;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -57,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tag Routes
     Route::apiResource('assets-tag', AssetsTagController::class);
     // Assets Routes
+    Route::post('/assets/import', [AssetsController::class, 'importFromCSV']);
     Route::post('/assets/{id}/copy', [AssetsController::class, 'copyItems']);
     Route::get('assets/get-by-branch', [AssetsController::class, 'getByBranch']);
     Route::apiResource('assets', AssetsController::class);
@@ -68,6 +70,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('purchase-order', PurchaseOrderController::class);
     Route::get('access-levels/{id}/users', [AccessLevelController::class, 'getWithUsers']);
     Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
+
+    Route::post('/clear-cache', function (Request $request) {
+        try {
+            Cache::forget('access_levels_cache');
+            Cache::forget('assets_branch_cache');
+            Cache::forget('users_cache');
+            Cache::forget('assets_cache');
+            Cache::forget('assets_category_cache');
+            Cache::forget('assets_transaction_purpose_cache');
+            Cache::forget('shipping_option_cache');
+            Cache::forget('suppliers_cache');
+            return response()->json(['message' => 'Cache cleared successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    });
 });
 
 

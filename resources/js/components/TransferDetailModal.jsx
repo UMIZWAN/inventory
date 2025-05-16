@@ -1,13 +1,24 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import TransferDeliveryOrderPDF from "./TransferDeliveryOrderPDF";
+import { useOptions } from "../context/OptionContext";
 
 export default function TransferDetailModal({ isOpen, onClose, data, buttons, mode }) {
   const { getCategoryById, assets } = useAssetMeta();
   const { user } = useAuth();
+  const { shipping, fetchShipping } = useOptions();
+  const [selectedShippingId, setSelectedShippingId] = useState(data?.assets_shipping_option_id || '');
+
+  useEffect(() => {
+    setSelectedShippingId(data?.assets_shipping_option_id || '');
+  }, [data]);
+
+  useEffect(() => {
+    fetchShipping();
+  }, []);
 
   // Get asset details for each item in the transfer
   const getItemDetails = (item) => {
@@ -96,7 +107,26 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                   <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
                   <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
-                  <p><span className="font-semibold">Shipping Option:</span> {data?.assets_shipping_option_name}</p>
+                  <div>
+                    <span className="font-semibold">Shipping Option:</span>{' '}
+                    {data?.assets_transaction_status === "APPROVED" ? (
+                      <select
+                        value={selectedShippingId}
+                        onChange={(e) => setSelectedShippingId(e.target.value)}
+                        className="ml-2 border border-gray-300 rounded px-2 py-1"
+                      >
+                        <option value="">[Select Shipping]</option>
+                        {shipping.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.shipping_option_name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="ml-2">{data?.assets_shipping_option_name}</span>
+                    )}
+                  </div>
+
 
                   <div className="mt-4">
                     <h4 className="font-semibold">Items:</h4>
@@ -115,8 +145,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                         <tbody>
                           {data?.assets_transaction_item_list?.map((item, index) => {
                             const details = getItemDetails(item);
-                            const quantity = item.asset_unit || 1;
-                            const total = item.price * item.asset_unit;
+                            const total = details.price * details.asset_unit;
                             // totalAmount += total;
                             return (
                               <tr key={index} className="hover:bg-gray-50">
@@ -151,7 +180,18 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                     <button
                       type="button"
                       className={`inline-flex justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium ${buttons.primary.color} focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2`}
-                      onClick={buttons.primary.action}
+                      onClick={() => {
+                        if (buttons.primary.label === "Send") {
+                          if (!selectedShippingId) {
+                            alert("Please select a shipping option before sending.");
+                            return;
+                          }
+                          buttons.primary.action(selectedShippingId);
+                        } else {
+                          buttons.primary.action();
+                        }
+                      }}
+
                     >
                       {buttons.primary.label}
                     </button>

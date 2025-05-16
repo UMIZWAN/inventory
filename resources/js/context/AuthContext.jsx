@@ -38,6 +38,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const handleClearCache = async () => {
+    try {
+      const res = await api.post("/api/clear-cache");
+      alert(res.data.message);
+    } catch (err) {
+      alert("Failed to clear cache");
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("access_token");
     setUser(null);
@@ -54,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, fetchUser }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, fetchUser, handleClearCache }}>
       {children}
     </AuthContext.Provider>
   );
