@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import logo from '../assets/image/universal group - black logo.jpg';
 import { useAuth } from "../context/AuthContext";
-import { router, Head} from "@inertiajs/react";
+import { router, Head } from "@inertiajs/react";
 
 const Login = () => {
   const { login } = useAuth(); // use login from context
@@ -38,12 +39,14 @@ const Login = () => {
         </svg>
       </div>
 
+      {/* <div className="flex justify-center mb-20">
+        <img src={logo} alt="logo" className="h-9" />
+      </div> */}
+
       <div className="relative z-10 max-w-md w-full mx-auto p-6 bg-white shadow-xl rounded-xl">
         {/* Logo */}
         <div className="flex justify-center items-center py-4 bg-blue-600 rounded-t-xl">
-          <a href="/">
-            <img src="/assets/images/logo.png" alt="logo" className="h-6" />
-          </a>
+          <h1 className="text-white font-bold uppercase tracking-wider">Marketing Inventory System</h1>
         </div>
 
         <div className="p-6">

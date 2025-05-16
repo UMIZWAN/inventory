@@ -54,7 +54,7 @@ const ShippingPage = () => {
         <h1 className="text-2xl font-bold mb-4">Shipping Option</h1>
 
         <div className="overflow-x-auto bg-white shadow-md rounded-lg p-4 space-y-4">
-          {user?.add_edit_supplier && (
+          {user?.settings && (
             <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
               <input
                 type="text"
@@ -102,7 +102,7 @@ const ShippingPage = () => {
                   {shipping.map((s) => (
                     <tr key={s.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{s.shipping_option_name}</td>
-                      {user?.add_edit_supplier && (
+                      {user?.settings && (
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                           <button
                             onClick={() => handleEdit(s)}

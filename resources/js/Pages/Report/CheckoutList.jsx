@@ -6,10 +6,12 @@ import { useAuth } from "../../context/AuthContext";
 import ExportButton from "../../components/ExportButton";
 import TransactionDetail from "../../components/TransactionDetail";
 import Layout from "../../components/layout/Layout";
+import { useOptions } from "../../context/OptionContext";
 
 export default function CheckoutList() {
     const { user } = useAuth();
-    const { assets, assetOut, createStockOut, fetchAssetTransaction } = useAssetMeta();
+    const { fetchInvType } = useOptions();
+    const { assets, assetOut, createStockOut, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -24,6 +26,8 @@ export default function CheckoutList() {
 
     useEffect(() => {
         fetchAssetTransaction();
+        fetchBranchAssets();
+        fetchInvType();
     }, []);
 
     const openModal = (txn) => {
@@ -105,23 +109,25 @@ export default function CheckoutList() {
                     onFilterChange={(f) => setFilters(f)}
                 />
 
-                <ExportButton
-                    data={filteredList.map((txn) => ({
-                        "Running No": txn.assets_transaction_running_number,
-                        "Type": txn.assets_transaction_type,
-                        "Branch": txn.assets_from_branch_name,
-                        "Items": txn.assets_transaction_item_list
-                            .map(item => {
-                                const asset = assets.find(a => a.id === item.asset_id);
-                                return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
-                            })
-                            .join(", "),
-                        "Purpose": txn.asset_transaction_purpose_name,
-                        "Date": new Date(txn.created_at).toLocaleDateString(),
-                    }))}
-                    filename="AssetOut"
-                    sheetName="Checkout"
-                />
+                {user?.download_reports && (
+                    <ExportButton
+                        data={filteredList.map((txn) => ({
+                            "Running No": txn.assets_transaction_running_number,
+                            "Type": txn.assets_transaction_type,
+                            "Branch": txn.assets_from_branch_name,
+                            "Items": txn.assets_transaction_item_list
+                                .map(item => {
+                                    const asset = assets.find(a => a.id === item.asset_id);
+                                    return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
+                                })
+                                .join(", "),
+                            "Purpose": txn.asset_transaction_purpose_name,
+                            "Date": new Date(txn.created_at).toLocaleDateString(),
+                        }))}
+                        filename="AssetOut"
+                        sheetName="Checkout"
+                    />
+                )}
 
                 <table className="min-w-full text-sm text-left border border-gray-200">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">

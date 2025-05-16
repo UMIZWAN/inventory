@@ -59,29 +59,29 @@ export default function TransferList({ status, mode }) {
     setSelected(null);
   };
 
-  const handleUpdateDraft = async (updatedForm) => {
-    try {
-      const payload = {
-        ...selected,
-        assets_transaction_status: updatedForm.status,
-        assets_from_branch_id: updatedForm.fromBranch,
-        assets_to_branch_id: updatedForm.toBranch,
-        created_at: updatedForm.date,
-        assets_transaction_remark: updatedForm.remarks,
-        assets_transaction_purpose: updatedForm.purpose.join(", "),
-        assets_transaction_item_list: updatedForm.items.map((item) => ({
-          asset_id: parseInt(item.item),
-          asset_unit: parseInt(item.quantity),
-          status: null,
-        })),
-      };
+  // const handleUpdateDraft = async (updatedForm) => {
+  //   try {
+  //     const payload = {
+  //       ...selected,
+  //       assets_transaction_status: updatedForm.status,
+  //       assets_from_branch_id: updatedForm.fromBranch,
+  //       assets_to_branch_id: updatedForm.toBranch,
+  //       created_at: updatedForm.date,
+  //       assets_transaction_remark: updatedForm.remarks,
+  //       assets_transaction_purpose: updatedForm.purpose.join(", "),
+  //       assets_transaction_item_list: updatedForm.items.map((item) => ({
+  //         asset_id: parseInt(item.item),
+  //         asset_unit: parseInt(item.quantity),
+  //         status: null,
+  //       })),
+  //     };
 
-      await api.put(`/api/assets-transaction/${selected.id}`, payload);
-      closeModal();
-    } catch (err) {
-      console.error("Update failed:", err);
-    }
-  };
+  //     await api.put(`/api/assets-transaction/${selected.id}`, payload);
+  //     closeModal();
+  //   } catch (err) {
+  //     console.error("Update failed:", err);
+  //   }
+  // };
 
   const handleAction = async (txn, newStatus) => {
 
@@ -164,7 +164,7 @@ export default function TransferList({ status, mode }) {
       });
     }
 
-    if (status === "REQUESTED" && txn.assets_from_branch_id === user?.branch_id) {
+    if (status === "REQUESTED" && txn.assets_from_branch_id === user?.branch_id && user.approve_reject_transaction) {
       actions.push({
         label: "Approve",
         status: "APPROVED",
@@ -177,7 +177,7 @@ export default function TransferList({ status, mode }) {
       });
     }
 
-    if (status === "APPROVED" && txn.assets_from_branch_id === user?.branch_id) {
+    if (status === "APPROVED" && txn.assets_from_branch_id === user?.branch_id && user.approve_reject_transaction) {
       actions.push({
         label: "Send",
         status: "IN-TRANSIT",
@@ -273,24 +273,26 @@ export default function TransferList({ status, mode }) {
           onFilterChange={(f) => setFilters(f)}
         />
 
-        <ExportButton
-          data={filteredTransfers.map((txn) => ({
-            "Running No": txn.assets_transaction_running_number,
-            "Type": txn.assets_transaction_type,
-            "From Branch": txn.assets_from_branch_name,
-            "To Branch": txn.assets_to_branch_name,
-            "Items": txn.assets_transaction_item_list
-              .map(item => {
-                const asset = assets.find(a => a.id === item.asset_id);
-                return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
-              })
-              .join(", "),
-            "Status": txn.assets_transaction_status,
-            "Date": new Date(txn.created_at).toLocaleDateString(),
-          }))}
-          filename="AssetTransfers"
-          sheetName="Transfers"
-        />
+        {user?.download_reports && (
+          <ExportButton
+            data={filteredTransfers.map((txn) => ({
+              "Running No": txn.assets_transaction_running_number,
+              "Type": txn.assets_transaction_type,
+              "From Branch": txn.assets_from_branch_name,
+              "To Branch": txn.assets_to_branch_name,
+              "Items": txn.assets_transaction_item_list
+                .map(item => {
+                  const asset = assets.find(a => a.id === item.asset_id);
+                  return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
+                })
+                .join(", "),
+              "Status": txn.assets_transaction_status,
+              "Date": new Date(txn.created_at).toLocaleDateString(),
+            }))}
+            filename="AssetTransfers"
+            sheetName="Transfers"
+          />
+        )}
 
         <table className="min-w-full text-sm text-left border border-gray-200">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">

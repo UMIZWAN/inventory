@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class AccessLevel extends Model
 {
@@ -13,6 +14,8 @@ class AccessLevel extends Model
 
     protected $fillable = [
         'name',
+        // Settings
+        'settings',
         // Role
         'add_edit_role',
         'view_role',
@@ -45,7 +48,15 @@ class AccessLevel extends Model
         'download_reports',
     ];
 
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => strtoupper($value)
+        );
+    }
+
     protected $casts = [
+        'settings' => 'boolean',
         'add_edit_role' => 'boolean',
         'view_role' => 'boolean',
         'add_edit_user' => 'boolean',

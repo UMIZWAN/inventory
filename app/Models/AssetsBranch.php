@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 
 class AssetsBranch extends Model
@@ -11,6 +12,13 @@ class AssetsBranch extends Model
     use HasFactory;
     protected $table = 'assets_branch';
     protected $fillable = ['name'];
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => strtoupper($value)
+        );
+    }
 
     public function branch()
     {

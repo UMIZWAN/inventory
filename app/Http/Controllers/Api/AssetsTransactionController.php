@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AssetsBranchValues;
+use App\Models\Assets;
 
 class AssetsTransactionController extends Controller
 {
@@ -164,7 +165,9 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
-                    'assets_transaction_item_list.*.asset_unit' => 'required|integer'
+                    'assets_transaction_item_list.*.asset_unit' => 'required|integer',
+                    'assets_transaction_item_list.*.asset_sales_cost' => 'nullable|numeric|min:0',
+                    'assets_transaction_item_list.*.asset_purchase_cost' => 'nullable|numeric|min:0',
                 ]);
 
                 if ($validator->fails()) {
@@ -218,6 +221,20 @@ class AssetsTransactionController extends Controller
                     $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
                         ->where('asset_id', $item['asset_id'])
                         ->first();
+
+                    $updateData = [];
+
+                    if ($item['asset_sales_cost']) {
+                        $updateData['asset_sales_cost'] = $item['asset_sales_cost'];
+                    }
+
+                    if ($item['asset_purchase_cost']) {
+                        $updateData['asset_purchase_cost'] = $item['asset_purchase_cost'];
+                    }
+
+                    if (!empty($updateData)) {
+                        Assets::where('id', $item['asset_id'])->update($updateData);
+                    }
 
                     if ($assetBranchValue) {
                         $assetBranchValue->increment('asset_current_unit', $item['asset_unit']);

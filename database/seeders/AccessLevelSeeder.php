@@ -18,6 +18,8 @@ class AccessLevelSeeder extends Seeder
         // Public - no access
         AccessLevel::factory()->create([
             'name' => 'Vendor',
+            // Settings
+            'settings' => false,
             // Role
             'add_edit_role' => false,
             'view_role' => false,
@@ -52,6 +54,8 @@ class AccessLevelSeeder extends Seeder
 
         AccessLevel::factory()->create([
             'name' => 'Admin',
+            // Settings
+            'settings' => true,
             // Role
             'add_edit_role' => true,
             'view_role' => true,
@@ -87,6 +91,8 @@ class AccessLevelSeeder extends Seeder
         // Editor - edit and view, but no approvals
         AccessLevel::factory()->create([
             'name' => 'Editor',
+            // Settings
+            'settings' => false,
             // Role
             'add_edit_role' => false,
             'view_role' => true,
@@ -122,6 +128,8 @@ class AccessLevelSeeder extends Seeder
         // Viewer - view only
         AccessLevel::factory()->create([
             'name' => 'Viewer',
+            // Settings
+            'settings' => false,
             // Role
             'add_edit_role' => false,
             'view_role' => true,

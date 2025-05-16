@@ -22,6 +22,7 @@ class UserResource extends JsonResource
             'branch_name' => $this->branch->name,
             'access_level_id' => $this->access_level_id,
             'access_level_name' => $this->accessLevel->name,
+            'settings' => $this->accessLevel->settings,
             // Role Access
             'add_edit_role' => $this->accessLevel->add_edit_role,
             'view_role' => $this->accessLevel->view_role,

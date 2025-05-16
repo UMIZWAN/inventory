@@ -46,6 +46,7 @@ class AccessLevelController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:access_level',
+            'settings' => 'boolean',
             'add_edit_role' => 'boolean',
             'view_role' => 'boolean',
             'add_edit_user' => 'boolean',
@@ -135,6 +136,9 @@ class AccessLevelController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:access_level,name,' . $id,
+            // Settings
+            'settings' => 'boolean',
+            // Role
             'add_edit_role' => 'boolean',
             'view_role' => 'boolean',
             'add_edit_user' => 'boolean',

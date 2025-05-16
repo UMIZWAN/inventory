@@ -121,12 +121,14 @@ class AssetsController extends Controller
 
             // Create an entry in assets_branch_values for each branch
             foreach ($branches as $branch) {
-                AssetsBranchValues::create([
-                    'asset_id' => $asset->id,
-                    'asset_branch_id' => $branch->id,
-                    'asset_location_id' => null, // Default to null, can be updated later
-                    'asset_current_unit' => 0,   // Initialize with 0 quantity
-                ]);
+                if (str_starts_with($branch->name, 'HQ')) {
+                    AssetsBranchValues::create([
+                        'asset_id' => $asset->id,
+                        'asset_branch_id' => $branch->id,
+                        'asset_location_id' => null,
+                        'asset_current_unit' => 0,
+                    ]);
+                }
             }
 
             $asset->load(['category', 'tag', 'branchValues']);
@@ -165,7 +167,6 @@ class AssetsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            Log::info('Validation failed: ', $validator->errors()->toArray());
             return response()->json([
                 'success' => false,
                 'message' => 'Validation Error',
@@ -188,11 +189,8 @@ class AssetsController extends Controller
             $original = $asset->getOriginal();
             $changes = [];
 
-            Log::info($request->file('asset_image'));
             // Handle image upload if present
             if ($request->hasFile('asset_image')) {
-                Log::info('Image detected');
-                Log::info($request->file('asset_image'));
                 $image = $request->file('asset_image');
 
                 // Validate the image

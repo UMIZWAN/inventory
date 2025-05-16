@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             AssetsSeeder::class,
             SuppliersSeeder::class,
             // PurchaseOrderSeeder::class,
-            AssetsTransactionSeeder::class,
+            // AssetsTransactionSeeder::class,
         ]);
     }
 }

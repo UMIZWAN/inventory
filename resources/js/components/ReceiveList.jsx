@@ -93,25 +93,27 @@ export default function ReceiveList() {
                     onFilterChange={(f) => setFilters(f)}
                 />
 
-                <ExportButton
-                    data={filteredList.map((txn) => ({
-                        "Running No": txn.assets_transaction_running_number,
-                        "Type": txn.assets_transaction_type,
-                        "Branch": txn.assets_from_branch_name,
-                        "Items": txn.assets_transaction_item_list
-                            .map(item => {
-                                const asset = assets.find(a => a.id === item.asset_id);
-                                return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
-                            })
-                            .join(", "),
-                        "Purpose": txn.assets_transaction_purpose
-                            ? JSON.parse(txn.assets_transaction_purpose).join(", ")
-                            : "-",
-                        "Date": new Date(txn.created_at).toLocaleDateString(),
-                    }))}
-                    filename="AssetOut"
-                    sheetName="Checkout"
-                />
+                {user?.download_reports && (
+                    <ExportButton
+                        data={filteredList.map((txn) => ({
+                            "Running No": txn.assets_transaction_running_number,
+                            "Type": txn.assets_transaction_type,
+                            "Branch": txn.assets_from_branch_name,
+                            "Items": txn.assets_transaction_item_list
+                                .map(item => {
+                                    const asset = assets.find(a => a.id === item.asset_id);
+                                    return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
+                                })
+                                .join(", "),
+                            "Purpose": txn.assets_transaction_purpose
+                                ? JSON.parse(txn.assets_transaction_purpose).join(", ")
+                                : "-",
+                            "Date": new Date(txn.created_at).toLocaleDateString(),
+                        }))}
+                        filename="AssetOut"
+                        sheetName="Checkout"
+                    />
+                )}
 
                 <table className="min-w-full text-sm text-left border border-gray-200">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">

@@ -6,6 +6,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
         name: '',
         add_edit_role: false,
         view_role: false,
+        settings: false,
         add_edit_user: false,
         view_user: false,
         add_edit_asset: false,
@@ -35,6 +36,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                 name: accessLevel.name || '',
                 add_edit_role: accessLevel.add_edit_role || false,
                 view_role: accessLevel.view_role || false,
+                settings: accessLevel.settings || false,
                 add_edit_user: accessLevel.add_edit_user || false,
                 view_user: accessLevel.view_user || false,
                 add_edit_asset: accessLevel.add_edit_asset || false,
@@ -64,7 +66,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
             ...prevState,
             [name]: type === 'checkbox' ? checked : value
         }));
-        
+
         // Clear error for this field when user starts typing
         if (errors[name]) {
             setErrors(prevErrors => ({
@@ -77,12 +79,12 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!accessLevel) return;
-        
+
         setLoading(true);
         setErrors({});
         try {
             const response = await api.put(`/api/access-levels/${accessLevel.id}`, formData);
-            
+
             if (response.data.data) {
                 // Close modal and notify parent component
                 onAccessLevelUpdated(response.data.data);
@@ -154,7 +156,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                                     Add/Edit Role
                                 </label>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center mb-2">
                                 <input
                                     type="checkbox"
                                     id="view_role"
@@ -167,6 +169,27 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                                     View Role
                                 </label>
                             </div>
+
+                        </div>
+                    </div>
+                    <div className="mb-4">
+                        <h4 className="text-gray-700 font-bold mb-2">Settings</h4>
+                        
+                        <div className="pl-4 mb-2">
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="settings"
+                                    name="settings"
+                                    checked={formData.settings}
+                                    onChange={handleChange}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="settings" className="text-gray-700 text-sm">
+                                    Settings
+                                </label>
+                            </div>
+                            <p className="text-gray-500 text-xs italic mt-1">Applied on Category, Supplier, Shipping Option, Purpose</p>
                         </div>
                     </div>
 
@@ -248,8 +271,8 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                     </div>
 
                     <div className="mb-4">
-                        
-                    <h4 className="text-gray-700 font-bold mb-2">Branch Permissions</h4>
+
+                        <h4 className="text-gray-700 font-bold mb-2">Branch Permissions</h4>
                         <div className="pl-4 mb-2">
                             <div className="flex items-center mb-2">
                                 <input
@@ -333,102 +356,6 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                                 />
                                 <label htmlFor="receive_transaction" className="text-gray-700 text-sm">
                                     Receive Transaction
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-4">
-                        <h4 className="text-gray-700 font-bold mb-2">Purchase Order Permissions</h4>
-                        <div className="pl-4 mb-2">
-                            <div className="flex items-center mb-2">
-                                <input
-                                    type="checkbox"
-                                    id="add_edit_purchase_order"
-                                    name="add_edit_purchase_order"
-                                    checked={formData.add_edit_purchase_order}
-                                    onChange={handleChange}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="add_edit_purchase_order" className="text-gray-700 text-sm">
-                                    Add/Edit Purchase Order
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="view_purchase_order"
-                                    name="view_purchase_order"
-                                    checked={formData.view_purchase_order}
-                                    onChange={handleChange}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="view_purchase_order" className="text-gray-700 text-sm">
-                                    View Purchase Order
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-4">
-                        <h4 className="text-gray-700 font-bold mb-2">Supplier Permissions</h4>
-                        <div className="pl-4 mb-2">
-                            <div className="flex items-center mb-2">
-                                <input
-                                    type="checkbox"
-                                    id="add_edit_supplier"
-                                    name="add_edit_supplier"
-                                    checked={formData.add_edit_supplier}
-                                    onChange={handleChange}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="add_edit_supplier" className="text-gray-700 text-sm">
-                                    Add/Edit Supplier
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="view_supplier"
-                                    name="view_supplier"
-                                    checked={formData.view_supplier}
-                                    onChange={handleChange}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="view_supplier" className="text-gray-700 text-sm">
-                                    View Supplier
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-4">
-                        <h4 className="text-gray-700 font-bold mb-2">Tax Permissions</h4>
-                        <div className="pl-4 mb-2">
-                            <div className="flex items-center mb-2">
-                                <input
-                                    type="checkbox"
-                                    id="add_edit_tax"
-                                    name="add_edit_tax"
-                                    checked={formData.add_edit_tax}
-                                    onChange={handleChange}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="add_edit_tax" className="text-gray-700 text-sm">
-                                    Add/Edit Tax
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="view_tax"
-                                    name="view_tax"
-                                    checked={formData.view_tax}
-                                    onChange={handleChange}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="view_tax" className="text-gray-700 text-sm">
-                                    View Tax
                                 </label>
                             </div>
                         </div>

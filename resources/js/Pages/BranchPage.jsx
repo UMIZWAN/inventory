@@ -55,7 +55,7 @@ const BranchPage = () => {
         <h1 className="text-2xl font-bold mb-4">Branches</h1>
 
         <div className="overflow-x-auto bg-white shadow-md rounded-lg p-4 space-y-4">
-          {user?.add_edit_supplier && (
+          {user?.add_edit_branch && (
             <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
               <input
                 type="text"
@@ -94,7 +94,7 @@ const BranchPage = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                    {user?.add_edit_supplier && (
+                    {user?.add_edit_branch && (
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                     )}
                   </tr>
@@ -103,7 +103,7 @@ const BranchPage = () => {
                   {branches.map((cat) => (
                     <tr key={cat.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cat.name}</td>
-                      {user?.add_edit_supplier && (
+                      {user?.add_edit_branch && (
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                           <button
                             onClick={() => handleEdit(cat)}
