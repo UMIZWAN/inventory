@@ -83,13 +83,16 @@ export default function TransferList({ status, mode }) {
   //   }
   // };
 
-  const handleAction = async (txn, newStatus) => {
-
+  const handleAction = async (txn, newStatus, shippingId = null) => {
     try {
       const payload = {
         assets_transaction_status: newStatus,
         assets_transaction_remark: txn.assets_transaction_remark || "",
       };
+      
+      if (newStatus === "IN-TRANSIT" && shippingId) {
+        payload.assets_shipping_option_id = shippingId;
+      }
 
       const res = await api.put(`/api/assets-transaction/${txn.id}`, payload);
       closeModal();
@@ -197,7 +200,8 @@ export default function TransferList({ status, mode }) {
     return {
       primary: primary && {
         label: primary.label,
-        action: () => handleAction(selected, primary.status),
+        action: (shippingId) =>
+          handleAction(selected, primary.status, shippingId),
         color: primary.color,
       },
       secondary: secondary && {
