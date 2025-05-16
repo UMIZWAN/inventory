@@ -33,7 +33,7 @@ class AssetsCategoryController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:assets_branch',
+            'name' => 'required|unique:assets_category',
         ]);
 
         if ($validator->fails()) {
@@ -75,7 +75,7 @@ class AssetsCategoryController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:assets_branch,name,' . $id,
+            'name' => 'required|unique:assets_category,name,' . $id,
         ]);
 
         if ($validator->fails()) {

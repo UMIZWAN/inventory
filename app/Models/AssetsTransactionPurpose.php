@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class AssetsTransactionPurpose extends Model
 {
@@ -14,6 +15,13 @@ class AssetsTransactionPurpose extends Model
     protected $fillable = [
         'asset_transaction_purpose_name',
     ];
+
+    protected function assetsTransactionPurposeName(): Attribute
+    {
+        return Attribute::make(
+            set: fn($value) => strtoupper($value)
+        );
+    }
 
     public function assetsTransactions()
     {

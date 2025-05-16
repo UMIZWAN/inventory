@@ -3,9 +3,10 @@ import { IoIosNotificationsOutline, IoMdLogOut } from "react-icons/io";
 import Sidebar from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { router } from "@inertiajs/react";
+import { FiRepeat } from "react-icons/fi";
 
 const Layout = ({ children }) => {
-    const { user, logout } = useAuth();
+    const { user, logout, handleClearCache } = useAuth();
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -32,6 +33,13 @@ const Layout = ({ children }) => {
                         {/* <button className="text-white px-1 py-1 rounded-full hover:bg-sky-100">
                             <IoIosNotificationsOutline className="text-2xl text-gray-600" />
                         </button> */}
+                        <button
+                            onClick={handleClearCache}
+                            className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-3 py-1 rounded shadow"
+                        >
+                            <FiRepeat />
+                            <span>Clear Cache</span>
+                        </button>
                         <button
                             onClick={handleLogout}
                             className="bg-white text-red-600 shadow-sm shadow-red-600/50 px-2 py-1 rounded hover:bg-red-100"
