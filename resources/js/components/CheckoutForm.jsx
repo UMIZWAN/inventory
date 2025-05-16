@@ -143,7 +143,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                 </button> */}
             <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
                 <h1 className="text-2xl font-bold mb-6 text-center">Invoice Form</h1>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-center items-center">
 
                     <div className="rounded-lg p-4 space-y-6">
 
