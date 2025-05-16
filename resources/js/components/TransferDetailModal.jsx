@@ -115,8 +115,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                         <tbody>
                           {data?.assets_transaction_item_list?.map((item, index) => {
                             const details = getItemDetails(item);
-                            const quantity = item.asset_unit || 1;
-                            const total = item.price * item.asset_unit;
+                            const total = details.price * details.asset_unit;
                             // totalAmount += total;
                             return (
                               <tr key={index} className="hover:bg-gray-50">
