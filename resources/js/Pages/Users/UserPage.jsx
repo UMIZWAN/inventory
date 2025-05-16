@@ -215,30 +215,6 @@ const UserPage = ({ auth }) => {
                                                                                 {renderPermissionStatus(u.receive_transaction)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Purchase Order:</span>
-                                                                                {renderPermissionStatus(u.add_edit_purchase_order)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Purchase Order:</span>
-                                                                                {renderPermissionStatus(u.view_purchase_order)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Supplier:</span>
-                                                                                {renderPermissionStatus(u.add_edit_supplier)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Supplier:</span>
-                                                                                {renderPermissionStatus(u.view_supplier)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Tax:</span>
-                                                                                {renderPermissionStatus(u.add_edit_tax)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Tax:</span>
-                                                                                {renderPermissionStatus(u.view_tax)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Reports:</span>
                                                                                 {renderPermissionStatus(u.view_reports)}
                                                                             </div>

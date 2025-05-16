@@ -273,24 +273,26 @@ export default function TransferList({ status, mode }) {
           onFilterChange={(f) => setFilters(f)}
         />
 
-        <ExportButton
-          data={filteredTransfers.map((txn) => ({
-            "Running No": txn.assets_transaction_running_number,
-            "Type": txn.assets_transaction_type,
-            "From Branch": txn.assets_from_branch_name,
-            "To Branch": txn.assets_to_branch_name,
-            "Items": txn.assets_transaction_item_list
-              .map(item => {
-                const asset = assets.find(a => a.id === item.asset_id);
-                return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
-              })
-              .join(", "),
-            "Status": txn.assets_transaction_status,
-            "Date": new Date(txn.created_at).toLocaleDateString(),
-          }))}
-          filename="AssetTransfers"
-          sheetName="Transfers"
-        />
+        {user?.download_reports && (
+          <ExportButton
+            data={filteredTransfers.map((txn) => ({
+              "Running No": txn.assets_transaction_running_number,
+              "Type": txn.assets_transaction_type,
+              "From Branch": txn.assets_from_branch_name,
+              "To Branch": txn.assets_to_branch_name,
+              "Items": txn.assets_transaction_item_list
+                .map(item => {
+                  const asset = assets.find(a => a.id === item.asset_id);
+                  return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
+                })
+                .join(", "),
+              "Status": txn.assets_transaction_status,
+              "Date": new Date(txn.created_at).toLocaleDateString(),
+            }))}
+            filename="AssetTransfers"
+            sheetName="Transfers"
+          />
+        )}
 
         <table className="min-w-full text-sm text-left border border-gray-200">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">

@@ -201,30 +201,6 @@ const AccessLevelsPage = ({ auth }) => {
                                                                                 {renderPermissionStatus(accessLevel.receive_transaction)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Purchase Order:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_purchase_order)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Purchase Order:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_purchase_order)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Supplier:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_supplier)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Supplier:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_supplier)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Tax:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_tax)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Tax:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_tax)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
                                                                                 <span>View Reports:</span>
                                                                                 {renderPermissionStatus(accessLevel.view_reports)}
                                                                             </div>
