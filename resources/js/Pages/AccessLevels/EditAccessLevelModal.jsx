@@ -6,6 +6,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
         name: '',
         add_edit_role: false,
         view_role: false,
+        settings: false,
         add_edit_user: false,
         view_user: false,
         add_edit_asset: false,
@@ -35,6 +36,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                 name: accessLevel.name || '',
                 add_edit_role: accessLevel.add_edit_role || false,
                 view_role: accessLevel.view_role || false,
+                settings: accessLevel.settings || false,
                 add_edit_user: accessLevel.add_edit_user || false,
                 view_user: accessLevel.view_user || false,
                 add_edit_asset: accessLevel.add_edit_asset || false,
@@ -64,7 +66,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
             ...prevState,
             [name]: type === 'checkbox' ? checked : value
         }));
-        
+
         // Clear error for this field when user starts typing
         if (errors[name]) {
             setErrors(prevErrors => ({
@@ -77,12 +79,12 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!accessLevel) return;
-        
+
         setLoading(true);
         setErrors({});
         try {
             const response = await api.put(`/api/access-levels/${accessLevel.id}`, formData);
-            
+
             if (response.data.data) {
                 // Close modal and notify parent component
                 onAccessLevelUpdated(response.data.data);
@@ -154,7 +156,7 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                                     Add/Edit Role
                                 </label>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center mb-2">
                                 <input
                                     type="checkbox"
                                     id="view_role"
@@ -167,6 +169,27 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                                     View Role
                                 </label>
                             </div>
+
+                        </div>
+                    </div>
+                    <div className="mb-4">
+                        <h4 className="text-gray-700 font-bold mb-2">Settings</h4>
+                        
+                        <div className="pl-4 mb-2">
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="settings"
+                                    name="settings"
+                                    checked={formData.settings}
+                                    onChange={handleChange}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="settings" className="text-gray-700 text-sm">
+                                    Settings
+                                </label>
+                            </div>
+                            <p className="text-gray-500 text-xs italic mt-1">Applied on Category, Supplier, Shipping Option, Purpose</p>
                         </div>
                     </div>
 
@@ -248,8 +271,8 @@ const EditAccessLevelModal = ({ isOpen, onClose, accessLevel, onAccessLevelUpdat
                     </div>
 
                     <div className="mb-4">
-                        
-                    <h4 className="text-gray-700 font-bold mb-2">Branch Permissions</h4>
+
+                        <h4 className="text-gray-700 font-bold mb-2">Branch Permissions</h4>
                         <div className="pl-4 mb-2">
                             <div className="flex items-center mb-2">
                                 <input

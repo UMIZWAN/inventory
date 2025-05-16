@@ -185,6 +185,10 @@ const AccessLevelsPage = ({ auth }) => {
                                                                                 {renderPermissionStatus(accessLevel.view_branch)}
                                                                             </div>
                                                                             <div className="flex justify-between border-b pb-2">
+                                                                                <span>Settings:</span>
+                                                                                {renderPermissionStatus(accessLevel.settings)}
+                                                                            </div>
+                                                                            <div className="flex justify-between border-b pb-2">
                                                                                 <span>Add/Edit Transaction:</span>
                                                                                 {renderPermissionStatus(accessLevel.add_edit_transaction)}
                                                                             </div>

@@ -6,6 +6,7 @@ const AddAccessLevelModal = ({ isOpen, onClose, onAccessLevelAdded }) => {
         name: '',
         add_edit_role: false,
         view_role: false,
+        settings: false,
         add_edit_user: false,
         view_user: false,
         add_edit_asset: false,
@@ -58,6 +59,7 @@ const AddAccessLevelModal = ({ isOpen, onClose, onAccessLevelAdded }) => {
                     name: '',
                     add_edit_role: false,
                     view_role: false,
+                    settings: false,
                     add_edit_user: false,
                     view_user: false,
                     add_edit_asset: false,
@@ -162,6 +164,27 @@ const AddAccessLevelModal = ({ isOpen, onClose, onAccessLevelAdded }) => {
                                     View Role
                                 </label>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <h4 className="text-gray-700 font-bold mb-2">Settings</h4>
+                        
+                        <div className="pl-4 mb-2">
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="settings"
+                                    name="settings"
+                                    checked={formData.settings}
+                                    onChange={handleChange}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="settings" className="text-gray-700 text-sm">
+                                    Settings
+                                </label>
+                            </div>
+                            <p className="text-gray-500 text-xs italic mt-1">Applied on Category, Supplier, Shipping Option, Purpose</p>
                         </div>
                     </div>
 
