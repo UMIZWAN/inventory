@@ -464,23 +464,41 @@ class AssetsController extends Controller
 
             DB::beginTransaction();
             try {
-                $asset = Assets::create([
-                    'name' => $row['name'],
-                    'asset_running_number' => $row['asset_running_number'],
-                    'asset_category_id' => $row['asset_category_id'],
-                    'asset_stable_unit' => $row['asset_stable_unit'],
-                    'asset_purchase_cost' => $row['asset_purchase_cost'],
-                    'asset_sales_cost' => $row['asset_sales_cost'],
-                    'asset_unit_measure' => $row['asset_unit_measure'],
-                    'assets_log' => Auth::user()->name . ' imported asset via CSV on ' . now(),
-                ]);
+                if (Assets::where('asset_running_number', $row['asset_running_number'])->exists()) {
 
-                AssetsBranchValues::create([
-                    'asset_id' => $asset->id,
-                    'asset_branch_id' => $row['asset_branch_id'],
-                    'asset_location_id' => null,
-                    'asset_current_unit' => $row['asset_current_unit'],
-                ]);
+                    $id = Assets::where('asset_running_number', $row['asset_running_number'])->value('id');
+                    if (AssetsBranchValues::where('asset_id', $id, 'asset_branch_id', $row['asset_branch_id'])->exists()) {
+
+                        continue;
+                    } else {
+
+                        AssetsBranchValues::create([
+                            'asset_id' => $id,
+                            'asset_branch_id' => $row['asset_branch_id'],
+                            'asset_location_id' => null,
+                            'asset_current_unit' => $row['asset_current_unit'],
+                        ]);
+                    }
+                } else {
+
+                    $asset = Assets::create([
+                        'name' => $row['name'],
+                        'asset_running_number' => $row['asset_running_number'],
+                        'asset_category_id' => $row['asset_category_id'],
+                        'asset_stable_unit' => $row['asset_stable_unit'],
+                        'asset_purchase_cost' => $row['asset_purchase_cost'],
+                        'asset_sales_cost' => $row['asset_sales_cost'],
+                        'asset_unit_measure' => $row['asset_unit_measure'],
+                        'assets_log' => Auth::user()->name . ' imported asset via CSV on ' . now(),
+                    ]);
+
+                    AssetsBranchValues::create([
+                        'asset_id' => $asset->id,
+                        'asset_branch_id' => $row['asset_branch_id'],
+                        'asset_location_id' => null,
+                        'asset_current_unit' => $row['asset_current_unit'],
+                    ]);
+                }
 
                 DB::commit();
                 $results[] = [
@@ -488,7 +506,7 @@ class AssetsController extends Controller
                     'success' => true,
                     'asset_id' => $asset->id,
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 DB::rollBack();
                 $results[] = [
                     'row' => $row,
