@@ -19,25 +19,26 @@ const styles = StyleSheet.create({
   section: { marginBottom: 20 },
   label: { fontWeight: "bold" },
   table: {
-    display: "table",
-    width: "auto",
-    borderStyle: "solid",
-    borderWidth: 1,
-    marginTop: 10,
+    width: "100%",
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
   },
-  tableRow: { flexDirection: "row" },
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
   tableColHeader: {
     width: "20%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    backgroundColor: "#eee",
-    padding: 4,
+    backgroundColor: "#f3f4f6",
+    fontWeight: "bold",
+    padding: 8,
   },
   tableCol: {
-    width: "20%",
-    borderStyle: "solid",
-    borderWidth: 1,
-    padding: 4,
+    padding: 8,
+    fontSize: 11,
+    flex: 1,
   },
   signatureRow: {
     flexDirection: "row",
@@ -82,7 +83,7 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
 
       <View style={styles.table}>
         <View style={styles.tableRow}>
-          {["Code", "Name", "Category", "Price", "Quantity"].map((col) => (
+          {["Code", "Name", "Category", "Price", "Quantity", "Total Price"].map((col) => (
             <Text key={col} style={styles.tableColHeader}>
               {col}
             </Text>
@@ -97,6 +98,7 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
               RM {Number(item.price).toFixed(2)}
             </Text>
             <Text style={styles.tableCol}>{item.asset_unit}</Text>
+            <Text style={styles.tableCol}>RM {Number(item.price * item.asset_unit).toFixed(2)}</Text>
           </View>
         ))}
       </View>

@@ -253,7 +253,6 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   const createStockOut = async (form) => {
-    console.log("Creating stock out with form:", form);
     try {
       const payload = {
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
