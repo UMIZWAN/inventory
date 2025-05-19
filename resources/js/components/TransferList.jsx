@@ -10,7 +10,7 @@ import ExportButton from "./ExportButton";
 
 export default function TransferList({ status, mode }) {
   const { user } = useAuth();
-  const { assets, assetTransfer, createTransfer, fetchAssetTransaction, fetchAssets, fetchBranchAssets } = useAssetMeta();
+  const { assets, assetTransfer, createTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
 
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -99,7 +99,6 @@ export default function TransferList({ status, mode }) {
       fetchAssetTransaction();
       fetchBranchAssets();
     } catch (err) {
-      console.error("Update failed:", err);
       alert(err.response.data.error)
     }
   };
@@ -267,7 +266,7 @@ export default function TransferList({ status, mode }) {
               }}
               className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2 cursor-pointer"
             >
-              + New Transfer
+              + New Request
             </a>
           )}
         </div>

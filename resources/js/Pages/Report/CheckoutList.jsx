@@ -11,7 +11,7 @@ import { useOptions } from "../../context/OptionContext";
 export default function CheckoutList() {
     const { user } = useAuth();
     const { fetchInvType } = useOptions();
-    const { assets, assetOut, createStockOut, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
+    const { assets, assetOut, createStockOut, fetchAssetTransaction } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -26,7 +26,6 @@ export default function CheckoutList() {
 
     useEffect(() => {
         fetchAssetTransaction();
-        fetchBranchAssets();
         fetchInvType();
     }, []);
 
