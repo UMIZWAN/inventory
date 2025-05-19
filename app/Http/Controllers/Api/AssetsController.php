@@ -199,7 +199,11 @@ class AssetsController extends Controller
                 ], 404);
             }
 
-            $data = $request->except(['asset_image', 'asset_branch_values']);
+            $inputKeys = array_keys($request->all());
+            $data = collect($request->only($inputKeys))
+                ->except(['asset_image', 'asset_branch_values'])
+                ->toArray();
+
             $original = $asset->getOriginal();
             $changes = [];
 
@@ -521,5 +525,36 @@ class AssetsController extends Controller
             'message' => 'Import complete',
             'results' => $results,
         ]);
+    }
+
+    public function getAssetList()
+    {
+        $assets = Assets::with(['category', 'tag', 'branchValues'])->latest()->get();
+
+        if ($assets->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No assets found',
+                'data' => []
+            ], 404);
+        }
+
+        $formattedAssets = $assets->map(function ($asset) {
+            return [
+                'id' => $asset->id,
+                'name' => $asset->name,
+                'asset_running_number' => $asset->asset_running_number,
+                'asset_category_id' => $asset->asset_category_id,
+                'asset_category_name' => $asset->category->name ?? null,
+                'asset_sales_cost' => $asset->asset_sales_cost,
+                'asset_unit_measure' => $asset->asset_unit_measure,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'List Data Assets',
+            'data' => $formattedAssets
+        ], 200);
     }
 }
