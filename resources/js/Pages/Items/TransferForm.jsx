@@ -14,7 +14,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     requester: user?.id || "",
     department: "",
     date: new Date().toISOString().slice(0, 10),
-    status: "REQUEST",
+    status: "REQUESTED",
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: user?.branch_id || "",
@@ -36,7 +36,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         requester: user?.id || "",
         department: "",
         date: initialData.date || new Date().toISOString().slice(0, 10),
-        status: initialData.status || "REQUEST",
+        status: initialData.status || "REQUESTED",
         transaction_type: "ASSET_TRANSFER",
         fromBranch: initialData.fromBranch || "",
         toBranch: initialData.toBranch || "",
@@ -52,9 +52,9 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       key: "item",
       label: "Item",
       type: "select",
-      options: itemList.map((a) => ({
+      options: (form.status === "REQUESTED" ? itemList : assets).map((a) => ({
         value: a.id, label: a.name,
-        // qty: a.branch_values[0]?.asset_current_unit
+        qty: (form.status === "REQUESTED" ? "" : (a.branch_values[0]?.asset_current_unit || "0"))
       })),
       width: "w-64"
     },
@@ -167,13 +167,13 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         </button>
 
         <h2 className="text-2xl font-semibold mb-4 text-center">
-          {/* {isEditMode ? "Edit Transfer " : "Stock Transfer "} */}
-          Transfer Request
+          {form.status === "REQUESTED" ? "Transfer Request" : "Stock Transfer "}
+
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="grid grid-cols-2 gap-4">
-            {form.status === "REQUEST" ? (
+            {form.status === "REQUESTED" ? (
               <>
                 <div>
                   <label className="block font-medium mb-1">From Branch</label>
@@ -234,7 +234,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-medium mb-1">{form.status === "REQUEST" ? ("Requested By") : ("Transfered By")}</label>
+              <label className="block font-medium mb-1">{form.status === "REQUESTED" ? ("Requested By") : ("Transfered By")}</label>
               <input
                 type="text"
                 name="requester"
@@ -247,16 +247,16 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
             <div>
               <label className="block font-medium mb-1">Status</label>
-              <input
+              <select
                 name="status"
                 value={form.status}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
                 readOnly
-              />
-                {/* <option value="REQUEST">REQUEST</option>
+              >
+                <option value="REQUESTED">REQUEST</option>
                 <option value="IN-TRANSIT">IN-TRANSIT</option>
-              </select> */}
+              </select>
             </div>
 
           </div>
@@ -273,7 +273,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
               />
             </div>
 
-            {form.status !== "REQUEST" && (
+            {form.status !== "REQUESTED" && (
               <div>
                 <label className="block font-medium mb-1">Shipping Option</label>
                 <select
