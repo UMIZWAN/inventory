@@ -37,6 +37,15 @@ const ItemDetails = ({ asset, onClose }) => {
     };
 
     const handleSubmit = async () => {
+
+        const requiredFields = ['name', 'asset_category_id', 'asset_unit_measure', 'asset_stable_unit'];
+        for (let field of requiredFields) {
+            if (!form[field] || form[field].toString().trim() === '') {
+                alert(`The field "${field.replace(/_/g, ' ')}" is required.`);
+                return;
+            }
+        }
+
         setSubmitting(true);
 
         try {

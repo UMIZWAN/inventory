@@ -9,9 +9,6 @@ import {
   Image,
 } from "@react-pdf/renderer";
 
-// Replace this with your actual logo URL or base64 string
-// const logoUrl = "resources/js/assets/image/universal group - black logo.jpg";
-
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 11, fontFamily: "Helvetica" },
   logo: { width: 250, height: 26, marginBottom: 25, alignSelf: "center" },
