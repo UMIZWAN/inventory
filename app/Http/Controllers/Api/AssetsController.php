@@ -557,4 +557,44 @@ class AssetsController extends Controller
             'data' => $formattedAssets
         ], 200);
     }
+
+    public function getListByBranch(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'asset_branch_id' => 'required|exists:assets_branch,id',
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation Error',
+                    'data' => $validator->errors()
+                ], 422);
+            }
+            
+            // Validate the branch ID
+            $branchId = $request->asset_branch_id;
+
+            $assets = Assets::with(['category', 'tag'])
+                ->whereHas('branchValues', function ($query) use ($branchId) {
+                    $query->where('asset_branch_id', $branchId);
+                })
+                ->with(['branchValues' => function ($query) use ($branchId) {
+                    $query->where('asset_branch_id', $branchId);
+                }])
+                ->latest()
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'List Data Assets',
+                'data' => AssetsResource::collection($assets),
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
