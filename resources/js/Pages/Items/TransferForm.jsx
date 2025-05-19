@@ -7,7 +7,7 @@ import { router } from "@inertiajs/react";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
-  const { assets, branches, fetchBranchAssets, fetchBranches, createTransfer } = useAssetMeta();
+  const { assets, branches, fetchBranchAssets, fetchBranches, createTransfer, itemList, fetchItemList } = useAssetMeta();
   const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -28,6 +28,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     fetchShipping();
     fetchBranchAssets();
     fetchBranches();
+    fetchItemList();
   }, []);
 
   useEffect(() => {
@@ -52,9 +53,9 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       key: "item",
       label: "Item",
       type: "select",
-      options: assets.map((a) => ({
+      options: itemList.map((a) => ({
         value: a.id, label: a.name,
-        qty: a.branch_values[0]?.asset_current_unit
+        // qty: a.branch_values[0]?.asset_current_unit
       })),
       width: "w-64"
     },
@@ -78,7 +79,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     const updatedItems = [...form.items];
 
     if (field === 'item') {
-      const selectedAsset = assets.find(a => a.id === Number(value));
+      const selectedAsset = itemList.find(a => a.id === Number(value));
       updatedItems[index].item = value;
 
       if (selectedAsset) {

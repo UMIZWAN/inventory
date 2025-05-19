@@ -88,14 +88,14 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
         </View>
         {items.map((item, idx) => (
           <View key={idx} style={styles.tableRow}>
-            <Text style={styles.tableCol}>{item.code}</Text>
-            <Text style={styles.tableCol}>{item.name}</Text>
-            <Text style={styles.tableCol}>{item.category}</Text>
+            <Text style={styles.tableCol}>{item.assets.asset_running_number}</Text>
+            <Text style={styles.tableCol}>{item.asset_name}</Text>
+            <Text style={styles.tableCol}>{item.assets.asset_category_name}</Text>
             <Text style={styles.tableCol}>
-              RM {Number(item.price).toFixed(2)}
+              RM {Number(item.assets.asset_sales_cost).toFixed(2)}
             </Text>
             <Text style={styles.tableCol}>{item.asset_unit}</Text>
-            <Text style={styles.tableCol}>RM {Number(item.price * item.asset_unit).toFixed(2)}</Text>
+            <Text style={styles.tableCol}>RM {Number(item.assets.asset_sales_cost * item.asset_unit).toFixed(2)}</Text>
           </View>
         ))}
       </View>

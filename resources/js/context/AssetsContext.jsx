@@ -8,19 +8,13 @@ export const AssetMetaProvider = ({ children }) => {
   const { user } = useAuth();
   const [assets, setAssets] = useState([]);
   const [allAssets, setAllAssets] = useState([]);
+  const [itemList, setItemList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [branches, setBranches] = useState([]);
   const [assetIn, setAssetIn] = useState([]);
   const [assetOut, setAssetOut] = useState([]);
   const [assetTransfer, setAssetTransfer] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // useEffect(() => {
-  //   if (user?.branch_id) {
-  //     fetchAssets(user?.branch_id);
-  //     fetchAssetTransaction();
-  //   }
-  // }, [user]);
 
   const fetchAssets = (branchId) => {
     setLoading(true);
@@ -45,6 +39,22 @@ export const AssetMetaProvider = ({ children }) => {
       .then(response => {
         if (response.data.success) {
           setAssets(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching assets:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const fetchItemList = () => {
+    setLoading(true);
+    api.get('/api/assets/get-itemlist')
+      .then(response => {
+        if (response.data.success) {
+          setItemList(response.data.data);
         }
       })
       .catch(error => {
@@ -87,24 +97,6 @@ export const AssetMetaProvider = ({ children }) => {
       throw err;
     }
   };
-
-  // const copyAsset = async (form) => {
-  //   console.log('Adding asset:', form);
-
-  //   try {
-  //     await api.post('/api/assets', form, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //       },
-  //     });
-
-  //     fetchAssets(); // Refresh the list after update
-  //     fetchBranchAssets();
-  //   } catch (err) {
-  //     console.error('Failed to update asset:', err);
-  //     throw err;
-  //   }
-  // };
 
   const updateAsset = async (id, data) => {
     try {
@@ -322,6 +314,8 @@ export const AssetMetaProvider = ({ children }) => {
         assets,
         fetchBranchAssets,
         fetchAssets,
+        fetchItemList,
+        itemList,
         addAsset,
         updateAsset,
         categories,
