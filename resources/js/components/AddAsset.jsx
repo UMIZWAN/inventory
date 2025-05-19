@@ -109,8 +109,8 @@ function AddAsset({ setShowModal }) {
 
                     <input name="asset_purchase_cost" type="number" placeholder="Cost" value={form.asset_purchase_cost} onChange={handleChange} className="w-full p-2 border rounded" />
                     <input name="asset_sales_cost" type="number" placeholder="Price" value={form.asset_sales_cost} onChange={handleChange} className="w-full p-2 border rounded" />
-                    <input name="asset_stable_unit" type="number" placeholder="Stable Quantity" value={form.asset_stable_unit} onChange={handleChange} className="w-full p-2 border rounded" />
-                    <input name="asset_unit_measure" placeholder="UOM" value={form.unit_measure} onChange={handleChange} className="w-full p-2 border rounded" />
+                    <input name="asset_stable_unit" type="number" placeholder="Stable Quantity" value={form.asset_stable_unit} onChange={handleChange} className="w-full p-2 border rounded" required/>
+                    <input name="asset_unit_measure" placeholder="UOM" value={form.unit_measure} onChange={handleChange} className="w-full p-2 border rounded" required/>
 
                     {/* <select name="assets_location_id" value={form.assets_location_id || ''} onChange={handleChange} className="w-full p-2 border rounded" required>
                         <option value="">Select Location</option>

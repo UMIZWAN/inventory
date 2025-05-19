@@ -21,16 +21,16 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
   }, []);
 
   // Get asset details for each item in the transfer
-  const getItemDetails = (item) => {
-    const asset = assets.find(a => a.id === item.asset_id);
-    return {
-      code: asset?.asset_running_number || 'Unknown Code',
-      name: asset?.name || 'Unknown Asset',
-      price: asset?.asset_sales_cost || 0,
-      category: asset?.asset_category_name || 'Unknown',
-      ...item
-    };
-  };
+  // const getItemDetails = (item) => {
+  //   const asset = assets.find(a => a.id === item.asset_id);
+  //   return {
+  //     code: asset?.asset_running_number || 'Unknown Code',
+  //     name: asset?.name || 'Unknown Asset',
+  //     price: asset?.asset_sales_cost || 0,
+  //     category: asset?.asset_category_name || 'Unknown',
+  //     ...item
+  //   };
+  // };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -83,7 +83,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                         document={
                           <TransferDeliveryOrderPDF
                             data={data}
-                            items={data.assets_transaction_item_list?.map(getItemDetails) || []}
+                            items={data.assets_transaction_item_list}
                           />
                         }
                         fileName={`DeliveryOrder_${data.assets_transaction_running_number}.pdf`}
@@ -144,17 +144,17 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                         </thead>
                         <tbody>
                           {data?.assets_transaction_item_list?.map((item, index) => {
-                            const details = getItemDetails(item);
-                            const total = details.price * details.asset_unit;
+                            // const details = getItemDetails(item);
+                            // const total = details.price * details.asset_unit;
                             // totalAmount += total;
                             return (
                               <tr key={index} className="hover:bg-gray-50">
-                                <td className="px-4 py-2 border">{details.code}</td>
-                                <td className="px-4 py-2 border">{details.name}</td>
-                                <td className="px-4 py-2 border">{details.category}</td>
-                                <td className="px-4 py-2 border">{Number(details.price).toFixed(2)}</td>
-                                <td className="px-4 py-2 border">{details.asset_unit}</td>
-                                <td className="px-4 py-2 border">{Number(total).toFixed(2)}</td>
+                                <td className="px-4 py-2 border">{item.assets.asset_running_number}</td>
+                                <td className="px-4 py-2 border">{item.asset_name}</td>
+                                <td className="px-4 py-2 border">{item.assets.asset_category_name}</td>
+                                <td className="px-4 py-2 border">{Number(item.assets.asset_sales_cost).toFixed(2)}</td>
+                                <td className="px-4 py-2 border">{item.asset_unit}</td>
+                                <td className="px-4 py-2 border">{Number(item.assets.asset_sales_cost * item.asset_unit).toFixed(2)}</td>
                               </tr>
                             );
                           })}

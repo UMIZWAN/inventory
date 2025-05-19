@@ -60,7 +60,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                             <Text style={styles.tableCell}>Asset Name</Text>
                             <Text style={styles.tableCell}>Quantity</Text>
                             <Text style={styles.tableCell}>Price (Each)</Text>
-                            <Text style={styles.tableCell}>Total</Text>
+                            <Text style={styles.tableCell}>Total Price</Text>
                         </View>
 
                         {/* Table Rows */}
@@ -84,9 +84,9 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     </View>
 
                     {/* Total Amount */}
-                    {/* <View style={styles.totalContainer}>
+                    <View style={styles.totalContainer}>
                         <Text style={styles.totalText}>Total Amount: RM {totalAmount.toFixed(2)}</Text>
-                    </View> */}
+                    </View>
                 </View>
 
                 <View style={styles.signatureRow}>
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     },
     tableCell: {
         padding: 8,
-        fontSize: 12,
+        fontSize: 11,
         flex: 1,
         textAlign: "center",
     },
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
         textAlign: "right",
     },
     totalText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: "bold",
     },
     signatureRow: {
