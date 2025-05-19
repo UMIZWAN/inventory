@@ -58,16 +58,28 @@ const SupplierModal = ({ open, onClose, initialData = null }) => {
               <label className="block text-sm font-medium capitalize mb-1">
                 {field.replace(/_/g, " ")}
               </label>
-              <input
-                type="text"
-                name={field}
-                value={form[field]}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded"
-                required
-              />
+              {field === "supplier_address" ? (
+                <textarea
+                  name={field}
+                  value={form[field]}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded"
+                  rows={3}
+                  required
+                />
+              ) : (
+                <input
+                  type="text"
+                  name={field}
+                  value={form[field]}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded"
+                  required
+                />
+              )}
             </div>
           ))}
+
           <div className="flex justify-end gap-2">
             <button
               type="button"
