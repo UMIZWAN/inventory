@@ -127,6 +127,7 @@ export const AssetMetaProvider = ({ children }) => {
 
       await api.post(`/api/assets/${id}/upload`, data, config);
       fetchAssets(user?.branch_id);
+      fetchBranchAssets();
     } catch (err) {
       console.error('Failed to update asset:', err);
       throw err;

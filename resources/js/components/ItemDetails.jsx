@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 const ItemDetails = ({ asset, onClose }) => {
     const { user } = useAuth();
-    const { updateAsset, categories, tags, branches } = useAssetMeta();
+    const { updateAsset, categories } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
