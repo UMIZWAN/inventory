@@ -12,13 +12,11 @@ function StockTransfer() {
   const { assetTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
 
   useEffect(() => {
-      if (user?.branch_id) {
-        fetchAssetTransaction();
-        fetchBranchAssets();
-      }
-    }, [user]);
+    fetchAssetTransaction();
+    fetchBranchAssets();
+  }, []);
 
-    
+
 
   const incomingTransfersCount = assetTransfer.filter(
     (txn) =>
@@ -56,11 +54,10 @@ function StockTransfer() {
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              className={`px-4 py-2 font-medium ${
-                activeTab === tab.key
+              className={`px-4 py-2 font-medium ${activeTab === tab.key
                   ? "border-b-2 border-blue-600 text-blue-600"
                   : "text-gray-400 hover:text-sky-600"
-              }`}
+                }`}
               onClick={() => setActiveTab(tab.key)}
             >
               {tab.label}

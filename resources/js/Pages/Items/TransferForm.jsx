@@ -7,7 +7,7 @@ import { router } from "@inertiajs/react";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
-  const { assets, branches, fetchBranchAssets, fetchBranches, createTransfer, itemList, fetchItemList } = useAssetMeta();
+  const { assets, branches, fetchBranches, createTransfer, itemList, fetchItemList } = useAssetMeta();
   const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -26,7 +26,6 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
   useEffect(() => {
     fetchShipping();
-    fetchBranchAssets();
     fetchBranches();
     fetchItemList();
   }, []);
@@ -39,7 +38,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         date: initialData.date || new Date().toISOString().slice(0, 10),
         status: initialData.status || "REQUEST",
         transaction_type: "ASSET_TRANSFER",
-        fromBranch: initialData.fromBranch || user?.branch_id || "",
+        fromBranch: initialData.fromBranch || "",
         toBranch: initialData.toBranch || "",
         items: initialData.items || [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
         remarks: initialData.remarks || "",
