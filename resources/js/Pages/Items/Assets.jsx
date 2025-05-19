@@ -257,17 +257,17 @@ const Assets = () => {
                                             </td>
                                             {user?.add_edit_asset && (
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    RM {Number(asset.asset_purchase_cost).toFixed(2) || '—'}
+                                                    RM {Number(asset.asset_purchase_cost).toFixed(2) || '0.00'}
                                                 </td>
                                             )}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                RM {Number(asset.asset_sales_cost).toFixed(2) || '—'}
+                                                RM {Number(asset.asset_sales_cost).toFixed(2) || '0.00'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.branch_values[0]?.asset_branch_name || '—'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                {asset.branch_values[0]?.asset_current_unit || '—'}
+                                                {asset.branch_values[0]?.asset_current_unit || '0'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {new Date(asset.created_at).toLocaleDateString()}
