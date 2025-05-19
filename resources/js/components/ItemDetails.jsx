@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 const ItemDetails = ({ asset, onClose }) => {
     const { user } = useAuth();
-    const { updateAsset, categories, tags, branches } = useAssetMeta();
+    const { updateAsset, categories } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
@@ -37,6 +37,15 @@ const ItemDetails = ({ asset, onClose }) => {
     };
 
     const handleSubmit = async () => {
+
+        const requiredFields = ['name', 'asset_category_id', 'asset_unit_measure', 'asset_stable_unit'];
+        for (let field of requiredFields) {
+            if (!form[field] || form[field].toString().trim() === '') {
+                alert(`The field "${field.replace(/_/g, ' ')}" is required.`);
+                return;
+            }
+        }
+
         setSubmitting(true);
 
         try {
@@ -46,12 +55,12 @@ const ItemDetails = ({ asset, onClose }) => {
                 asset_category_id: form.asset_category_id,
                 asset_stable_unit: form.asset_stable_unit,
                 asset_unit_measure: form.asset_unit_measure,
-                asset_description: form.asset_description || null,
-                asset_type: form.asset_type || null,
-                asset_purchase_cost: form.asset_purchase_cost || null,
-                asset_sales_cost: form.asset_sales_cost || null,
-                assets_remark: form.assets_remark || null,
-                asset_running_number: form.asset_running_number || null,
+                asset_description: form.asset_description,
+                asset_type: form.asset_type,
+                asset_purchase_cost: form.asset_purchase_cost,
+                asset_sales_cost: form.asset_sales_cost,
+                assets_remark: form.assets_remark,
+                asset_running_number: form.asset_running_number,
             };
 
             // If there's a new image file, use FormData
