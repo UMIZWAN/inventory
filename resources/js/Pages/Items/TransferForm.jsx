@@ -137,7 +137,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
 
     if (form.status === "IN-TRANSIT") {
       const invalidItem = form.items.find(({ item, quantity }) => {
-        const asset = assets.find(a => a.id === Number(item));
+        const asset = branchItem.find(a => a.id === Number(item));
         if (!asset) return false;
 
         const currentBranchStock = asset.branch_values?.find(
@@ -148,7 +148,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       });
 
       if (invalidItem) {
-        const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
+        const assetName = branchItem.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
         alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
         return;
       }
