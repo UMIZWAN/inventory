@@ -7,7 +7,7 @@ import { router } from "@inertiajs/react";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
-  const { assets, branches, fetchBranches, createTransfer, itemList, fetchItemList, fetchBranchAssets, branchItem, fetchBranchItem } = useAssetMeta();
+  const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
