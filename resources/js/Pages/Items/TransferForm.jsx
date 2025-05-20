@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import ItemsTable from "../../components/ItemsTable";
 import { useAssetMeta } from "../../context/AssetsContext";
 import { useAuth } from "../../context/AuthContext";
@@ -7,7 +7,7 @@ import { router } from "@inertiajs/react";
 
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
-  const { assets, branches, fetchBranches, createTransfer, itemList, fetchItemList } = useAssetMeta();
+  const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -27,8 +27,23 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
   useEffect(() => {
     fetchShipping();
     fetchBranches();
-    fetchItemList();
   }, []);
+
+  useEffect(() => {
+    if (form.status === "REQUESTED" && form.fromBranch) {
+      fetchBranchItem(form.fromBranch);
+    } else if (form.status === "IN-TRANSIT") {
+      fetchBranchItem(user?.branch_id);
+    }
+  }, [form.status, form.fromBranch]);
+
+  const itemOptions = 
+     branchItem.map((item) => ({ 
+      value: item.id, 
+      label: item.name,
+      qty: item.branch_values[0]?.asset_current_unit || "0"
+    }))
+    
 
   useEffect(() => {
     if (initialData) {
@@ -52,10 +67,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       key: "item",
       label: "Item",
       type: "select",
-      options: (form.status === "REQUESTED" ? itemList : assets).map((a) => ({
-        value: a.id, label: a.name,
-        qty: (form.status === "REQUESTED" ? "" : (a.branch_values[0]?.asset_current_unit || "0"))
-      })),
+      options: itemOptions,
       width: "w-64"
     },
     { key: "category", label: "Category", readOnly: true },
@@ -78,7 +90,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     const updatedItems = [...form.items];
 
     if (field === 'item') {
-      const selectedAsset = itemList.find(a => a.id === Number(value));
+      const selectedAsset = branchItem.find(a => a.id === Number(value));
       updatedItems[index].item = value;
 
       if (selectedAsset) {
@@ -255,7 +267,9 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
                 readOnly
               >
                 <option value="REQUESTED">REQUEST</option>
-                <option value="IN-TRANSIT">IN-TRANSIT</option>
+                {user.approve_reject_transaction && (
+                  <option value="IN-TRANSIT">IN-TRANSIT</option>
+                )}
               </select>
             </div>
 

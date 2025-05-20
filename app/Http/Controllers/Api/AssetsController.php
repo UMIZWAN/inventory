@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AssetsResource;
 use App\Models\Assets;
 use App\Models\AssetsBranchValues;
+use App\Models\AssetsBranch;
+use App\Models\AssetsCategory;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -380,7 +382,7 @@ class AssetsController extends Controller
             foreach ($branches as $branch) {
                 if (str_starts_with($branch->name, 'HQ')) {
                     AssetsBranchValues::create([
-                        'asset_id' => $asset->id,
+                        'asset_id' => $newAsset->id,
                         'asset_branch_id' => $branch->id,
                         'asset_location_id' => null,
                         'asset_current_unit' => 0,
@@ -430,102 +432,156 @@ class AssetsController extends Controller
 
     public function importFromCSV(Request $request)
     {
-        $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt',
-        ]);
-
-        $path = $request->file('csv_file')->getRealPath();
-        $data = array_map('str_getcsv', file($path));
-
-        // Assuming first row is the header
-        $header = array_map('trim', $data[0]);
-        unset($data[0]);
-
-        $results = [];
-        foreach ($data as $row) {
-            $row = array_combine($header, $row);
-
-            $validator = Validator::make($row, [
-                'name' => 'required|string|max:255',
-                'asset_running_number' => 'required|string|max:255|unique:assets,asset_running_number',
-                'asset_category_id' => 'required|exists:assets_category,id',
-                'asset_stable_unit' => 'required|integer|min:0',
-                'asset_purchase_cost' => 'nullable|numeric|min:0',
-                'asset_sales_cost' => 'nullable|numeric|min:0',
-                'asset_unit_measure' => 'required|string|max:255',
-                'asset_branch_id' => 'required|exists:assets_branch,id',
-                'asset_current_unit' => 'required|integer|min:0',
+        try {
+            $request->validate([
+                'csv_file' => 'required|file|mimes:csv,txt',
             ]);
 
-            if ($validator->fails()) {
-                $results[] = [
-                    'row' => $row,
-                    'success' => false,
-                    'errors' => $validator->errors(),
-                ];
-                continue;
+            $path = $request->file('csv_file')->getRealPath();
+
+            $rows = [];
+            if (($handle = fopen($path, 'r')) !== false) {
+                // Read the header
+                $header = fgetcsv($handle);
+                $header = array_map('trim', $header);
+
+                // Read the rest of the rows
+                while (($data = fgetcsv($handle)) !== false) {
+                    // Combine header and data
+                    $row = array_combine($header, $data);
+
+                    // Clean multiline fields, e.g. name and description
+                    if (isset($row['name'])) {
+                        $row['name'] = preg_replace("/[\r\n]+/", " ", trim($row['name']));
+                    }
+                    if (isset($row['asset_description'])) {
+                        $row['asset_description'] = preg_replace("/[\r\n]+/", " ", trim($row['asset_description']));
+                    }
+
+                    $rows[] = $row;
+                }
+                fclose($handle);
+            } else {
+                throw new Exception('Unable to open CSV file');
             }
 
-            DB::beginTransaction();
-            try {
-                if (Assets::where('asset_running_number', $row['asset_running_number'])->exists()) {
+            $results = [];
+            foreach ($rows as $row) {
+                // Sanitize currency values
+                $row['asset_purchase_cost'] = $this->sanitizeCurrency($row['asset_purchase_cost'] ?? null);
+                $row['asset_sales_cost'] = $this->sanitizeCurrency($row['asset_sales_cost'] ?? null);
 
-                    $id = Assets::where('asset_running_number', $row['asset_running_number'])->value('id');
-                    if (AssetsBranchValues::where('asset_id', $id, 'asset_branch_id', $row['asset_branch_id'])->exists()) {
+                // Validation and rest of your code unchanged...
+                $validator = Validator::make($row, [
+                    'name' => 'required|string|max:255',
+                    'asset_running_number' => 'required|string|max:255',
+                    'asset_category' => 'required|string|max:255',
+                    'asset_stable_unit' => 'required|integer|min:0',
+                    'asset_purchase_cost' => 'nullable|numeric|min:0',
+                    'asset_sales_cost' => 'nullable|numeric|min:0',
+                    'asset_unit_measure' => 'required|string|max:255',
+                    'asset_branch' => 'required|string|max:255',
+                    'asset_current_unit' => 'required|integer|min:0',
+                    'asset_description' => 'nullable|string',
+                ]);
 
-                        continue;
+                if ($validator->fails()) {
+                    $results[] = [
+                        'row' => $row,
+                        'success' => false,
+                        'errors' => $validator->errors(),
+                    ];
+                    continue;
+                }
+
+                DB::beginTransaction();
+                try {
+                    // Your existing DB logic here (unchanged) ...
+                    $branchId = AssetsBranch::firstOrCreate(['name' => $row['asset_branch']])->id;
+                    $categoryId = AssetsCategory::firstOrCreate(['name' => $row['asset_category']])->id;
+
+                    $existingAsset = Assets::where('asset_running_number', $row['asset_running_number'])->first();
+
+                    if ($existingAsset) {
+                        $exists = AssetsBranchValues::where('asset_id', $existingAsset->id)
+                            ->where('asset_branch_id', $branchId)
+                            ->exists();
+
+                        if (!$exists) {
+                            AssetsBranchValues::create([
+                                'asset_id' => $existingAsset->id,
+                                'asset_branch_id' => $branchId,
+                                'asset_location_id' => null,
+                                'asset_current_unit' => $row['asset_current_unit'],
+                            ]);
+                        }
+
+                        $results[] = [
+                            'row' => $row,
+                            'success' => true,
+                            'asset_id' => $existingAsset->id,
+                        ];
                     } else {
+                        $asset = Assets::create([
+                            'name' => $row['name'],
+                            'asset_running_number' => $row['asset_running_number'],
+                            'asset_category_id' => $categoryId,
+                            'asset_stable_unit' => $row['asset_stable_unit'],
+                            'asset_purchase_cost' => is_numeric($row['asset_purchase_cost']) ? $row['asset_purchase_cost'] : null,
+                            'asset_sales_cost' => is_numeric($row['asset_sales_cost']) ? $row['asset_sales_cost'] : null,
+                            'asset_unit_measure' => $row['asset_unit_measure'],
+                            'asset_description' => $row['asset_description'] ?? '',
+                            'assets_log' => Auth::user()->name . ' imported asset via CSV on ' . now(),
+                        ]);
 
                         AssetsBranchValues::create([
-                            'asset_id' => $id,
-                            'asset_branch_id' => $row['asset_branch_id'],
+                            'asset_id' => $asset->id,
+                            'asset_branch_id' => $branchId,
                             'asset_location_id' => null,
                             'asset_current_unit' => $row['asset_current_unit'],
                         ]);
+
+                        $results[] = [
+                            'row' => $row,
+                            'success' => true,
+                            'asset_id' => $asset->id,
+                        ];
                     }
-                } else {
 
-                    $asset = Assets::create([
-                        'name' => $row['name'],
-                        'asset_running_number' => $row['asset_running_number'],
-                        'asset_category_id' => $row['asset_category_id'],
-                        'asset_stable_unit' => $row['asset_stable_unit'],
-                        'asset_purchase_cost' => $row['asset_purchase_cost'],
-                        'asset_sales_cost' => $row['asset_sales_cost'],
-                        'asset_unit_measure' => $row['asset_unit_measure'],
-                        'assets_log' => Auth::user()->name . ' imported asset via CSV on ' . now(),
-                    ]);
-
-                    AssetsBranchValues::create([
-                        'asset_id' => $asset->id,
-                        'asset_branch_id' => $row['asset_branch_id'],
-                        'asset_location_id' => null,
-                        'asset_current_unit' => $row['asset_current_unit'],
-                    ]);
+                    DB::commit();
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    $results[] = [
+                        'row' => $row,
+                        'success' => false,
+                        'errors' => $e->getMessage(),
+                    ];
                 }
-
-                DB::commit();
-                $results[] = [
-                    'row' => $row,
-                    'success' => true,
-                    'asset_id' => $asset->id,
-                ];
-            } catch (Exception $e) {
-                DB::rollBack();
-                $results[] = [
-                    'row' => $row,
-                    'success' => false,
-                    'errors' => $e->getMessage(),
-                ];
             }
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Import complete',
-            'results' => $results,
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Import complete',
+                'results' => $results,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
+
+
+    // Add this helper method to the same controller
+    private function sanitizeCurrency($value)
+    {
+        if (is_null($value)) return null;
+
+        // Remove commas and anything that is not a digit or a dot
+        return preg_replace('/[^\d.]/', '', str_replace(',', '', $value));
+    }
+
 
     public function getAssetList()
     {
@@ -556,5 +612,45 @@ class AssetsController extends Controller
             'message' => 'List Data Assets',
             'data' => $formattedAssets
         ], 200);
+    }
+
+    public function getListByBranch(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'asset_branch_id' => 'required|exists:assets_branch,id',
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation Error',
+                    'data' => $validator->errors()
+                ], 422);
+            }
+
+            // Validate the branch ID
+            $branchId = $request->asset_branch_id;
+
+            $assets = Assets::with(['category', 'tag'])
+                ->whereHas('branchValues', function ($query) use ($branchId) {
+                    $query->where('asset_branch_id', $branchId);
+                })
+                ->with(['branchValues' => function ($query) use ($branchId) {
+                    $query->where('asset_branch_id', $branchId);
+                }])
+                ->latest()
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'List Data Assets',
+                'data' => AssetsResource::collection($assets),
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

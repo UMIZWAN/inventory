@@ -9,6 +9,7 @@ export const AssetMetaProvider = ({ children }) => {
   const [assets, setAssets] = useState([]);
   const [allAssets, setAllAssets] = useState([]);
   const [itemList, setItemList] = useState([]);
+  const [branchItem, setBranchItem] = useState([]);
   const [categories, setCategories] = useState([]);
   const [branches, setBranches] = useState([]);
   const [assetIn, setAssetIn] = useState([]);
@@ -64,6 +65,24 @@ export const AssetMetaProvider = ({ children }) => {
         setLoading(false);
       });
   };
+
+  const fetchBranchItem = (branchId) => {
+    setLoading(true);
+    api.get('/api/assets/get-list-branch', {
+      params: { asset_branch_id: branchId }
+    })
+      .then(response => {
+        if (response.data.success) {
+          setBranchItem(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching assets:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };  
 
   const getOneAsset = (id) => {
     api.get(`/api/assets/${id}`)
@@ -316,6 +335,8 @@ export const AssetMetaProvider = ({ children }) => {
         fetchAssets,
         fetchItemList,
         itemList,
+        fetchBranchItem,
+        branchItem,
         addAsset,
         updateAsset,
         categories,
