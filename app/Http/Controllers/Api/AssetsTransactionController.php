@@ -307,6 +307,16 @@ class AssetsTransactionController extends Controller
                         'status' => $item['status'],
                         'asset_unit' => $item['asset_unit']
                     ]);
+
+                    if ($request->asset_transaction_status == 'IN-TRANSIT') {
+                        $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
+                            ->where('asset_id', $item['asset_id'])
+                            ->first();
+
+                        if ($assetBranchValue) {
+                            $assetBranchValue->decrement('asset_current_unit', $item['asset_unit']);
+                        }
+                    }
                 }
 
                 DB::commit();
