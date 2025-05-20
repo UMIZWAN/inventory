@@ -13,7 +13,7 @@ function StockTransfer() {
 
   useEffect(() => {
     fetchAssetTransaction();
-    fetchBranchAssets();
+    // fetchBranchAssets();
   }, []);
 
 

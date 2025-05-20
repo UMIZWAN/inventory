@@ -380,7 +380,7 @@ class AssetsController extends Controller
             foreach ($branches as $branch) {
                 if (str_starts_with($branch->name, 'HQ')) {
                     AssetsBranchValues::create([
-                        'asset_id' => $asset->id,
+                        'asset_id' => $newAsset->id,
                         'asset_branch_id' => $branch->id,
                         'asset_location_id' => null,
                         'asset_current_unit' => 0,
@@ -400,6 +400,7 @@ class AssetsController extends Controller
             ], 500);
         }
     }
+
     public function getByBranch()
     {
         try {

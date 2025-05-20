@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 
 function ReceiveForm({ setShowReceiveForm, onSubmit }) {
   const { user } = useAuth();
-  const { assets, createAssetIn } = useAssetMeta();
+  const { assets, createAssetIn, fetchBranchAssets } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
   const [submitting, setSubmitting] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
@@ -26,6 +26,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
 
   useEffect(() => {
     fetchSuppliers();
+    fetchBranchAssets();
   }, []);
 
   const columns = [
