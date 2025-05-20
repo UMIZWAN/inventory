@@ -30,32 +30,20 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
   }, []);
 
   useEffect(() => {
-    if (form.status === "IN-TRANSIT") {
-      fetchBranchAssets();
-    } else if (form.status === "REQUESTED" && form.fromBranch) {
-      fetchBranchItem(form.fromBranch); // Call only if fromBranch is selected
+    if (form.status === "REQUESTED" && form.fromBranch) {
+      fetchBranchItem(form.fromBranch);
+    } else if (form.status === "IN-TRANSIT") {
+      fetchBranchItem(user?.branch_id);
     }
   }, [form.status, form.fromBranch]);
 
-  const itemOptions = form.status === "REQUESTED"
-    ? branchItem.map((item) => ({ 
+  const itemOptions = 
+     branchItem.map((item) => ({ 
       value: item.id, 
       label: item.name,
       qty: item.branch_values[0]?.asset_current_unit || "0"
     }))
-    : assets.map((a) => ({
-      value: a.id,
-      label: a.name,
-      qty: a.branch_values[0]?.asset_current_unit || "0"
-    }));
-
-  // useEffect(() => {
-  //   if (form.status === "IN-TRANSIT") {
-  //     fetchBranchAssets();
-  //   } else {
-  //     fetchItemList();
-  //   }
-  // }, [form.status]);
+    
 
   useEffect(() => {
     if (initialData) {
@@ -102,7 +90,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     const updatedItems = [...form.items];
 
     if (field === 'item') {
-      const selectedAsset = (branchItem || assets).find(a => a.id === Number(value));
+      const selectedAsset = branchItem.find(a => a.id === Number(value));
       updatedItems[index].item = value;
 
       if (selectedAsset) {
