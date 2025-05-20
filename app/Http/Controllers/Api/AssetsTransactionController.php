@@ -308,7 +308,7 @@ class AssetsTransactionController extends Controller
                         'asset_unit' => $item['asset_unit']
                     ]);
 
-                    if ($request->asset_transaction_status == 'IN-TRANSIT') {
+                    if ($request->assets_transaction_status == 'IN-TRANSIT') {
                         $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
                             ->where('asset_id', $item['asset_id'])
                             ->first();
