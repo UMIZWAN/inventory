@@ -14,6 +14,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\AssetsBranchValues;
 use App\Models\Assets;
+use App\Models\PurchaseOrder;
+use App\Models\Supplier;
+use App\Models\ShippingOption;
+use App\Models\Tax;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use App\Http\Resources\TransactionHistoryResource;
 
 class AssetsTransactionController extends Controller
 {
@@ -594,6 +601,40 @@ class AssetsTransactionController extends Controller
                 'success' => false,
                 'message' => 'Failed to generate next running number: ' . $e->getMessage(),
                 'data' => null
+            ], 500);
+        }
+    }
+    public function getHistory()
+    {
+        try {
+            Log::info("Attempting to fetch history for all assets");
+
+            // Eager load all necessary relationships for all assets
+            $assets = Assets::with([
+                'branchValues.branch',
+                'transactionItems.assetsTransaction'
+            ])->get();
+
+            if ($assets->isEmpty()) {
+                Log::warning("No assets found in database");
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No assets found'
+                ], 404);
+            }
+
+            Log::info("Successfully loaded history for all assets");
+            return TransactionHistoryResource::collection($assets);
+        } catch (\Exception $e) {
+            Log::error("Error retrieving all assets history", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving assets history',
+                'error' => env('APP_DEBUG') ? $e->getMessage() : null
             ], 500);
         }
     }

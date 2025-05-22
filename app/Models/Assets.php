@@ -47,6 +47,10 @@ class Assets extends Model
         return $this->hasMany(AssetsBranchValues::class, 'asset_id');
     }
 
+    public function transactionItems(){
+        return $this->hasMany(AssetsTransactionItemList::class,'asset_id');
+    }
+
     public function category()
     {
         return $this->belongsTo(AssetsCategory::class, 'asset_category_id');
