@@ -8,7 +8,7 @@ import { router } from "@inertiajs/react";
 function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
   const { user } = useAuth();
   const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
-  const { fetchShipping, shipping } = useOptions();
+  const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     requester: user?.id || "",
@@ -21,12 +21,13 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     shipping: "",
     items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
-    purpose: [],
+    purpose: "",
   });
 
   useEffect(() => {
     fetchShipping();
     fetchBranches();
+    fetchInvType();
   }, []);
 
   useEffect(() => {
@@ -37,13 +38,12 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     }
   }, [form.status, form.fromBranch]);
 
-  const itemOptions = 
-     branchItem.map((item) => ({ 
-      value: item.id, 
+  const itemOptions =
+    branchItem.map((item) => ({
+      value: item.id,
       label: item.name,
       qty: item.branch_values[0]?.asset_current_unit || "0"
     }))
-    
 
   useEffect(() => {
     if (initialData) {
@@ -60,7 +60,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         purpose: initialData.purpose || [],
       });
     }
-  }, [initialData, user]);
+  }, []);
 
   const columns = [
     {
@@ -113,17 +113,13 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (name === "purpose") {
-      const updatedPurpose = checked
-        ? [...form.purpose, value]
-        : form.purpose.filter((p) => p !== value);
-      setForm({ ...form, purpose: updatedPurpose });
-    } else {
-      setForm(prev => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+  
 
   const totalAmount = (form.items).reduce((sum, item) => {
     const qty = parseFloat(item.quantity) || 0;
@@ -179,7 +175,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         </button>
 
         <h2 className="text-2xl font-semibold mb-4 text-center">
-          {form.status === "REQUESTED" ? "Transfer Request" : "Stock Transfer "}
+          {form.status === "REQUESTED" ? "Stock Request" : "Stock Transfer "}
 
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -258,20 +254,30 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
             </div>
 
             <div>
-              <label className="block font-medium mb-1">Status</label>
+              <label className="block mb-1 font-medium">Purpose</label>
               <select
-                name="status"
-                value={form.status}
+                name="purpose"
+                value={form.purpose}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                readOnly
               >
-                <option value="REQUESTED">REQUEST</option>
-                {user.approve_reject_transaction && (
-                  <option value="IN-TRANSIT">IN-TRANSIT</option>
-                )}
+                <option value="">[Select Type]</option>
+                {invType.map((inv) => (
+                  <option key={inv.id} value={inv.id} >{inv.asset_transaction_purpose_name}</option>
+                ))}
               </select>
             </div>
+
+            {/* <div>
+              <label className="block font-medium mb-1">Status</label>
+              <input
+                type="text"
+                name="status"
+                value={form.status}
+                readOnly
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
+              />
+            </div> */}
 
           </div>
 

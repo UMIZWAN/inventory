@@ -89,7 +89,7 @@ export default function TransferList({ status, mode }) {
         assets_transaction_status: newStatus,
         assets_transaction_remark: txn.assets_transaction_remark || "",
       };
-      
+
       if (newStatus === "IN-TRANSIT" && shippingId) {
         payload.assets_shipping_option_id = shippingId;
       }
@@ -232,10 +232,10 @@ export default function TransferList({ status, mode }) {
 
   return (
     <>
-      {showTransferForm && (
+      {showTransferForm?.show && (
         <TransferForm
           setShowTransferForm={setShowTransferForm}
-          initialData={null}
+          initialData={{ status: showTransferForm.status }}
           onSubmit={createTransfer}
         />
       )}
@@ -252,23 +252,36 @@ export default function TransferList({ status, mode }) {
       <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Transfer List</h1>
-          {user?.add_edit_transaction && (
-            <a
-              href="/items/asset-transfer" // Change this to your actual transfer page route
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => {
-                e.preventDefault(); // Prevent default to allow JS handling
-                setShowTransferForm(true); // Opens modal if not right-clicked
-              }}
-              onContextMenu={() => {
-                // Allow right-click to open in new tab naturally
-              }}
-              className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2 cursor-pointer"
-            >
-              + Request/Transfer
-            </a>
-          )}
+          <div className="flex items-center gap-2">
+            {user?.add_edit_transaction && (
+              <a
+                href="/items/asset-transfer"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowTransferForm({ show: true, status: "REQUESTED" });
+                }}
+                className="rounded-full bg-amber-400 text-white px-4 py-2 hover:bg-amber-500 text-sm flex items-center gap-2 cursor-pointer"
+              >
+                + Request
+              </a>
+            )}
+            {user?.add_edit_transaction && (
+              <a
+                href="/items/asset-transfer"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowTransferForm({ show: true, status: "IN-TRANSIT" });
+                }}
+                className="rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 text-sm flex items-center gap-2 cursor-pointer"
+              >
+                + Transfer
+              </a>
+            )}
+          </div>
         </div>
 
         <TransactionFilter
