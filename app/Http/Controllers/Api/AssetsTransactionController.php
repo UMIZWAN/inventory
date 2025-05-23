@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AssetsTransactionResource;
+use App\Http\Resources\ReportResource;
 use App\Models\AssetsTransaction;
 use App\Models\AssetsTransactionItemList;
 use Carbon\Carbon;
@@ -21,6 +22,7 @@ use App\Models\Tax;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Http\Resources\TransactionHistoryResource;
+use App\Models\AssetsBranch;
 
 class AssetsTransactionController extends Controller
 {
@@ -347,7 +349,7 @@ class AssetsTransactionController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED',
+                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED,IN PROGRESS,COMPLETED',
             ]);
 
             if ($validator->fails()) {
@@ -489,6 +491,82 @@ class AssetsTransactionController extends Controller
                     ], 200);
                 }
             }
+
+            if ($transaction->assets_transaction_type == 'ASSET OUT' && $transaction->assets_transaction_status == 'IN PROGRESS') {
+
+                $validator = Validator::make($request->all(), [
+                    'assets_transaction_item_list.*.asset_unit' => 'required|integer'
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation error',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+
+                // $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+
+                try {
+                    DB::beginTransaction();
+
+                    foreach ($request->input('assets_transaction_item_list') as $inputItem) {
+                        $assetId = $inputItem['asset_id'];
+                        $assetUnit = $inputItem['asset_unit'];
+                        // Get the matching item from DB
+                        $transactionItem = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
+                            ->where('asset_id', $assetId)
+                            ->first();
+
+                        if ($assetUnit > $transactionItem->asset_unit) {
+                            throw new Exception("Cannot receive more than available units for Asset ID {$assetId}");
+                        }
+
+                        if (!$transactionItem) {
+                            continue; // Or handle this case with a warning if needed
+                        }
+
+                        // Calculate new value
+                        $used = $transactionItem->asset_unit - $assetUnit;
+
+                        $transactionItem->update([
+                            'asset_unit' => $used
+                        ]);
+
+                        $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                            ->where('asset_id', $assetId)
+                            ->first();
+
+                        if ($assetBranchToValue) {
+                            $assetBranchToValue->increment('asset_current_unit', $assetUnit);
+                        }
+                    }
+
+                    $transaction->update([
+                        'assets_transaction_status' => $request->assets_transaction_status,
+                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
+                        'received_by' => Auth::user()->id,
+                        'received_at' => Carbon::now()
+                    ]);
+
+                    DB::commit();
+
+                    return response()->json([
+                        'message' => 'Asset received successfully',
+                        'data' => new AssetsTransactionResource($transaction)
+                    ], 200);
+                } catch (Exception $e) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to process asset out transaction',
+                        'error' => env('APP_DEBUG') ? $e->getMessage() : null
+                    ], 500);
+                }
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unsupported transaction type for update',
@@ -604,38 +682,37 @@ class AssetsTransactionController extends Controller
             ], 500);
         }
     }
-    public function getHistory()
+    public function getReport(Request $request)
     {
-        try {
-            Log::info("Attempting to fetch history for all assets");
+        // item code - asset
+        // stock in date - asset transaction item list created at
+        // stock out date - asset transaction item list created at
+        // stock in qty - asset transaction item list asset unit sum
+        // stock out qty - asset transaction item list asset unit sum
+        // stock in from - asset transaction supplier id , asset from branch id
+        // stock out purpose - asset transaction purpose id
+        // stock in /out type - asset transaction type
+        // stock current qty - asset branch values asset current unit
 
-            // Eager load all necessary relationships for all assets
-            $assets = Assets::with([
-                'branchValues.branch',
-                'transactionItems.assetsTransaction'
-            ])->get();
+        $data = Assets::with([
+            'transactionItems' => function ($query) {
+                $query->select('id', 'asset_id', 'asset_transaction_id', 'created_at', 'asset_unit');
+            },
+            'transactionItems.assetsTransaction' => function ($query) {
+                $query->select('id', 'assets_transaction_type', 'assets_transaction_purpose_id', 'supplier_id', 'assets_from_branch_id', 'assets_to_branch_id');
+            },
+            'branchValues' => function ($query) {
+                $query->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit');
+            },
+            'transactionItems.assetsTransaction.purpose' => function ($query) {
+                $query->select('id', 'asset_transaction_purpose_name');
+            },
+        ])->get();
 
-            if ($assets->isEmpty()) {
-                Log::warning("No assets found in database");
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No assets found'
-                ], 404);
-            }
-
-            Log::info("Successfully loaded history for all assets");
-            return TransactionHistoryResource::collection($assets);
-        } catch (\Exception $e) {
-            Log::error("Error retrieving all assets history", [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error retrieving assets history',
-                'error' => env('APP_DEBUG') ? $e->getMessage() : null
-            ], 500);
-        }
+        return response()->json([
+            // 'data' => $data
+            'data' => ReportResource::collection($data)
+            // 'data' => new ReportResource($data)
+        ], 201);
     }
 }

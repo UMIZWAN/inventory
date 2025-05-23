@@ -34,7 +34,7 @@ return new class extends Migration
       $table->foreignId('assets_shipping_option_id')->nullable()->constrained('shipping_option')->nullOnDelete();
 
       // STATUS only relevant for ASSET TRANSFER
-      $table->enum('assets_transaction_status', ['REQUESTED', 'REJECTED', 'APPROVED', 'IN-TRANSIT', 'RECEIVED'])->nullable();
+      $table->enum('assets_transaction_status', ['REQUESTED', 'REJECTED', 'APPROVED', 'IN-TRANSIT', 'RECEIVED', 'IN PROGRESS', 'COMPLETED'])->nullable();
 
       // PURPOSE: allow multiple purposes (JSON)
       $table->foreignId('assets_transaction_purpose_id')->nullable()->constrained('assets_transaction_purpose')->nullOnDelete();
