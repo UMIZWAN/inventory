@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import api from "../../api/api";
 import Layout from '../../components/layout/Layout';
 import { Head } from "@inertiajs/react";
+import ExportButton from "../../components/ExportButton";
 
 const MasterListPage = () => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredItems, setFilteredItems] = useState([]);
-    
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
@@ -97,22 +98,22 @@ const MasterListPage = () => {
         const range = [];
         const rangeWithDots = [];
         let l;
-        
+
         // Always include page 1
         range.push(1);
-        
+
         // Calculate the range of pages to show around current page
         for (let i = currentPage - delta; i <= currentPage + delta; i++) {
             if (i > 1 && i < totalPages) {
                 range.push(i);
             }
         }
-        
+
         // Always include the last page if there are more than 1 pages
         if (totalPages > 1) {
             range.push(totalPages);
         }
-        
+
         // Add dots where needed
         for (let i of range) {
             if (l) {
@@ -125,9 +126,33 @@ const MasterListPage = () => {
             rangeWithDots.push(i);
             l = i;
         }
-        
+
         return rangeWithDots;
     };
+
+    const exportData = filteredItems.map((item) => ({
+        "Asset Number": item.asset_running_number || "",
+        "Item Name": item.name || "",
+        "Category": item.asset_category_name || "",
+        "Total Quantity": item.total_units || 0,
+        "Status": (() => {
+            const total = item.total_units;
+            const stable = item.asset_stable_unit;
+            if (!total || !stable) return "Critical Stock";
+            const pct = (total / stable) * 100;
+            if (pct >= 100) return "In Stock";
+            else if (pct >= 50) return "Low Stock";
+            else return "Critical Stock";
+        })(),
+        "Branch Distribution": item.branch_values
+            ? item.branch_values
+                .map(
+                    (branch) =>
+                        `${branch.asset_branch_name}: ${branch.asset_current_unit} ${item.asset_unit_measure}`
+                )
+                .join(" \n ")
+            : "",
+    }));
 
     return (
         <Layout>
@@ -156,6 +181,13 @@ const MasterListPage = () => {
                                 />
                             </svg>
                         </div>
+                    </div>
+                    <div className="mt-4">
+                        <ExportButton
+                            data={exportData}
+                            filename="master_inventory_list"
+                            sheetName="Inventory"
+                        />
                     </div>
                 </div>
                 {loading ? (
@@ -207,7 +239,7 @@ const MasterListPage = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     <div className="text-sm text-gray-500">
-                                                        {item.total_units || 0} 
+                                                        {item.total_units || 0}
                                                         {/* {item.asset_stable_unit || 0} {item.asset_unit_measure} */}
                                                     </div>
                                                 </td>
@@ -253,11 +285,10 @@ const MasterListPage = () => {
                                     <button
                                         onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
                                         disabled={currentPage === 1}
-                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
-                                            currentPage === 1
-                                                ? "text-gray-400 cursor-not-allowed"
-                                                : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === 1
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-gray-700 hover:bg-gray-50"
+                                            }`}
                                     >
                                         Previous
                                     </button>
@@ -271,11 +302,10 @@ const MasterListPage = () => {
                                                 <button
                                                     key={`page-${number}`}
                                                     onClick={() => paginate(number)}
-                                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
-                                                        currentPage === number
-                                                            ? "bg-blue-600 text-white"
-                                                            : "text-gray-700 hover:bg-gray-50"
-                                                    }`}
+                                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${currentPage === number
+                                                        ? "bg-blue-600 text-white"
+                                                        : "text-gray-700 hover:bg-gray-50"
+                                                        }`}
                                                 >
                                                     {number}
                                                 </button>
@@ -285,11 +315,10 @@ const MasterListPage = () => {
                                     <button
                                         onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
                                         disabled={currentPage === totalPages || totalPages === 0}
-                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
-                                            currentPage === totalPages || totalPages === 0
-                                                ? "text-gray-400 cursor-not-allowed"
-                                                : "text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === totalPages || totalPages === 0
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-gray-700 hover:bg-gray-50"
+                                            }`}
                                     >
                                         Next
                                     </button>

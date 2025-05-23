@@ -5,6 +5,7 @@ import { FiEye, FiEdit2, FiTrash2, FiCopy } from 'react-icons/fi';
 import Layout from '../../components/layout/Layout';
 import { useAssetMeta } from '../../context/AssetsContext';
 import placeholder from '../../assets/image/placeholder.png';
+import ExportButton from '../../components/ExportButton';
 import { useAuth } from '../../context/AuthContext';
 import { Head } from "@inertiajs/react";
 import api from '../../api/api';
@@ -52,6 +53,17 @@ const Assets = () => {
 
         return matchesSearch && matchesCategory && matchesStatus;
     });
+
+    const exportData = filteredAssets.map(asset => ({
+        Code: asset.asset_running_number || '—',
+        Name: asset.name || '—',
+        Type: asset.asset_type || '—',
+        Category: asset.asset_category_name || '—',
+        'Unit Cost': user?.add_edit_asset ? `RM ${Number(asset.asset_purchase_cost).toFixed(2)}` : '',
+        Price: `RM ${Number(asset.asset_sales_cost).toFixed(2)}`,
+        Branch: asset.branch_values[0]?.asset_branch_name || '—',
+        Quantity: asset.branch_values[0]?.asset_current_unit || 0,
+    }));
 
     // Get current items for pagination
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -145,7 +157,7 @@ const Assets = () => {
                         )}
                     </div>
 
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 mb-4">
                         {/* Search Input */}
                         <div className="w-full lg:w-1/3">
                             <input
@@ -160,11 +172,11 @@ const Assets = () => {
                         {/* Filters */}
                         <div className="flex flex-wrap gap-4">
                             <div>
-                                <label className="block mb-1">Categories:</label>
+                                {/* <label className="block mb-1 text-xs font-bold">Categories:</label> */}
                                 <select
                                     value={filters.category}
                                     onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                                    className="px-2 py-1 text-sm border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="px-2 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">All Categories</option>
                                     {[...new Set(assets.map(a => a.asset_category_name).filter(Boolean))].map(cat => (
@@ -173,6 +185,10 @@ const Assets = () => {
                                 </select>
                             </div>
                         </div>
+                    </div>
+
+                    <div className='flex justify-end mb-4'>
+                        <ExportButton data={exportData} filename="Assets_List" sheetName="Assets" />
                     </div>
 
                     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -237,16 +253,16 @@ const Assets = () => {
                                                             <div className="text-xs text-gray-500">{asset.asset_type}</div>
                                                         </div>
                                                         {user?.add_edit_asset && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDuplicate(asset);
-                                                            }}
-                                                            title="Duplicate"
-                                                            className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1"
-                                                        >
-                                                            <FiCopy className="w-4 h-4" />
-                                                        </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDuplicate(asset);
+                                                                }}
+                                                                title="Duplicate"
+                                                                className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1"
+                                                            >
+                                                                <FiCopy className="w-4 h-4" />
+                                                            </button>
                                                         )}
                                                     </div>
 
