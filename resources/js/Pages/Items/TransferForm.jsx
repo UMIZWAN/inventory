@@ -4,8 +4,9 @@ import { useAssetMeta } from "../../context/AssetsContext";
 import { useAuth } from "../../context/AuthContext";
 import { useOptions } from "../../context/OptionContext";
 import { router } from "@inertiajs/react";
+import Layout from "../../components/layout/Layout";
 
-function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
+function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, transferStatus }) {
   const { user } = useAuth();
   const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
@@ -14,7 +15,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     requester: user?.id || "",
     department: "",
     date: new Date().toISOString().slice(0, 10),
-    status: "REQUESTED",
+    status: transferStatus,
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: user?.branch_id || "",
@@ -23,6 +24,15 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     remarks: "",
     purpose: "",
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status"); // "REQUESTED" or "IN-TRANSIT"
+
+    // if (status) {
+    //   setShowTransferForm({ show: true, status });
+    // }
+  }, []);
 
   useEffect(() => {
     fetchShipping();
@@ -51,10 +61,10 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         requester: user?.id || "",
         department: "",
         date: initialData.date || new Date().toISOString().slice(0, 10),
-        status: initialData.status || "REQUESTED",
+        status: transferStatus,
         transaction_type: "ASSET_TRANSFER",
         fromBranch: initialData.fromBranch || "",
-        toBranch: initialData.toBranch || "",
+        toBranch: initialData.toBranch || user?.branch_id || "",
         items: initialData.items || [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
         remarks: initialData.remarks || "",
         purpose: initialData.purpose || [],
@@ -119,7 +129,6 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
       [name]: value,
     }));
   };
-  
 
   const totalAmount = (form.items).reduce((sum, item) => {
     const qty = parseFloat(item.quantity) || 0;
@@ -163,16 +172,17 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
+    <>
+    {/* <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> */}
+      <div className="overflow-x-auto bg-white shadow rounded-lg p-12 space-y-4">
 
-        <button
+        {/* <button
           onClick={() => setShowTransferForm(false)}
           className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
           aria-label="Close"
         >
           &times;
-        </button>
+        </button> */}
 
         <h2 className="text-2xl font-semibold mb-4 text-center">
           {form.status === "REQUESTED" ? "Stock Request" : "Stock Transfer "}
@@ -362,7 +372,8 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
           </div>
         </form>
       </div>
-    </div>
+    
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import api from "../api/api";
 import TransferForm from "../Pages/Items/TransferForm";
@@ -15,6 +15,7 @@ export default function TransferList({ status, mode }) {
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [showTransferForm, setShowTransferForm] = useState(false);
+  const [transferStatus, setTransferStatus] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -27,6 +28,16 @@ export default function TransferList({ status, mode }) {
     itemName: '',
   });
 
+  console.log(assets)
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const status = query.get('status');
+
+    if (status) {
+      setTransferStatus(status);
+      setShowTransferForm(true);
+    }
+  }, []);
 
   const openModal = (txn) => {
     if (status === "DRAFT") {
@@ -237,6 +248,7 @@ export default function TransferList({ status, mode }) {
           setShowTransferForm={setShowTransferForm}
           initialData={{ status: showTransferForm.status }}
           onSubmit={createTransfer}
+          status={transferStatus}
         />
       )}
 
@@ -252,10 +264,10 @@ export default function TransferList({ status, mode }) {
       <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Transfer List</h1>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             {user?.add_edit_transaction && (
               <a
-                href="/items/asset-transfer"
+                href="/items/asset-transfer?status=REQUESTED"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => {
@@ -269,7 +281,7 @@ export default function TransferList({ status, mode }) {
             )}
             {user?.add_edit_transaction && (
               <a
-                href="/items/asset-transfer"
+                href="/items/asset-transfer?status=IN-TRANSIT"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => {
@@ -281,7 +293,7 @@ export default function TransferList({ status, mode }) {
                 + Transfer
               </a>
             )}
-          </div>
+          </div> */}
         </div>
 
         <TransactionFilter
@@ -352,6 +364,15 @@ export default function TransferList({ status, mode }) {
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusStyle(txn.assets_transaction_status)}`}>
                       {txn.assets_transaction_status}
                     </span>
+                    <p className="text-xs italic mt-1 text-gray-600">
+                      By: {
+                        txn.assets_transaction_status === "RECEIVED"
+                          ? txn.received_by_name
+                          : txn.assets_transaction_status === "APPROVED"
+                            ? txn.approved_by_name
+                            : txn.created_by_name
+                      }
+                    </p>
                   </td>
                   <td className="px-4 py-2 border space-x-2">
                     <button
