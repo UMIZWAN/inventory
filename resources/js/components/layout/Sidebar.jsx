@@ -231,6 +231,14 @@ const Sidebar = () => {
                 </div>
                 <ul className="space-y-1">
                     {user?.view_reports && (
+                        <Link href="/inventory">
+                        <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
+                          <TbReportMoney className="text-sky-600" />
+                          <span className="font-medium">Inventory</span>
+                        </li>
+                      </Link>
+                    )}
+                    {user?.view_reports && (
                         <Link href="/inv-list">
                         <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                           <TbReportMoney className="text-sky-600" />
