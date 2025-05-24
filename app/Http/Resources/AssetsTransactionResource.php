@@ -32,6 +32,7 @@ class AssetsTransactionResource extends JsonResource
             'assets_to_branch_name' => $this->toBranch->name ?? null,
             'assets_transaction_log' => $this->assets_transaction_log,
             'assets_transaction_total_cost' => $this->assets_transaction_total_cost,
+            'attachment' => $this->attachment,
 
             'created_by' => $this->created_by,
             'created_by_name' => $this->createdBy->name ?? null,

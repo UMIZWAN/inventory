@@ -99,7 +99,6 @@ class AssetsTransactionController extends Controller
             if ($request->assets_transaction_type == 'ASSET OUT') {
 
                 $validator = Validator::make($request->all(), [
-                    // 'assets_transaction_running_number' => 'required|string|unique:assets_transaction,assets_transaction_running_number',
                     'assets_transaction_type' => 'required|string',
                     'assets_recipient_name' => 'nullable|string',
                     'assets_from_branch_id' => 'required|integer',
@@ -109,7 +108,8 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_item_list' => 'required|array|min:1',
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
-                    'assets_transaction_item_list.*.asset_unit' => 'required|integer'
+                    'assets_transaction_item_list.*.asset_unit' => 'required|integer',
+                    'attachment' => 'nullable|file|mimes:pdf,xls,xlsx,doc,docx|max:10240', // Added attachment validation (max 10MB)
                 ]);
 
                 if ($validator->fails()) {
@@ -120,46 +120,67 @@ class AssetsTransactionController extends Controller
                     ], 422);
                 }
 
+
                 DB::beginTransaction();
 
-                $transaction = AssetsTransaction::create([
-                    'assets_transaction_running_number' => $request->assets_transaction_running_number,
-                    'assets_transaction_type' => $request->assets_transaction_type,
-                    'assets_recipient_name' => $request->assets_recipient_name,
-                    'assets_transaction_remark' => $request->assets_transaction_remark,
-                    'assets_transaction_purpose_id' => $request->assets_transaction_purpose_id,
-                    'assets_from_branch_id' => $request->assets_from_branch_id,
-                    'assets_transaction_total_cost' => $request->assets_transaction_total_cost,
-                    'created_by' => $request->created_by,
-                    'created_at' => $request->created_at,
-                ]);
-
-                foreach ($request->assets_transaction_item_list as $item) {
-                    AssetsTransactionItemList::create([
-                        'asset_transaction_id' => $transaction->id,
-                        'asset_id' => $item['asset_id'],
-                        'status' => $item['status'],
-                        'asset_unit' => $item['asset_unit']
-                    ]);
-                }
-
-                foreach ($request->assets_transaction_item_list as $item) {
-                    $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
-                        ->where('asset_id', $item['asset_id'])
-                        ->first();
-
-                    if ($assetBranchValue) {
-                        $assetBranchValue->decrement('asset_current_unit', $item['asset_unit']);
+                try {
+                    $attachmentPath = null;
+                    // Handle attachment upload
+                    if ($request->hasFile('attachment')) {
+                        $attachment = $request->file('attachment');
+                        // Store the file in the 'public/attachments' directory
+                        $attachmentPath = $attachment->store('public/attachments');
+                        // Get the URL for the stored file (optional, depends on how you serve files)
+                        // You might want to use Storage::url($attachmentPath) if serving directly via public disk
                     }
+
+                    $transaction = AssetsTransaction::create([
+                        'assets_transaction_running_number' => $request->assets_transaction_running_number,
+                        'assets_transaction_type' => $request->assets_transaction_type,
+                        'assets_recipient_name' => $request->assets_recipient_name,
+                        'assets_transaction_remark' => $request->assets_transaction_remark,
+                        'assets_transaction_purpose_id' => $request->assets_transaction_purpose_id,
+                        'assets_from_branch_id' => $request->assets_from_branch_id,
+                        'assets_transaction_total_cost' => $request->assets_transaction_total_cost,
+                        'created_by' => $request->created_by,
+                        'created_at' => $request->created_at,
+                        'attachment' => $attachmentPath, // Save the stored path
+                    ]);
+
+                    foreach ($request->assets_transaction_item_list as $item) {
+                        AssetsTransactionItemList::create([
+                            'asset_transaction_id' => $transaction->id,
+                            'asset_id' => $item['asset_id'],
+                            'status' => $item['status'],
+                            'asset_unit' => $item['asset_unit']
+                        ]);
+                    }
+
+                    foreach ($request->assets_transaction_item_list as $item) {
+                        $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $request->assets_from_branch_id)
+                            ->where('asset_id', $item['asset_id'])
+                            ->first();
+
+                        if ($assetBranchValue) {
+                            $assetBranchValue->decrement('asset_current_unit', $item['asset_unit']);
+                        }
+                    }
+
+                    DB::commit();
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' created successfully',
+                        'data' => $transaction->load('transactionItems', 'fromBranch', 'purpose', 'createdBy')
+                    ], 201);
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to create asset transaction.',
+                        'error' => $e->getMessage()
+                    ], 500);
                 }
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' created successfully',
-                    'data' => $transaction->load('transactionItems', 'fromBranch', 'purpose', 'createdBy')
-                ], 201);
             }
 
             if ($request->assets_transaction_type == 'ASSET IN') {
