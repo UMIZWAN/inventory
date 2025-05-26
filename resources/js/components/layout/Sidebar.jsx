@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FaChevronDown, FaChevronRight, FaFileInvoice } from 'react-icons/fa';
 import { FiShield, FiUsers, FiMapPin, FiTag, FiPackage, FiTruck, FiList, FiRepeat } from 'react-icons/fi';
-import { TbBuildingCommunity, TbReportMoney } from "react-icons/tb";
+import { TbBuildingCommunity, TbReportMoney, TbReportAnalytics } from "react-icons/tb";
 import { Link } from '@inertiajs/react';
 import { useAuth } from '../../context/AuthContext';
 import { useAssetMeta } from '../../context/AssetsContext';
@@ -233,7 +233,7 @@ const Sidebar = () => {
                     {user?.view_reports && (
                         <Link href="/inventory">
                         <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                          <TbReportMoney className="text-sky-600" />
+                          <TbReportAnalytics className="text-sky-600" />
                           <span className="font-medium">Inventory</span>
                         </li>
                       </Link>
