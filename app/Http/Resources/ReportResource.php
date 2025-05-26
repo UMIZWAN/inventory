@@ -34,7 +34,9 @@ class ReportResource extends JsonResource
                                 'asset_transaction_type' => $trx->assets_transaction_type,
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,
-                                'assets_from_branch_id' => $trx->assets_from_branch_id,
+                                'supplier_name' => $trx->supplier->supplier_name ?? null,
+                                // 'assets_from_branch_id' => $trx->assets_from_branch_id,
+                                // 'assets_from_branch_name' => $trx->fromBranch->name ?? null,
                                 'asset_unit' => $item->asset_unit,
                             ];
                         }); // No ->values() here yet, we'll concat first
@@ -53,6 +55,7 @@ class ReportResource extends JsonResource
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,
                                 'assets_from_branch_id' => $trx->assets_from_branch_id ?? $trx->supplier_id,
+                                'assets_from_branch_name' => $trx->fromBranch->name ?? null,
                                 'assets_to_branch_id' => $trx->assets_to_branch_id,
                                 'asset_unit' => $item->asset_unit,
                             ];
