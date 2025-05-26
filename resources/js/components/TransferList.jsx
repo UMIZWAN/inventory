@@ -370,7 +370,9 @@ export default function TransferList({ status, mode }) {
                           ? txn.received_by_name
                           : txn.assets_transaction_status === "APPROVED"
                             ? txn.approved_by_name
-                            : txn.created_by_name
+                            : txn.assets_transaction_status === "REJECTED"
+                              ? txn.rejected_by_name
+                              : txn.created_by_name
                       }
                     </p>
                   </td>
