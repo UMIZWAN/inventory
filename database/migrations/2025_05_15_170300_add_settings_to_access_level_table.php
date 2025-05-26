@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::table('assets_transaction', function (Blueprint $table) {
+            $table->string('attachment')->nullable()->after('assets_transaction_total_cost');
+        });
+
         Schema::table('access_level', function (Blueprint $table) {
             $table->boolean('settings')->default(false)->after('name');
         });
@@ -21,6 +25,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('assets_transaction', function (Blueprint $table) {
+            $table->dropColumn('attachment');
+        });
         Schema::table('access_level', function (Blueprint $table) {
             $table->dropColumn('settings');
         });

@@ -43,6 +43,10 @@ Route::get('/inv-list', function () {
     return inertia('Report/CheckoutList');
 });
 
+Route::get('/inventory', function () {
+    return inertia('Report/InventoryReport');
+});
+
 Route::prefix('items')->group(function () {
     Route::get('/master-list', fn() => Inertia::render('Items/MasterListPage'));
     Route::get('/item-list', fn() => Inertia::render('Items/Assets'));

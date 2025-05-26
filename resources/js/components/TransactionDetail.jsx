@@ -65,16 +65,16 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 
                         {/* Table Rows */}
                         {items.map((item, index) => {
-                            const { name, price, code } = getAssetDetails(item.asset_id);
-                            const quantity = item.asset_unit || 1;
+                            const price = item?.assets.asset_sales_cost;
+                            const quantity = item?.asset_unit;
                             const total = price * quantity;
                             totalAmount += total;
 
                             return (
                                 <View key={index} style={styles.tableRow}>
                                     {/* <Text style={styles.tableCell}>{index + 1}</Text> */}
-                                    <Text style={styles.tableCell}>{code}</Text>
-                                    <Text style={styles.tableCell}>{name}</Text>
+                                    <Text style={styles.tableCell}>{item?.assets.asset_running_number}</Text>
+                                    <Text style={styles.tableCell}>{item?.asset_name}</Text>
                                     <Text style={styles.tableCell}>{quantity}</Text>
                                     <Text style={styles.tableCell}>RM {Number(price).toFixed(2)}</Text>
                                     <Text style={styles.tableCell}>RM {Number(total).toFixed(2)}</Text>
@@ -86,6 +86,13 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     {/* Total Amount */}
                     <View style={styles.totalContainer}>
                         <Text style={styles.totalText}>Total Amount: RM {totalAmount.toFixed(2)}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    {/* Total Amount */}
+                    <View style={{ marginTop: 10}}>
+                        <Text style={styles.label}>Remark: {transaction?.assets_transaction_remark || '-'}</Text>
                     </View>
                 </View>
 
@@ -111,25 +118,10 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 // Main Component
 function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
-    const { assets, suppliers } = useAssetMeta();
+    const getItemList = transaction.assets_transaction_item_list || transaction.transaction_items || [];
 
-    const getAssetDetails = (assetId) => {
-        const asset = assets.find((a) => a.id === assetId);
-        return asset
-            ? { name: asset.name, price: type === "receive" ? asset.asset_purchase_cost : asset.asset_sales_cost, code: asset.asset_running_number }
-            : { name: "-", price: 0, code: "-" };
-    };
-
-    const getItemList = () => {
-        // if (type === "receive") {
-        //     return transaction.items || [];
-        // } else {
-        return transaction.assets_transaction_item_list || transaction.transaction_items || [];
-        // }
-    };
-
-    const totalAmount = getItemList().reduce((sum, item) => {
-        const { price } = getAssetDetails(item.asset_id);
+    const totalAmount = getItemList.reduce((sum, item) => {
+        const price = item?.assets.asset_sales_cost
         const quantity = (item.asset_unit || 1);
         return sum + price * quantity;
     }, 0);
@@ -148,7 +140,6 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                             document={
                                 <InvoicePDF
                                     transaction={transaction}
-                                    getAssetDetails={getAssetDetails}
                                     type={type}
                                 />
                             }
@@ -197,15 +188,15 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {getItemList().map((item, index) => {
-                                const id = item.asset_id;
-                                const { name, price, code } = getAssetDetails(id);
-                                const quantity = item.asset_unit || 1;
+                            {getItemList.map((item, index) => {
+                                // const id = item.asset_id;
+                                const price = item?.assets.asset_sales_cost
+                                const quantity = item?.asset_unit
                                 const total = price * quantity;
                                 return (
                                     <tr key={index}>
-                                        <td className="px-4 py-2 border text-center">{code}</td>
-                                        <td className="px-4 py-2 border w-60">{name}</td>
+                                        <td className="px-4 py-2 border text-center">{item?.assets.asset_running_number}</td>
+                                        <td className="px-4 py-2 border w-60">{item?.asset_name}</td>
                                         <td className="px-4 py-2 border text-center">{quantity}</td>
                                         <td className="px-4 py-2 border text-center">RM {Number(price).toFixed(2)}</td>
                                         <td className="px-4 py-2 border text-center">RM {Number(total).toFixed(2)}</td>

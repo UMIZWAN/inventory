@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class AssetsTransaction extends Model
@@ -30,6 +31,7 @@ class AssetsTransaction extends Model
         'assets_transaction_remark',
         'assets_transaction_log',
         'assets_transaction_total_cost',
+        'attachment', // Add this line
         'created_by',
         'updated_by',
         'received_by',

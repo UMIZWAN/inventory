@@ -28,6 +28,14 @@ class AssetsBranch extends Model
     {
         return $this->hasMany(AssetsBranchValues::class, 'assets_location_id');
     }
+    public function fromBranch()
+    {
+        return $this->hasMany(AssetsTransaction::class, 'assets_from_branch_id');
+    }
+    public function toBranch()
+    {
+        return $this->hasMany(AssetsTransaction::class, 'assets_to_branch_id');
+    }
     public function user()
     {
         return $this->hasMany(User::class, 'branch_id');

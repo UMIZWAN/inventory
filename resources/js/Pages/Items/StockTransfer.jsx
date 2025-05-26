@@ -3,6 +3,7 @@ import Layout from "../../components/layout/Layout";
 import TransferList from "../../components/TransferList";
 import CheckoutForm from "../../components/CheckoutForm";
 import ReceiveList from "../../components/ReceiveList";
+import TransferForm from "./TransferForm";
 import { useAuth } from "../../context/AuthContext";
 import { useAssetMeta } from "../../context/AssetsContext";
 import { Head } from "@inertiajs/react";
@@ -16,8 +17,6 @@ function StockTransfer() {
     // fetchBranchAssets();
   }, []);
 
-
-
   const incomingTransfersCount = assetTransfer.filter(
     (txn) =>
       txn.assets_transaction_status === "IN-TRANSIT" &&
@@ -29,7 +28,7 @@ function StockTransfer() {
       ? [{ key: "asset_in", label: "Marketing In" }]
       : []),
     {
-      key: "asset_transfer",
+      key: "asset_transfer_list",
       label: (
         <>
           Marketing Transfer{" "}
@@ -41,6 +40,10 @@ function StockTransfer() {
         </>
       )
     },
+    ...(user?.add_edit_transaction
+    ? [{ key: "asset_request", label: "Request" }] : []),
+    ...(user?.add_edit_transaction
+    ? [{ key: "asset_transfer", label: "Transfer" }] : []),
     { key: "asset_out", label: "Invoice" },
   ];
 
@@ -55,8 +58,8 @@ function StockTransfer() {
             <button
               key={tab.key}
               className={`px-4 py-2 font-medium ${activeTab === tab.key
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-400 hover:text-sky-600"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-400 hover:text-sky-600"
                 }`}
               onClick={() => setActiveTab(tab.key)}
             >
@@ -66,8 +69,18 @@ function StockTransfer() {
         </div>
 
         {activeTab === "asset_in" && <ReceiveList />}
-        {activeTab === "asset_transfer" && (
+        {activeTab === "asset_transfer_list" && (
           <TransferList status={null} mode="both" />
+        )}
+        {activeTab === "asset_request" && (
+          <TransferForm mode="both"
+            transferStatus={"REQUESTED"}
+          />
+        )}
+        {activeTab === "asset_transfer" && (
+          <TransferForm mode="both"
+            transferStatus={"IN-TRANSIT"}
+          />
         )}
         {activeTab === "asset_out" && <CheckoutForm />}
       </div>

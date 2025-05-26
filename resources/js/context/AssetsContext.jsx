@@ -15,6 +15,7 @@ export const AssetMetaProvider = ({ children }) => {
   const [assetIn, setAssetIn] = useState([]);
   const [assetOut, setAssetOut] = useState([]);
   const [assetTransfer, setAssetTransfer] = useState([]);
+  const [report, setReport] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAssets = (branchId) => {
@@ -241,10 +242,10 @@ export const AssetMetaProvider = ({ children }) => {
         assets_from_branch_id: parseInt(form.fromBranch),
         assets_to_branch_id: parseInt(form.toBranch),
         assets_shipping_option_id: form.shipping,
+        assets_transaction_purpose_id: form.purpose,
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
-        // assets_transaction_purpose: form.purpose,
         assets_transaction_total_cost: totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
@@ -327,6 +328,20 @@ export const AssetMetaProvider = ({ children }) => {
     }
   };
 
+  const fetchReport = async (branchId) => {
+    setLoading(true);
+    try {
+      const res = await api.get('/api/report', {
+        params: { asset_branch_id: branchId }
+      });
+      setReport(res.data.data);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+    } finally {
+      setLoading(false);
+    }
+  }; 
+
   return (
     <AssetsContext.Provider
       value={{
@@ -359,6 +374,8 @@ export const AssetMetaProvider = ({ children }) => {
         createAssetIn,
         fetchAssetTransaction,
         allAssets,
+        fetchReport,
+        report,
       }}
     >
 

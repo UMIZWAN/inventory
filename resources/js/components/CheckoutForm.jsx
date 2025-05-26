@@ -8,7 +8,7 @@ import TransactionDetail from "./TransactionDetail";
 export default function CheckoutForm({ setShowCheckoutForm }) {
     const { user } = useAuth();
     const { fetchInvType, invType } = useOptions();
-    const { assets, createStockOut } = useAssetMeta();
+    const { assets, createStockOut, fetchBranchAssets } = useAssetMeta();
     const [type, setType] = useState("sold");
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -20,6 +20,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
 
     useEffect(() => {
         fetchInvType();
+        fetchBranchAssets();
     }, [])
 
     const [items, setItems] = useState([

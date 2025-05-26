@@ -4,29 +4,40 @@ import { useAssetMeta } from "../../context/AssetsContext";
 import { useAuth } from "../../context/AuthContext";
 import { useOptions } from "../../context/OptionContext";
 import { router } from "@inertiajs/react";
+import Layout from "../../components/layout/Layout";
 
-function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }) {
+function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, transferStatus }) {
   const { user } = useAuth();
   const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
-  const { fetchShipping, shipping } = useOptions();
+  const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     requester: user?.id || "",
     department: "",
     date: new Date().toISOString().slice(0, 10),
-    status: "REQUESTED",
+    status: transferStatus,
     transaction_type: "ASSET_TRANSFER",
     fromBranch: user?.branch_id || "",
     toBranch: user?.branch_id || "",
     shipping: "",
     items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
-    purpose: [],
+    purpose: "",
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status"); // "REQUESTED" or "IN-TRANSIT"
+
+    // if (status) {
+    //   setShowTransferForm({ show: true, status });
+    // }
+  }, []);
 
   useEffect(() => {
     fetchShipping();
     fetchBranches();
+    fetchInvType();
   }, []);
 
   useEffect(() => {
@@ -37,13 +48,12 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
     }
   }, [form.status, form.fromBranch]);
 
-  const itemOptions = 
-     branchItem.map((item) => ({ 
-      value: item.id, 
+  const itemOptions =
+    branchItem.map((item) => ({
+      value: item.id,
       label: item.name,
       qty: item.branch_values[0]?.asset_current_unit || "0"
     }))
-    
 
   useEffect(() => {
     if (initialData) {
@@ -51,16 +61,16 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
         requester: user?.id || "",
         department: "",
         date: initialData.date || new Date().toISOString().slice(0, 10),
-        status: initialData.status || "REQUESTED",
+        status: transferStatus,
         transaction_type: "ASSET_TRANSFER",
         fromBranch: initialData.fromBranch || "",
-        toBranch: initialData.toBranch || "",
+        toBranch: initialData.toBranch || user?.branch_id || "",
         items: initialData.items || [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
         remarks: initialData.remarks || "",
         purpose: initialData.purpose || [],
       });
     }
-  }, [initialData, user]);
+  }, []);
 
   const columns = [
     {
@@ -113,16 +123,11 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (name === "purpose") {
-      const updatedPurpose = checked
-        ? [...form.purpose, value]
-        : form.purpose.filter((p) => p !== value);
-      setForm({ ...form, purpose: updatedPurpose });
-    } else {
-      setForm(prev => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const totalAmount = (form.items).reduce((sum, item) => {
@@ -167,19 +172,20 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
+    <>
+    {/* <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> */}
+      <div className="overflow-x-auto bg-white shadow rounded-lg p-12 space-y-4">
 
-        <button
+        {/* <button
           onClick={() => setShowTransferForm(false)}
           className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
           aria-label="Close"
         >
           &times;
-        </button>
+        </button> */}
 
         <h2 className="text-2xl font-semibold mb-4 text-center">
-          {form.status === "REQUESTED" ? "Transfer Request" : "Stock Transfer "}
+          {form.status === "REQUESTED" ? "Stock Request" : "Stock Transfer "}
 
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -258,20 +264,30 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
             </div>
 
             <div>
-              <label className="block font-medium mb-1">Status</label>
+              <label className="block mb-1 font-medium">Purpose</label>
               <select
-                name="status"
-                value={form.status}
+                name="purpose"
+                value={form.purpose}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                readOnly
               >
-                <option value="REQUESTED">REQUEST</option>
-                {user.approve_reject_transaction && (
-                  <option value="IN-TRANSIT">IN-TRANSIT</option>
-                )}
+                <option value="">[Select Type]</option>
+                {invType.map((inv) => (
+                  <option key={inv.id} value={inv.id} >{inv.asset_transaction_purpose_name}</option>
+                ))}
               </select>
             </div>
+
+            {/* <div>
+              <label className="block font-medium mb-1">Status</label>
+              <input
+                type="text"
+                name="status"
+                value={form.status}
+                readOnly
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
+              />
+            </div> */}
 
           </div>
 
@@ -356,7 +372,8 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode }
           </div>
         </form>
       </div>
-    </div>
+    
+    </>
   );
 }
 

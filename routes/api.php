@@ -35,6 +35,8 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/report', [AssetsTransactionController::class, 'getReport']);
+
 
 
 
