@@ -140,7 +140,6 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                             document={
                                 <InvoicePDF
                                     transaction={transaction}
-                                    // getAssetDetails={getAssetDetails}
                                     type={type}
                                 />
                             }
