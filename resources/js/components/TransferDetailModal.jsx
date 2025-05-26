@@ -102,31 +102,37 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                 </div>
 
                 <div className="mt-4 space-y-2">
-                  <p><span className="font-semibold">Reference Number:</span> {data?.assets_transaction_running_number}</p>
-                  <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
-                  <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
-                  <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
-                  <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
-                  <div>
-                    <span className="font-semibold">Shipping Option:</span>{' '}
-                    {data?.assets_transaction_status === "APPROVED" ? (
-                      <select
-                        value={selectedShippingId}
-                        onChange={(e) => setSelectedShippingId(e.target.value)}
-                        className="ml-2 border border-gray-300 rounded px-2 py-1"
-                      >
-                        <option value="">[Select Shipping]</option>
-                        {shipping.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.shipping_option_name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="ml-2">{data?.assets_shipping_option_name}</span>
-                    )}
+                  <div className="flex justify-between">
+                    <div>
+                      <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
+                      <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
+                      <p><span className="font-semibold">Purpose:</span> {data?.asset_transaction_purpose_name}</p>
+                      <div>
+                        <span className="font-semibold">Shipping Option:</span>{' '}
+                        {data?.assets_transaction_status === "APPROVED" ? (
+                          <select
+                            value={selectedShippingId}
+                            onChange={(e) => setSelectedShippingId(e.target.value)}
+                            className="ml-2 border border-gray-300 rounded px-2 py-1"
+                          >
+                            <option value="">[Select Shipping]</option>
+                            {shipping.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.shipping_option_name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="ml-2">{data?.assets_shipping_option_name}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-left mr-20">
+                      <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
+                      <p><span className="font-semibold">Reference Number:</span> {data?.assets_transaction_running_number}</p>
+                      <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
+                    </div>
                   </div>
-
 
                   <div className="mt-4">
                     <h4 className="font-semibold">Items:</h4>

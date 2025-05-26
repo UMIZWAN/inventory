@@ -246,7 +246,6 @@ export const AssetMetaProvider = ({ children }) => {
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
-        // assets_transaction_purpose: form.purpose,
         assets_transaction_total_cost: totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),

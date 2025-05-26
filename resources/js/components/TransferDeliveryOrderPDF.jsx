@@ -68,12 +68,18 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
         </View>
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
           <Text>
-            <Text style={styles.label}>Shipping Option:</Text>{" "}
-            {data?.assets_shipping_option_name}
+            <Text style={styles.label}>Purpose:</Text>{" "}
+            {data?.asset_transaction_purpose_name}
           </Text>
           <Text style={{ width: 180, textAlign: "left" }}>
             <Text style={styles.label}>Ref. No.:</Text>{" "}
             {data?.assets_transaction_running_number}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+          <Text>
+            <Text style={styles.label}>Shipping Option:</Text>{" "}
+            {data?.assets_shipping_option_name}
           </Text>
         </View>
       </View>
