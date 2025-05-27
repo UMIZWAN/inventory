@@ -222,7 +222,8 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                             <label className="block text-sm font-medium">Attachment (optional):</label>
                             <input
                                 type="file"
-                                className="w-full border rounded p-2 mt-1"
+                                className="mt-1 p-1 w-full text-slate-500 text-sm rounded leading-6 file:bg-blue-200 file:text-blue-700 
+                                file:font-semibold file:border-none file:px-4 file:py-1 file:mr-6 file:rounded hover:file:bg-blue-100 border border-gray-300"
                                 onChange={(e) => setAttachment(e.target.files[0])}
                             />
                         </div>
