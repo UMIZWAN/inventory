@@ -4,6 +4,7 @@ import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import { useOptions } from "../context/OptionContext";
 import TransactionDetail from "./TransactionDetail";
+import { router } from "@inertiajs/react";
 
 export default function CheckoutForm({ setShowCheckoutForm }) {
     const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
     const [recipient, setRecipient] = useState('');
     const [remarks, setRemarks] = useState('');
     const [purposes, setPurposes] = useState();
+    const [attachment, setAttachment] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [createdStockOut, setCreatedStockOut] = useState(null);
 
@@ -98,6 +100,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                 type,
                 purposes,
                 items,
+                attachment,
                 totalAmount,
             };
 
@@ -117,12 +120,14 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             }
 
             const result = await createStockOut(form); // Ensure it returns full stock out detail
-            setCreatedStockOut(result);
-            setShowDetailModal(true);
+            // setCreatedStockOut(result);
+            // setShowDetailModal(true);
+            router.visit('/inv-list');
             setRecipient("");
             setItems([{ assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },]);
             setRemarks("");
             setPurposes("");
+            setAttachment(null);
             // setShowCheckoutForm(false);
         } catch (error) {
             console.error(error);
@@ -212,6 +217,14 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                                 value={remarks}
                                 onChange={(e) => setRemarks(e.target.value)}
                             ></textarea>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium">Attachment (optional):</label>
+                            <input
+                                type="file"
+                                className="w-full border rounded p-2 mt-1"
+                                onChange={(e) => setAttachment(e.target.files[0])}
+                            />
                         </div>
 
                         {/* Submit */}

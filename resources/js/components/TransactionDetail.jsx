@@ -14,8 +14,8 @@ Font.register({
 
 // PDF Document Component
 const InvoicePDF = ({ transaction, getAssetDetails }) => {
-
-    const items = transaction?.transaction_items || transaction.assets_transaction_item_list || [];
+    console.log(items);
+    const items = transaction?.transaction_items || transaction?.assets_transaction_item_list || [];
     let totalAmount = 0;
 
     return (
@@ -91,7 +91,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 
                 <View style={styles.section}>
                     {/* Total Amount */}
-                    <View style={{ marginTop: 10}}>
+                    <View style={{ marginTop: 10 }}>
                         <Text style={styles.label}>Remark: {transaction?.assets_transaction_remark || '-'}</Text>
                     </View>
                 </View>
@@ -119,12 +119,14 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
     const getItemList = transaction.assets_transaction_item_list || transaction.transaction_items || [];
+    let totalAmount = 0;
 
-    const totalAmount = getItemList.reduce((sum, item) => {
-        const price = item?.assets.asset_sales_cost
-        const quantity = (item.asset_unit || 1);
-        return sum + price * quantity;
-    }, 0);
+    // const totalAmount = (transaction.assets_transaction_item_list).reduce((sum, item) => {
+    //     console.log(item, sum)
+    //     const price = item?.assets.asset_sales_cost || 0
+    //     const quantity = (item.asset_unit || 1);
+    //     return sum + price * quantity;
+    // }, 0);
 
     return (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
@@ -140,6 +142,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                             document={
                                 <InvoicePDF
                                     transaction={transaction}
+
                                     type={type}
                                 />
                             }
@@ -190,9 +193,11 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                         <tbody>
                             {getItemList.map((item, index) => {
                                 // const id = item.asset_id;
-                                const price = item?.assets.asset_sales_cost
+                                const price = item?.assets.asset_sales_cost || transaction?.asset_sales_cost || 0;
                                 const quantity = item?.asset_unit
                                 const total = price * quantity;
+                                totalAmount += total;
+
                                 return (
                                     <tr key={index}>
                                         <td className="px-4 py-2 border text-center">{item?.assets.asset_running_number}</td>
@@ -213,6 +218,24 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                     <div className="mt-4">
                         <p><strong>Remark:</strong> {transaction.assets_transaction_remark || "-"}</p>
                     </div>
+                    <div className="mt-4">
+                        <p>
+                            <strong>Attachment:</strong>{" "}
+                            {transaction.attachment ? (
+                                <a
+                                    href={`http://127.0.0.1:8000/storage/${transaction.attachment}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 underline hover:text-blue-800"
+                                >
+                                    View File
+                                </a>
+                            ) : (
+                                "-"
+                            )}
+                        </p>
+                    </div>
+
                 </div>
             </div>
         </div>
