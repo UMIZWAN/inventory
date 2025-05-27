@@ -274,16 +274,21 @@ export const AssetMetaProvider = ({ children }) => {
         created_by: user?.id,
         created_at: form.date,
         assets_transaction_remark: form.remarks,
+        attachment: form.attachment,
         assets_transaction_purpose_id: form.purposes,
         assets_transaction_total_cost: form.totalAmount,
         assets_transaction_item_list: form.items.map((item) => ({
           asset_id: parseInt(item.item),
           asset_unit: parseFloat(item.quantity),
-          status: null,
+          status: "",
         })),
       };
 
-      const res = await api.post("/api/assets-transaction", payload);
+      const res = await api.post("/api/assets-transaction", payload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       fetchAssetTransaction(); // Refresh the list after update
       fetchBranchAssets(); // Refresh the assets list
