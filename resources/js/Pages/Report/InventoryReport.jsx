@@ -2,25 +2,88 @@ import React, { useState, useEffect } from 'react';
 import { useAssetMeta } from '../../context/AssetsContext';
 import Layout from '../../components/layout/Layout';
 import { useAuth } from '../../context/AuthContext';
-
+import api from '../../api/api';
+import ExportButton from '../../components/ExportButton';
 
 function InventoryReport() {
     const { user } = useAuth();
-    const { report, fetchReport,
+    const {
         categories, fetchCategories,
         branches, fetchBranches, } = useAssetMeta();
     const [filters, setFilters] = useState({
+        branch: user?.branch_id || '',
         search: '',
         category: '',
         from: '',
         to: '',
     });
+    const [report, setReport] = useState([]);
 
     useEffect(() => {
-        fetchReport(user?.branch_id);
+        // setFilters((prev) => ({ ...prev, branch: user?.branch_id || '' }));
+        // fetchReport({ branch: user?.branch_id });
         fetchCategories();
         fetchBranches();
     }, []);
+
+    const fetchReport = async (filters = {}) => {
+        try {
+            const params = new URLSearchParams();
+
+            if (filters.branch) params.append('asset_branch_id', filters.branch);
+            if (filters.search) params.append('search', filters.search);
+            if (filters.category) params.append('category', filters.category);
+            if (filters.from) params.append('from', filters.from);
+            if (filters.to) params.append('to', filters.to);
+
+            const response = await api.get(`/api/report?${params.toString()}`);
+            setReport(response.data.data);
+        } catch (error) {
+            console.error("Failed to fetch report:", error);
+        }
+    };
+
+    const exportData = [];
+    const merges = [];
+
+    let rowIndex = 1; // header row is index 0
+
+    report?.forEach((item) => {
+        const branch = item.branch_values[0];
+        const assetIns = branch?.asset_in || [];
+        const assetOuts = branch?.asset_out || [];
+        const maxRows = Math.max(assetIns.length, assetOuts.length, 1);
+
+        for (let i = 0; i < maxRows; i++) {
+            const assetIn = assetIns[i] || {};
+            const assetOut = assetOuts[i] || {};
+
+            exportData.push({
+                Code: i === 0 ? item.asset_running_number : '',
+                Name: i === 0 ? item.name : '',
+                "Stock In Date": assetIn.created_at ? new Date(assetIn.created_at).toLocaleDateString() : '',
+                "Stock In Type": assetIn.asset_transaction_type || '',
+                "Stock In From": assetIn.supplier_name || assetIn.assets_from_branch_name || '',
+                "Stock In Qty": assetIn.asset_unit || '',
+                "Stock Out Date": assetOut.created_at ? new Date(assetOut.created_at).toLocaleDateString() : '',
+                "Stock Out Type": assetOut.asset_transaction_type || '',
+                "Stock Out Purpose": assetOut.asset_transaction_purpose_name || '',
+                "Stock Out Qty": assetOut.asset_unit || '',
+                "Current Unit": i === 0 ? branch?.asset_current_unit || '' : ''
+            });
+        }
+
+        if (maxRows > 1) {
+            // Merge "Code" (A), "Name" (B), and "Current Unit" (K)
+            merges.push(
+                { s: { r: rowIndex, c: 0 }, e: { r: rowIndex + maxRows - 1, c: 0 } }, // Column A
+                { s: { r: rowIndex, c: 1 }, e: { r: rowIndex + maxRows - 1, c: 1 } }, // Column B
+                { s: { r: rowIndex, c: 10 }, e: { r: rowIndex + maxRows - 1, c: 10 } } // Column K
+            );
+        }
+
+        rowIndex += maxRows;
+    });
 
     return (
         <Layout>
@@ -91,18 +154,42 @@ function InventoryReport() {
                             />
                         </div>
                     </div>
-                    <button className="rounded bg-blue-600 text-white px-4 py-1 hover:bg-blue-700 text-sm cursor-pointer mt-2">Apply</button>
+                    <div className="flex gap-2 mt-4">
+                        <button
+                            onClick={() => fetchReport(filters)}
+                            className="rounded bg-blue-600 text-white px-4 py-1 hover:bg-blue-700 text-sm"
+                        >
+                            Apply
+                        </button>
+                        <button
+                            onClick={() => {
+                                const defaultFilters = {
+                                    search: '',
+                                    category: '',
+                                    from: '',
+                                    to: '',
+                                    branch: user?.branch_id || ''
+                                };
+                                setFilters(defaultFilters);
+                            }}
+                            className="rounded bg-gray-300 text-gray-800 px-4 py-1 hover:bg-gray-400 text-sm"
+                        >
+                            Clear
+                        </button>
+                    </div>
                 </div>
+
+                <ExportButton data={exportData} merges={merges} filename="Inventory_Report" sheetName="Inventory" />
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm text-left border border-gray-200">
                         <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
-                                <th className="px-4 py-2 border border-b-0" rowSpan={2}>Code</th>
-                                <th className="px-4 py-2 border border-b-0" rowSpan={2}>Name</th>
+                                <th className="px-4 py-2 border " rowSpan={2}>Code</th>
+                                <th className="px-4 py-2 border " rowSpan={2}>Name</th>
                                 <th className="py-2 border text-center" colSpan={4}>Stock In</th>
                                 <th className="py-2 border text-center" colSpan={4}>Stock Out</th>
-                                <th className="px-2 py-2 border border-b-0 text-center" rowSpan={2}>Current Unit</th>
+                                <th className="px-2 py-2 border text-center" rowSpan={2}>Current Unit</th>
                             </tr>
                             <tr>
                                 <th className="px-4 py-2 border text-center">Date</th>
@@ -116,69 +203,49 @@ function InventoryReport() {
                             </tr>
                         </thead>
                         <tbody>
-                            {report
-                                ?.filter((item) => {
-                                    const searchMatch = item.asset_running_number.toLowerCase().includes(filters.search.toLowerCase()) ||
-                                        item.name.toLowerCase().includes(filters.search.toLowerCase());
+                            {report?.map((item, index) => {
 
-                                    const categoryMatch = !filters.category || item.asset_category_id == filters.category;
+                                const branch = item.branch_values[0];
+                                const assetIns = branch.asset_in || [];
+                                const assetOuts = branch.asset_out || [];
+                                const maxRows = Math.max(assetIns.length, assetOuts.length, 1); // At least 1 row
 
-                                    const fromDate = filters.from ? new Date(filters.from) : null;
-                                    const toDate = filters.to ? new Date(filters.to) : null;
+                                return [...Array(maxRows)].map((_, i) => {
+                                    const assetIn = assetIns[i];
+                                    const assetOut = assetOuts[i];
 
-                                    const inDates = item.branch_values[0]?.asset_in?.map((a) => new Date(a.created_at)) || [];
-                                    const outDates = item.branch_values[0]?.asset_out?.map((a) => new Date(a.created_at)) || [];
-                                    const allDates = [...inDates, ...outDates];
+                                    return (
+                                        <tr key={`${item.id}-${i}`} className="text-sm border-t hover:bg-gray-50">
+                                            {i === 0 && (
+                                                <td className="px-4 py-2 border" rowSpan={maxRows}>
+                                                    {item.asset_running_number}
+                                                </td>
+                                            )}
+                                            {i === 0 && (
+                                                <td className="px-4 py-2 border" rowSpan={maxRows}>
+                                                    {item.name}
+                                                </td>
+                                            )}
 
-                                    const dateMatch = allDates.some((d) => {
-                                        return (!fromDate || d >= fromDate) && (!toDate || d <= toDate);
-                                    });
+                                            <td className="px-4 py-2 border">{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}</td>
+                                            <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
+                                            <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
+                                            <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
 
-                                    return searchMatch && categoryMatch && (filters.from || filters.to ? dateMatch : true);
-                                })
-                                .map((item, index) => {
+                                            <td className="px-4 py-2 border">{assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}</td>
+                                            <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>
+                                            <td className="px-4 py-2 border">{assetOut?.asset_transaction_purpose_name || '-'}</td>
+                                            <td className="px-4 py-2 border text-center">{assetOut?.asset_unit ?? '-'}</td>
 
-                                    const branch = item.branch_values[0];
-                                    const assetIns = branch.asset_in || [];
-                                    const assetOuts = branch.asset_out || [];
-                                    const maxRows = Math.max(assetIns.length, assetOuts.length, 1); // At least 1 row
-
-                                    return [...Array(maxRows)].map((_, i) => {
-                                        const assetIn = assetIns[i];
-                                        const assetOut = assetOuts[i];
-
-                                        return (
-                                            <tr key={`${item.id}-${i}`} className="text-sm border-t hover:bg-gray-50">
-                                                {i === 0 && (
-                                                    <td className="px-4 py-2 border" rowSpan={maxRows}>
-                                                        {item.asset_running_number}
-                                                    </td>
-                                                )}
-                                                {i === 0 && (
-                                                    <td className="px-4 py-2 border" rowSpan={maxRows}>
-                                                        {item.name}
-                                                    </td>
-                                                )}
-
-                                                <td className="px-4 py-2 border">{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}</td>
-                                                <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
-                                                <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
-                                                <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
-
-                                                <td className="px-4 py-2 border">{assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}</td>
-                                                <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>
-                                                <td className="px-4 py-2 border">{assetOut?.asset_transaction_purpose_name || '-'}</td>
-                                                <td className="px-4 py-2 border text-center">{assetOut?.asset_unit ?? '-'}</td>
-
-                                                {i === 0 && (
-                                                    <td className="px-4 py-2 border text-center" rowSpan={maxRows}>
-                                                        {branch?.asset_current_unit}
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        );
-                                    });
-                                })}
+                                            {i === 0 && (
+                                                <td className="px-4 py-2 border text-center" rowSpan={maxRows}>
+                                                    {branch?.asset_current_unit}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    );
+                                });
+                            })}
                         </tbody>
 
                     </table>

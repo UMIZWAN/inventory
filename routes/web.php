@@ -47,6 +47,13 @@ Route::get('/inventory', function () {
     return inertia('Report/InventoryReport');
 });
 
+Route::get('/report/item/{id}/{branch}', function ($id, $branch) {
+    return inertia('Report/SingleItemReport', [
+        'id' => (int) $id,
+        'branch_id' => (int) $branch,
+    ]);
+})->name('report.item');
+
 Route::prefix('items')->group(function () {
     Route::get('/master-list', fn() => Inertia::render('Items/MasterListPage'));
     Route::get('/item-list', fn() => Inertia::render('Items/Assets'));

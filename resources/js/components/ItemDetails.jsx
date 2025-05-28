@@ -4,6 +4,7 @@ import { MdOutlineCancel } from "react-icons/md";
 import { useAssetMeta } from '../context/AssetsContext';
 import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
+import { Link } from '@inertiajs/react';
 
 const ItemDetails = ({ asset, onClose }) => {
     const { user } = useAuth();
@@ -238,7 +239,7 @@ const ItemDetails = ({ asset, onClose }) => {
                             <span>{asset.asset_tag_name ?? '—'}</span>
                         )}
                     /> */}
-                    <Detail label="Unit" value={isEditing('asset_unit_measure')} />
+                    <Detail label="Unit of Measure " value={isEditing('asset_unit_measure')} />
                     <Detail label="Cost" value={isEditing('asset_purchase_cost')} />
                     <Detail label="Price" value={isEditing('asset_sales_cost')} />
                     <Detail label="Stable Quantity" value={isEditing('asset_stable_unit')} />
@@ -249,10 +250,10 @@ const ItemDetails = ({ asset, onClose }) => {
                                 label="Branch"
                                 value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
                             />
-                            <Detail
+                            {/* <Detail
                                 label="Location"
                                 value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_location_name ?? '—'}
-                            />
+                            /> */}
                         </>
                     )}
                 </div>
@@ -271,6 +272,17 @@ const ItemDetails = ({ asset, onClose }) => {
                         <p className="text-sm text-gray-700">{asset.assets_remark ?? '—'}</p>
                     )}
                 </div>
+
+                {!editMode && (
+                    <div className="mt-6">
+                        <Link
+                            href={`/report/item/${asset.id}/${user.branch_id}`}
+                            className="text-sm font-semibold text-blue-600 hover:underline"
+                        >
+                            Transaction History
+                        </Link>
+                    </div>
+                )}
 
                 {Array.isArray(logs) && logs.length > 0 && !editMode && (
                     <Section title="Logs" items={logs} />

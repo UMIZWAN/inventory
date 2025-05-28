@@ -716,52 +716,122 @@ class AssetsTransactionController extends Controller
         // stock out purpose - asset transaction purpose id
         // stock in /out type - asset transaction type
         // stock current qty - asset branch values asset current unit
+        $branchId = $request->asset_branch_id;
+        $search = $request->search;
+        $category = $request->category;
+        $from = $request->from;
+        $to = $request->to;
 
-        if ($request->asset_branch_id) {
-            $branchId = $request->asset_branch_id;
+        $query = Assets::query();
 
-            $data = Assets::whereHas('branchValues', function ($query) use ($branchId) {
-                $query->where('asset_branch_id', $branchId);
-            })
-                ->with([
-                    'transactionItems' => function ($query) {
-                        $query->select('id', 'asset_id', 'asset_transaction_id', 'created_at', 'asset_unit');
-                    },
-                    'transactionItems.assetsTransaction' => function ($query) {
-                        $query->select('id', 'assets_transaction_type', 'assets_transaction_purpose_id', 'supplier_id', 'assets_from_branch_id', 'assets_to_branch_id');
-                    },
-                    // 👇 add branchId filter here
-                    'branchValues' => function ($query) use ($branchId) {
-                        $query->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit')
-                            ->where('asset_branch_id', $branchId);
-                    },
-                    'transactionItems.assetsTransaction.purpose' => function ($query) {
-                        $query->select('id', 'asset_transaction_purpose_name');
-                    },
-                ])
-                ->get();
-        } else {
-            $data = Assets::with([
-                'transactionItems' => function ($query) {
-                    $query->select('id', 'asset_id', 'asset_transaction_id', 'created_at', 'asset_unit');
-                },
-                'transactionItems.assetsTransaction' => function ($query) {
-                    $query->select('id', 'assets_transaction_type', 'assets_transaction_purpose_id', 'supplier_id', 'assets_from_branch_id', 'assets_to_branch_id');
-                },
-                'branchValues' => function ($query) {
-                    $query->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit');
-                },
-                'transactionItems.assetsTransaction.purpose' => function ($query) {
-                    $query->select('id', 'asset_transaction_purpose_name');
-                },
-            ])->get();
+        // Branch filter (applies to related branchValues)
+        if ($branchId) {
+            $query->whereHas('branchValues', function ($q) use ($branchId) {
+                $q->where('asset_branch_id', $branchId);
+            });
         }
 
+        // Search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('asset_running_number', 'like', "%$search%")
+                    ->orWhere('name', 'like', "%$search%");
+            });
+        }
+
+        // Category filter
+        if ($category) {
+            $query->where('asset_category_id', $category);
+        }
+
+        // Only include assets that have at least 1 transaction item in date range
+        if ($from || $to) {
+            $query->whereHas('transactionItems', function ($q) use ($from, $to) {
+                if ($from) $q->whereDate('created_at', '>=', $from);
+                if ($to) $q->whereDate('created_at', '<=', $to);
+            });
+        }
+
+        // Eager load filtered relationships
+        $query->with([
+            'transactionItems' => function ($q) use ($from, $to) {
+                $q->select('id', 'asset_id', 'asset_transaction_id', 'created_at', 'asset_unit')
+                    ->when($from, fn($q) => $q->whereDate('created_at', '>=', $from))
+                    ->when($to, fn($q) => $q->whereDate('created_at', '<=', $to));
+            },
+            'transactionItems.assetsTransaction' => fn($q) => $q->select(
+                'id',
+                'assets_transaction_type',
+                'assets_transaction_purpose_id',
+                'supplier_id',
+                'assets_from_branch_id',
+                'assets_to_branch_id'
+            ),
+            'transactionItems.assetsTransaction.purpose' => fn($q) => $q->select(
+                'id',
+                'asset_transaction_purpose_name'
+            ),
+            'branchValues' => function ($q) use ($branchId) {
+                $q->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit');
+                if ($branchId) {
+                    $q->where('asset_branch_id', $branchId);
+                }
+            }
+        ]);
+
+        $data = $query->get();
 
         return response()->json([
             // 'data' => $data
             'data' => ReportResource::collection($data)
             // 'data' => new ReportResource($data)
         ], 201);
+    }
+
+    public function getSingleReport(Request $request)
+    {
+        $id = $request->id;
+        $branchId = $request->branch_id;
+
+        if (!$id || !$branchId) {
+            return response()->json(['error' => 'Missing asset ID or branch ID'], 400);
+        }
+
+        $asset = Assets::where('id', $id)
+            ->whereHas('branchValues', fn($q) => $q->where('asset_branch_id', $branchId))
+            ->with([
+                // Only transactions relevant to this branch (either in or out)
+                'transactionItems' => function ($q) use ($branchId) {
+                    $q->whereHas('assetsTransaction', function ($tq) use ($branchId) {
+                        $tq->where(function ($inner) use ($branchId) {
+                            $inner->where('assets_from_branch_id', $branchId)
+                                ->orWhere('assets_to_branch_id', $branchId);
+                        });
+                    })->select('id', 'asset_id', 'asset_transaction_id', 'created_at', 'asset_unit');
+                },
+                'transactionItems.assetsTransaction' => fn($q) => $q->select(
+                    'id',
+                    'assets_transaction_type',
+                    'assets_transaction_purpose_id',
+                    'supplier_id',
+                    'assets_from_branch_id',
+                    'assets_to_branch_id'
+                ),
+                'transactionItems.assetsTransaction.purpose' => fn($q) => $q->select(
+                    'id',
+                    'asset_transaction_purpose_name'
+                ),
+                'branchValues' => fn($q) => $q->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit')
+                    ->where('asset_branch_id', $branchId)
+            ])
+            ->first();
+
+        if (!$asset) {
+            return response()->json(['error' => 'Asset not found for the specified branch'], 404);
+        }
+
+        return response()->json([
+            'data' => new ReportResource($asset)
+        ]);
     }
 }

@@ -118,6 +118,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 // Main Component
 function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
+    const { fetchAssetTransaction } = useAssetMeta();
     const [balanceUnits, setBalanceUnits] = useState({});
 
     useEffect(() => {
@@ -157,6 +158,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                 assets_transaction_remark: remark,
             });
 
+            fetchAssetTransaction();
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: "Unknown error" };
@@ -243,14 +245,12 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                         <td className="px-4 py-2 border text-center">{quantity}</td>
                                         {transaction.assets_transaction_status === "IN PROGRESS" && (
                                             <td className="px-4 py-2 border text-center">
-
                                                 <input
                                                     type="number"
                                                     value={balanceUnits[index]}
                                                     onChange={(e) => handleBalanceChange(index, e.target.value)}
                                                     className="w-16 border rounded px-1 py-0.5 text-center"
                                                 />
-
                                             </td>
                                         )}
                                         <td className="px-4 py-2 border text-center">RM {Number(price).toFixed(2)}</td>

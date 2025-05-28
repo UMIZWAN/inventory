@@ -12,6 +12,7 @@ class ReportResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'asset_category_id' => $this->asset_category_id,
             'asset_running_number' => $this->asset_running_number,
             'branch_values' => $this->branchValues
                 ->when(request('branch_id'), function ($collection, $branchId) {
