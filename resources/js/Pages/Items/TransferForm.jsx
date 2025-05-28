@@ -78,7 +78,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, 
       label: "Item",
       type: "select",
       options: itemOptions,
-      width: "w-64"
+      width: "w-80"
     },
     { key: "category", label: "Category", readOnly: true },
     { key: "unitMeasure", label: "Unit of Measure", readOnly: true },

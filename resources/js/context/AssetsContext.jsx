@@ -269,6 +269,7 @@ export const AssetMetaProvider = ({ children }) => {
     try {
       const payload = {
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
+        assets_transaction_status: form.status.toUpperCase(),
         assets_from_branch_id: user?.branch_id,
         assets_recipient_name: form.recipient,
         created_by: user?.id,

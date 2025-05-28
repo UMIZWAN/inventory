@@ -14,9 +14,11 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [recipient, setRecipient] = useState('');
+    const [status, setStatus] = useState('IN PROGRESS');
     const [remarks, setRemarks] = useState('');
     const [purposes, setPurposes] = useState();
     const [attachment, setAttachment] = useState(null);
+    const [purposeLabel, setPurposeLabel] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [createdStockOut, setCreatedStockOut] = useState(null);
 
@@ -95,6 +97,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
             const form = {
                 branch,
                 date,
+                status,
                 recipient,
                 remarks,
                 type,
@@ -159,7 +162,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                                 <label className="block mb-1 font-medium">Branch</label>
                                 <input
                                     type="text"
-                                    className="w-full border border-gray-300 rounded px-3 py-2"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
                                     placeholder="Branch"
                                     value={user?.branch_name}
                                     onChange={(e) => setBranch(e.target.value)}
@@ -181,15 +184,33 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                                 <label className="block mb-1 font-medium">INV</label>
                                 <select
                                     value={purposes}
-                                    onChange={(e) => setPurposes(e.target.value)}
+                                    onChange={(e) => {
+                                        const selectedId = e.target.value;
+                                        const selected = invType.find(inv => String(inv.id) === selectedId);
+                                        setPurposes(selectedId);
+                                        setPurposeLabel(selected?.asset_transaction_purpose_name || '');
+                                    }}
                                     className="w-full border border-gray-300 rounded px-3 py-2"
                                 >
                                     <option value="">[Select Type]</option>
                                     {invType.map((inv) => (
-                                        <option key={inv.id} value={inv.id} >{inv.asset_transaction_purpose_name}</option>
+                                        <option key={inv.id} value={inv.id}>
+                                            {inv.asset_transaction_purpose_name}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
+                            {(purposeLabel === "Event" || purposeLabel === "Roadshow") && (
+                                <div>
+                                    <label className="block mb-1 font-medium">Status</label>
+                                    <input
+                                        type="text"
+                                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                                        value={status}
+                                        readOnly
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* Items Table */}
@@ -222,7 +243,8 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                             <label className="block text-sm font-medium">Attachment (optional):</label>
                             <input
                                 type="file"
-                                className="w-full border rounded p-2 mt-1"
+                                className="mt-1 p-1 w-full text-slate-500 text-sm rounded leading-6 file:bg-blue-200 file:text-blue-700 
+                                file:font-semibold file:border-none file:px-4 file:py-1 file:mr-6 file:rounded hover:file:bg-blue-100 border border-gray-300"
                                 onChange={(e) => setAttachment(e.target.files[0])}
                             />
                         </div>

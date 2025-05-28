@@ -17,9 +17,9 @@ const styles = StyleSheet.create({
   label: { fontWeight: "bold" },
   table: {
     width: "100%",
-        marginTop: 10,
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
   tableRow: {
     flexDirection: "row",
@@ -104,6 +104,12 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
             <Text style={styles.tableCol}>RM {Number(item.assets.asset_sales_cost * item.asset_unit).toFixed(2)}</Text>
           </View>
         ))}
+      </View>
+
+      <View style={styles.section}>
+        <View style={{ marginTop: 10 }}>
+          <Text style={styles.label}>Remark: {data?.assets_transaction_remark || '-'}</Text>
+        </View>
       </View>
 
       <View style={styles.signatureRow}>

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import logo from '../assets/image/universal group - black logo.jpg';
+import api from "../api/api";
 import { useAssetMeta } from "../context/AssetsContext";
 import { PDFDownloadLink, Document, Page, View, Text, StyleSheet, Font, Image } from "@react-pdf/renderer";
 
@@ -90,7 +91,6 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                 </View>
 
                 <View style={styles.section}>
-                    {/* Total Amount */}
                     <View style={{ marginTop: 10 }}>
                         <Text style={styles.label}>Remark: {transaction?.assets_transaction_remark || '-'}</Text>
                     </View>
@@ -118,6 +118,21 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 // Main Component
 function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
+    const [balanceUnits, setBalanceUnits] = useState({});
+
+    useEffect(() => {
+        const initialBalances = {};
+        getItemList.forEach((item, idx) => {
+            initialBalances[idx] = item.balance_unit || item.asset_unit; // fallback
+        });
+        setBalanceUnits(initialBalances);
+    }, [transaction]);
+
+    const handleBalanceChange = (index, value) => {
+        const updated = { ...balanceUnits, [index]: Number(value) };
+        setBalanceUnits(updated);
+    };
+
     const getItemList = transaction.assets_transaction_item_list || transaction.transaction_items || [];
     let totalAmount = 0;
 
@@ -127,6 +142,26 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
     //     const quantity = (item.asset_unit || 1);
     //     return sum + price * quantity;
     // }, 0);
+
+    const completeTransaction = async (txnId = transaction.id, balanceUnits, remark = '', status = 'COMPLETED') => {
+        try {
+            const formattedItems = getItemList.map((item, index) => ({
+                asset_id: item.asset_id,
+                asset_unit: balanceUnits[index] ?? item.asset_unit,
+                status: "", // optional
+            }));
+
+            const response = await api.put(`/api/assets-transaction/${txnId}`, {
+                assets_transaction_item_list: formattedItems,
+                assets_transaction_status: status,
+                assets_transaction_remark: remark,
+            });
+
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: "Unknown error" };
+        }
+    };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
@@ -186,6 +221,9 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 <th className="px-4 py-2 border">Code</th>
                                 <th className="px-4 text-left py-2 border">Asset Name</th>
                                 <th className="px-4 py-2 border">Quantity</th>
+                                {transaction.assets_transaction_status === "IN PROGRESS" && (
+                                    <th className="px-4 py-2 border">Balance Unit</th>
+                                )}
                                 <th className="px-4 py-2 border">Price</th>
                                 <th className="px-4 py-2 border">Total Price</th>
                             </tr>
@@ -203,6 +241,18 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                         <td className="px-4 py-2 border text-center">{item?.assets.asset_running_number}</td>
                                         <td className="px-4 py-2 border w-60">{item?.asset_name}</td>
                                         <td className="px-4 py-2 border text-center">{quantity}</td>
+                                        {transaction.assets_transaction_status === "IN PROGRESS" && (
+                                            <td className="px-4 py-2 border text-center">
+
+                                                <input
+                                                    type="number"
+                                                    value={balanceUnits[index]}
+                                                    onChange={(e) => handleBalanceChange(index, e.target.value)}
+                                                    className="w-16 border rounded px-1 py-0.5 text-center"
+                                                />
+
+                                            </td>
+                                        )}
                                         <td className="px-4 py-2 border text-center">RM {Number(price).toFixed(2)}</td>
                                         <td className="px-4 py-2 border text-center">RM {Number(total).toFixed(2)}</td>
                                     </tr>
@@ -218,23 +268,45 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                     <div className="mt-4">
                         <p><strong>Remark:</strong> {transaction.assets_transaction_remark || "-"}</p>
                     </div>
-                    <div className="mt-4">
-                        <p>
-                            <strong>Attachment:</strong>{" "}
-                            {transaction.attachment ? (
-                                <a
-                                    href={`http://127.0.0.1:8000/storage/${transaction.attachment}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 underline hover:text-blue-800"
-                                >
-                                    View File
-                                </a>
-                            ) : (
-                                "-"
-                            )}
-                        </p>
-                    </div>
+
+                    {type === "transfer" && (
+                        <div className="mt-4">
+                            <p>
+                                <strong>Attachment:</strong>{" "}
+                                {transaction.attachment ? (
+                                    <a
+                                        href={`http://127.0.0.1:8000/storage/${transaction.attachment}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 underline hover:text-blue-800"
+                                    >
+                                        View File
+                                    </a>
+                                ) : (
+                                    "-"
+                                )}
+                            </p>
+                        </div>
+                    )}
+
+                    {transaction.assets_transaction_status === "IN PROGRESS" && (
+                        <div className="flex justify-end mt-6">
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await completeTransaction(transaction.id, balanceUnits);
+                                        alert("Transaction completed successfully."); // or trigger a refresh / close
+                                        onClose(); // optionally close modal
+                                    } catch (err) {
+                                        alert("Failed to complete transaction: " + err.message);
+                                    }
+                                }}
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                            >
+                                Complete Transaction
+                            </button>
+                        </div>
+                    )}
 
                 </div>
             </div>
