@@ -44,16 +44,20 @@ function SingleItemReport({ id, branch_id }) {
 
         <div className="overflow-x-auto mt-4">
           <table className="min-w-full text-sm text-left border border-gray-300">
-            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+            <thead className="text-gray-700 uppercase text-xs">
               <tr>
-                <th className="px-4 py-2 border">Stock In Date</th>
-                <th className="px-4 py-2 border">Type</th>
-                <th className="px-4 py-2 border">From</th>
-                <th className="px-4 py-2 border">Qty</th>
-                <th className="px-4 py-2 border">Stock Out Date</th>
-                <th className="px-4 py-2 border">Type</th>
-                <th className="px-4 py-2 border">Purpose</th>
-                <th className="px-4 py-2 border">Qty</th>
+                <th className="bg-gray-100 px-4 py-2 border text-center" colSpan={4}>Stock In</th>
+                <th className="bg-rose-100 px-4 py-2 border text-center" colSpan={4}>Stock Out</th>
+              </tr>
+              <tr>
+                <th className="bg-gray-100 px-4 py-2 border">Date</th>
+                <th className="bg-gray-100 px-4 py-2 border">Type</th>
+                <th className="bg-gray-100 px-4 py-2 border">From</th>
+                <th className="bg-gray-100 px-4 py-2 border text-center">Qty</th>
+                <th className="bg-rose-100 px-4 py-2 border">Date</th>
+                <th className="bg-rose-100 px-4 py-2 border">Type</th>
+                <th className="bg-rose-100 px-4 py-2 border">Purpose</th>
+                <th className="bg-rose-100 px-4 py-2 border text-center">Qty</th>
               </tr>
             </thead>
             <tbody>
