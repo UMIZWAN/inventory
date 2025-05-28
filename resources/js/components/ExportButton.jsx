@@ -1,11 +1,16 @@
-// components/ExportButton.jsx
 import * as XLSX from "xlsx";
 
-export default function ExportButton({ data, filename = "Export", sheetName = "Sheet1" }) {
+export default function ExportButton({ data, merges = [], filename = "Export", sheetName = "Sheet1" }) {
   const handleDownload = (format = "xlsx") => {
     if (!data || data.length === 0) return;
 
     const worksheet = XLSX.utils.json_to_sheet(data);
+
+    // Apply merges
+    if (merges.length > 0) {
+      worksheet["!merges"] = merges;
+    }
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 

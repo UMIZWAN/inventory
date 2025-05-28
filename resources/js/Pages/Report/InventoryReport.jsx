@@ -43,19 +43,24 @@ function InventoryReport() {
         }
     };
 
-    const exportData = report?.flatMap((item) => {
+    const exportData = [];
+    const merges = [];
+
+    let rowIndex = 1; // header row is index 0
+
+    report?.forEach((item) => {
         const branch = item.branch_values[0];
         const assetIns = branch?.asset_in || [];
         const assetOuts = branch?.asset_out || [];
         const maxRows = Math.max(assetIns.length, assetOuts.length, 1);
 
-        return [...Array(maxRows)].map((_, i) => {
+        for (let i = 0; i < maxRows; i++) {
             const assetIn = assetIns[i] || {};
             const assetOut = assetOuts[i] || {};
 
-            return {
-                Code: item.asset_running_number,
-                Name: item.name,
+            exportData.push({
+                Code: i === 0 ? item.asset_running_number : '',
+                Name: i === 0 ? item.name : '',
                 "Stock In Date": assetIn.created_at ? new Date(assetIn.created_at).toLocaleDateString() : '',
                 "Stock In Type": assetIn.asset_transaction_type || '',
                 "Stock In From": assetIn.supplier_name || assetIn.assets_from_branch_name || '',
@@ -64,9 +69,20 @@ function InventoryReport() {
                 "Stock Out Type": assetOut.asset_transaction_type || '',
                 "Stock Out Purpose": assetOut.asset_transaction_purpose_name || '',
                 "Stock Out Qty": assetOut.asset_unit || '',
-                "Current Unit": branch?.asset_current_unit || ''
-            };
-        });
+                "Current Unit": i === 0 ? branch?.asset_current_unit || '' : ''
+            });
+        }
+
+        if (maxRows > 1) {
+            // Merge "Code" (A), "Name" (B), and "Current Unit" (K)
+            merges.push(
+                { s: { r: rowIndex, c: 0 }, e: { r: rowIndex + maxRows - 1, c: 0 } }, // Column A
+                { s: { r: rowIndex, c: 1 }, e: { r: rowIndex + maxRows - 1, c: 1 } }, // Column B
+                { s: { r: rowIndex, c: 10 }, e: { r: rowIndex + maxRows - 1, c: 10 } } // Column K
+            );
+        }
+
+        rowIndex += maxRows;
     });
 
     return (
@@ -155,7 +171,6 @@ function InventoryReport() {
                                     branch: user?.branch_id || ''
                                 };
                                 setFilters(defaultFilters);
-                                fetchReport(defaultFilters);
                             }}
                             className="rounded bg-gray-300 text-gray-800 px-4 py-1 hover:bg-gray-400 text-sm"
                         >
@@ -164,7 +179,7 @@ function InventoryReport() {
                     </div>
                 </div>
 
-                <ExportButton data={exportData} filename="Inventory_Report" sheetName="Inventory" />
+                <ExportButton data={exportData} merges={merges} filename="Inventory_Report" sheetName="Inventory" />
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm text-left border border-gray-200">
@@ -190,47 +205,47 @@ function InventoryReport() {
                         <tbody>
                             {report?.map((item, index) => {
 
-                                    const branch = item.branch_values[0];
-                                    const assetIns = branch.asset_in || [];
-                                    const assetOuts = branch.asset_out || [];
-                                    const maxRows = Math.max(assetIns.length, assetOuts.length, 1); // At least 1 row
+                                const branch = item.branch_values[0];
+                                const assetIns = branch.asset_in || [];
+                                const assetOuts = branch.asset_out || [];
+                                const maxRows = Math.max(assetIns.length, assetOuts.length, 1); // At least 1 row
 
-                                    return [...Array(maxRows)].map((_, i) => {
-                                        const assetIn = assetIns[i];
-                                        const assetOut = assetOuts[i];
+                                return [...Array(maxRows)].map((_, i) => {
+                                    const assetIn = assetIns[i];
+                                    const assetOut = assetOuts[i];
 
-                                        return (
-                                            <tr key={`${item.id}-${i}`} className="text-sm border-t hover:bg-gray-50">
-                                                {i === 0 && (
-                                                    <td className="px-4 py-2 border" rowSpan={maxRows}>
-                                                        {item.asset_running_number}
-                                                    </td>
-                                                )}
-                                                {i === 0 && (
-                                                    <td className="px-4 py-2 border" rowSpan={maxRows}>
-                                                        {item.name}
-                                                    </td>
-                                                )}
+                                    return (
+                                        <tr key={`${item.id}-${i}`} className="text-sm border-t hover:bg-gray-50">
+                                            {i === 0 && (
+                                                <td className="px-4 py-2 border" rowSpan={maxRows}>
+                                                    {item.asset_running_number}
+                                                </td>
+                                            )}
+                                            {i === 0 && (
+                                                <td className="px-4 py-2 border" rowSpan={maxRows}>
+                                                    {item.name}
+                                                </td>
+                                            )}
 
-                                                <td className="px-4 py-2 border">{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}</td>
-                                                <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
-                                                <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
-                                                <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
+                                            <td className="px-4 py-2 border">{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}</td>
+                                            <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
+                                            <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
+                                            <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
 
-                                                <td className="px-4 py-2 border">{assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}</td>
-                                                <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>
-                                                <td className="px-4 py-2 border">{assetOut?.asset_transaction_purpose_name || '-'}</td>
-                                                <td className="px-4 py-2 border text-center">{assetOut?.asset_unit ?? '-'}</td>
+                                            <td className="px-4 py-2 border">{assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}</td>
+                                            <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>
+                                            <td className="px-4 py-2 border">{assetOut?.asset_transaction_purpose_name || '-'}</td>
+                                            <td className="px-4 py-2 border text-center">{assetOut?.asset_unit ?? '-'}</td>
 
-                                                {i === 0 && (
-                                                    <td className="px-4 py-2 border text-center" rowSpan={maxRows}>
-                                                        {branch?.asset_current_unit}
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        );
-                                    });
-                                })}
+                                            {i === 0 && (
+                                                <td className="px-4 py-2 border text-center" rowSpan={maxRows}>
+                                                    {branch?.asset_current_unit}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    );
+                                });
+                            })}
                         </tbody>
 
                     </table>
