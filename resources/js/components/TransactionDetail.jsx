@@ -15,7 +15,6 @@ Font.register({
 
 // PDF Document Component
 const InvoicePDF = ({ transaction, getAssetDetails }) => {
-    console.log(items);
     const items = transaction?.transaction_items || transaction?.assets_transaction_item_list || [];
     let totalAmount = 0;
 

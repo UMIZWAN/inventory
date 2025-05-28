@@ -30,7 +30,6 @@ export default function CheckoutList() {
     }, []);
 
     const openModal = (txn) => {
-        console.log(txn);
         setSelected(txn);
         setIsOpen(true);
     };

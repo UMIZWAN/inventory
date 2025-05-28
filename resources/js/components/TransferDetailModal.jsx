@@ -107,6 +107,12 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                       <p><span className="font-semibold">From:</span> {data?.assets_from_branch_name}</p>
                       <p><span className="font-semibold">To:</span> {data?.assets_to_branch_name}</p>
                       <p><span className="font-semibold">Purpose:</span> {data?.asset_transaction_purpose_name}</p>
+                      <p><span className="font-semibold">By:</span> {data?.created_by_name}</p>          
+                    </div>
+                    <div className="text-left mr-20">
+                      <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
+                      <p><span className="font-semibold">Reference Number:</span> {data?.assets_transaction_running_number}</p>
+                      <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                       <div>
                         <span className="font-semibold">Shipping Option:</span>{' '}
                         {data?.assets_transaction_status === "APPROVED" ? (
@@ -126,11 +132,6 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                           <span className="ml-2">{data?.assets_shipping_option_name}</span>
                         )}
                       </div>
-                    </div>
-                    <div className="text-left mr-20">
-                      <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
-                      <p><span className="font-semibold">Reference Number:</span> {data?.assets_transaction_running_number}</p>
-                      <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                     </div>
                   </div>
 
