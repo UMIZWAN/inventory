@@ -143,9 +143,9 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Code</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Name</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Category</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Price</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Quantity</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase border">Total Price</th>
+                            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase border">Price</th>
+                            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase border">Quantity</th>
+                            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase border">Total Price</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -158,9 +158,9 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                                 <td className="px-4 py-2 border">{item.assets.asset_running_number}</td>
                                 <td className="px-4 py-2 border">{item.asset_name}</td>
                                 <td className="px-4 py-2 border">{item.assets.asset_category_name}</td>
-                                <td className="px-4 py-2 border">{Number(item.assets.asset_sales_cost).toFixed(2)}</td>
-                                <td className="px-4 py-2 border">{item.asset_unit}</td>
-                                <td className="px-4 py-2 border">{Number(item.assets.asset_sales_cost * item.asset_unit).toFixed(2)}</td>
+                                <td className="px-4 py-2 border text-center">{Number(item.assets.asset_sales_cost).toFixed(2)}</td>
+                                <td className="px-4 py-2 border text-center">{item.asset_unit}</td>
+                                <td className="px-4 py-2 border text-center">{Number(item.assets.asset_sales_cost * item.asset_unit).toFixed(2)}</td>
                               </tr>
                             );
                           })}
@@ -168,6 +168,10 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                       </table>
                     </div>
                   </div>
+
+                  <div className="mt-5">
+                        <p><strong>Remark:</strong> {data?.assets_transaction_remark || "-"}</p>
+                    </div>
                 </div>
 
                 <div className="mt-4 flex justify-end space-x-2">

@@ -139,6 +139,7 @@ class AssetsTransactionController extends Controller
                         'assets_transaction_type' => $request->assets_transaction_type,
                         'assets_recipient_name' => $request->assets_recipient_name,
                         'assets_transaction_remark' => $request->assets_transaction_remark,
+                        'assets_transaction_status' => $request->assets_transaction_status,
                         'assets_transaction_purpose_id' => $request->assets_transaction_purpose_id,
                         'assets_from_branch_id' => $request->assets_from_branch_id,
                         'assets_transaction_total_cost' => $request->assets_transaction_total_cost,
