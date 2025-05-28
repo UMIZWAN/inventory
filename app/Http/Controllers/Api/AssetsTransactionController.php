@@ -787,4 +787,51 @@ class AssetsTransactionController extends Controller
             // 'data' => new ReportResource($data)
         ], 201);
     }
+
+    public function getSingleReport(Request $request)
+    {
+        $id = $request->id;
+        $branchId = $request->branch_id;
+
+        if (!$id || !$branchId) {
+            return response()->json(['error' => 'Missing asset ID or branch ID'], 400);
+        }
+
+        $asset = Assets::where('id', $id)
+            ->whereHas('branchValues', fn($q) => $q->where('asset_branch_id', $branchId))
+            ->with([
+                // Only transactions relevant to this branch (either in or out)
+                'transactionItems' => function ($q) use ($branchId) {
+                    $q->whereHas('assetsTransaction', function ($tq) use ($branchId) {
+                        $tq->where(function ($inner) use ($branchId) {
+                            $inner->where('assets_from_branch_id', $branchId)
+                                ->orWhere('assets_to_branch_id', $branchId);
+                        });
+                    })->select('id', 'asset_id', 'asset_transaction_id', 'created_at', 'asset_unit');
+                },
+                'transactionItems.assetsTransaction' => fn($q) => $q->select(
+                    'id',
+                    'assets_transaction_type',
+                    'assets_transaction_purpose_id',
+                    'supplier_id',
+                    'assets_from_branch_id',
+                    'assets_to_branch_id'
+                ),
+                'transactionItems.assetsTransaction.purpose' => fn($q) => $q->select(
+                    'id',
+                    'asset_transaction_purpose_name'
+                ),
+                'branchValues' => fn($q) => $q->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit')
+                    ->where('asset_branch_id', $branchId)
+            ])
+            ->first();
+
+        if (!$asset) {
+            return response()->json(['error' => 'Asset not found for the specified branch'], 404);
+        }
+
+        return response()->json([
+            'data' => new ReportResource($asset)
+        ]);
+    }
 }

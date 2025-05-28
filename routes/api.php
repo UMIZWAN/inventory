@@ -75,6 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('access-levels/{id}/users', [AccessLevelController::class, 'getWithUsers']);
     Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
 
+    Route::get('report/item', [AssetsTransactionController::class, 'getSingleReport']);
+
     Route::post('/clear-cache', function (Request $request) {
         try {
             Cache::forget('access_levels_cache');
