@@ -24,6 +24,8 @@ function SingleItemReport({ id, branch_id }) {
     fetchReport();
   }, [id, branch_id]);
 
+  console.log('SingleItemReport data:', data);
+
   if (loading) return <Layout><p className="p-4">Loading...</p></Layout>;
   if (!data) return <Layout><p className="p-4">No data found.</p></Layout>;
 

@@ -32,6 +32,7 @@ class ReportResource extends JsonResource
                         ->map(function ($item) {
                             $trx = $item->assetsTransaction;
                             return [
+                                'transaction_id' => $trx->id,
                                 'asset_transaction_type' => $trx->assets_transaction_type,
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,
@@ -52,6 +53,7 @@ class ReportResource extends JsonResource
                         ->map(function ($item) {
                             $trx = $item->assetsTransaction;
                             return [
+                                'transaction_id' => $trx->id,
                                 'asset_transaction_type' => $trx->assets_transaction_type,
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,
@@ -76,6 +78,7 @@ class ReportResource extends JsonResource
                         ->map(function ($item) {
                             $trx = $item->assetsTransaction;
                             return [
+                                'transaction_id' => $trx->id,
                                 'asset_transaction_type' => $trx->assets_transaction_type,
                                 'created_at' => $item->created_at,
                                 'asset_transaction_purpose_name' => $trx->purpose->asset_transaction_purpose_name ?? null,
@@ -94,6 +97,7 @@ class ReportResource extends JsonResource
                         ->map(function ($item) {
                             $trx = $item->assetsTransaction;
                             return [
+                                'transaction_id' => $trx->id,
                                 'asset_transaction_type' => $trx->assets_transaction_type,
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,

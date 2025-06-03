@@ -4,6 +4,7 @@ import Layout from '../../components/layout/Layout';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/api';
 import ExportButton from '../../components/ExportButton';
+import TransactionModalWrapper from '../../components/TransactionModalWrapper';
 
 function InventoryReport() {
     const { user } = useAuth();
@@ -18,6 +19,8 @@ function InventoryReport() {
         to: '',
     });
     const [report, setReport] = useState([]);
+    const [txnId, setTxnId] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         // setFilters((prev) => ({ ...prev, branch: user?.branch_id || '' }));
@@ -84,6 +87,16 @@ function InventoryReport() {
 
         rowIndex += maxRows;
     });
+
+    const handleOpenTransaction = (id) => {
+        setTxnId(id);
+        setIsOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsOpen(false);
+        setTxnId(null); // optional: clear ID
+    };
 
     return (
         <Layout>
@@ -227,12 +240,16 @@ function InventoryReport() {
                                                 </td>
                                             )}
 
-                                            <td className="px-4 py-2 border">{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}</td>
+                                            <td className="px-4 py-2 border hover:underline"
+                                                onClick={() => handleOpenTransaction(assetIn?.transaction_id)}>{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}
+                                            </td>
                                             <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
                                             <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
                                             <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
 
-                                            <td className="px-4 py-2 border">{assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}</td>
+                                            <td className="px-4 py-2 border hover:underline" onClick={() => handleOpenTransaction(assetOut?.transaction_id)}>
+                                                {assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}
+                                            </td>
                                             <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>
                                             <td className="px-4 py-2 border">{assetOut?.asset_transaction_purpose_name || '-'}</td>
                                             <td className="px-4 py-2 border text-center">{assetOut?.asset_unit ?? '-'}</td>
@@ -251,6 +268,14 @@ function InventoryReport() {
                     </table>
                 </div>
             </div>
+
+            {isOpen && (
+                <TransactionModalWrapper
+                    id={txnId}
+                    isOpen={isOpen}
+                    onClose={closeModal}
+                />
+            )}
         </Layout>
     );
 }

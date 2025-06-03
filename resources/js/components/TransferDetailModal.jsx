@@ -69,10 +69,10 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   &times;
                 </button>
 
-                <div className="flex justify-between">
+                <div className="flex justify-between mb-4">
                   <Dialog.Title
-                    as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900"
+                    as="h2"
+                    className="text-2xl font-bold"
                   >
                     Transfer Details
                   </Dialog.Title>
@@ -91,9 +91,9 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                         {({ loading }) => (
                           <button
                             type="button"
-                            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm mr-4"
                           >
-                            {loading ? "Preparing PDF..." : "Download"}
+                            {loading ? "Preparing PDF..." : "Download PDF"}
                           </button>
                         )}
                       </PDFDownloadLink>
