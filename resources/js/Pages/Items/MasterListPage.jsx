@@ -3,8 +3,10 @@ import api from "../../api/api";
 import Layout from '../../components/layout/Layout';
 import { Head } from "@inertiajs/react";
 import ExportButton from "../../components/ExportButton";
+import { useAuth } from "../../context/AuthContext";
 
 const MasterListPage = () => {
+    const { user } = useAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -272,13 +274,15 @@ const MasterListPage = () => {
                                                     ) : (
                                                         <div className="text-sm text-gray-500 flex items-center justify-between">
                                                             <span>{item.asset_running_number}</span>
-                                                            <button
-                                                                onClick={() => handleEdit(item.id, item.asset_running_number)}
-                                                                className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                                title="Edit"
-                                                            >
-                                                                ✎
-                                                            </button>
+                                                            {user?.add_edit_asset && (
+                                                                <button
+                                                                    onClick={() => handleEdit(item.id, item.asset_running_number)}
+                                                                    className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity hover:text-blue-600"
+                                                                    title="Edit"
+                                                                >
+                                                                    ✎
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </td>
