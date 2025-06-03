@@ -189,7 +189,7 @@ const MasterListPage = () => {
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search by name, asset number, category or tag..."
+                            placeholder="Search by name, code or category..."
                             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
