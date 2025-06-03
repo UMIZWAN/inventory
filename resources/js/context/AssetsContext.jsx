@@ -17,6 +17,12 @@ export const AssetMetaProvider = ({ children }) => {
   const [assetTransfer, setAssetTransfer] = useState([]);
   const [report, setReport] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 10,
+    total: 0
+  });
 
   const fetchAssets = (branchId) => {
     setLoading(true);
@@ -35,12 +41,19 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
-  const fetchBranchAssets = (branchId) => {
+  const fetchBranchAssets = (params = {}) => {
     setLoading(true);
-    api.get('/api/assets/get-by-branch')
+    api.get('/api/assets/get-by-branch', { params })
       .then(response => {
         if (response.data.success) {
-          setAssets(response.data.data);
+          const paginationData = response.data.pagination;
+          setAssets(response.data.data); // paginated list
+          setPagination({
+            currentPage: paginationData.current_page,
+            lastPage: paginationData.last_page,
+            perPage: paginationData.per_page,
+            total: paginationData.total,
+          });
         }
       })
       .catch(error => {
@@ -83,7 +96,7 @@ export const AssetMetaProvider = ({ children }) => {
       .finally(() => {
         setLoading(false);
       });
-  };  
+  };
 
   const getOneAsset = (id) => {
     api.get(`/api/assets/${id}`)
@@ -346,12 +359,13 @@ export const AssetMetaProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }; 
+  };
 
   return (
     <AssetsContext.Provider
       value={{
         assets,
+        pagination, setPagination,
         fetchBranchAssets,
         fetchAssets,
         fetchItemList,

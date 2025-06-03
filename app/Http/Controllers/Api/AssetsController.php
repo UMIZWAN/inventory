@@ -168,16 +168,16 @@ class AssetsController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             // 'asset_running_number' => 'required|string|max:255|unique:assets,asset_running_number,' . $id,
             'asset_description' => 'nullable|string',
             'asset_type' => 'nullable|string|max:255',
-            'asset_category_id' => 'required|exists:assets_category,id',
+            'asset_category_id' => 'nullable|exists:assets_category,id',
             // 'asset_tag_id' => 'required|exists:assets_tag,id',
-            'asset_stable_unit' => 'required|integer|min:0',
+            'asset_stable_unit' => 'nullable|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
-            'asset_unit_measure' => 'required|string|max:255',
+            'asset_unit_measure' => 'nullable|string|max:255',
             'asset_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'assets_remark' => 'nullable|string'
         ]);
@@ -402,25 +402,48 @@ class AssetsController extends Controller
             ], 500);
         }
     }
-    public function getByBranch()
+
+    public function getByBranch(Request $request)
     {
         try {
             $branchId = Auth::user()->branch_id;
 
-            $assets = Assets::with(['category', 'tag'])
+            // Optional query parameters
+            $perPage = $request->input('per_page', 10); // default to 10 per page
+            $search = $request->search;
+            $categoryId = $request->input('asset_category_id');
+
+            $query = Assets::with(['category', 'tag'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
                     $query->where('asset_branch_id', $branchId);
                 })
                 ->with(['branchValues' => function ($query) use ($branchId) {
                     $query->where('asset_branch_id', $branchId);
-                }])
-                ->latest()
-                ->get();
+                }]);
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('asset_running_number', 'like', "%$search%")
+                        ->orWhere('name', 'like', "%$search%");
+                });
+            }
+
+            if (!empty($categoryId)) {
+                $query->where('asset_category_id', $categoryId);
+            }
+
+            $assets = $query->latest()->paginate($perPage);
 
             return response()->json([
                 'success' => true,
                 'message' => 'List Data Assets',
                 'data' => AssetsResource::collection($assets),
+                'pagination' => [
+                    'current_page' => $assets->currentPage(),
+                    'last_page' => $assets->lastPage(),
+                    'per_page' => $assets->perPage(),
+                    'total' => $assets->total(),
+                ]
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -602,6 +625,7 @@ class AssetsController extends Controller
                 'asset_running_number' => $asset->asset_running_number,
                 'asset_category_id' => $asset->asset_category_id,
                 'asset_category_name' => $asset->category->name ?? null,
+                'asset_purchase_cost' => $asset->asset_purchase_cost,
                 'asset_sales_cost' => $asset->asset_sales_cost,
                 'asset_unit_measure' => $asset->asset_unit_measure,
             ];

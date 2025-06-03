@@ -12,24 +12,27 @@ import api from '../../api/api';
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, fetchCategories, fetchBranchAssets, loading } = useAssetMeta();
+    const { assets, categories, fetchCategories, fetchBranchAssets, pagination, setPagination } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filters, setFilters] = useState({
         category: '',
-        tag: '',
-        location: '',
-        status: '',
     });
 
-    // Pagination state
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(10);
     const [toast, setToast] = useState(null);
 
     useEffect(() => {
-        fetchBranchAssets();
+        const params = {
+            page: pagination.current_page,
+            search: searchTerm,
+            asset_category_id: filters.category,
+        };
+        fetchBranchAssets(params);
+    }, [pagination.current_page, searchTerm, filters.category]);
+
+    useEffect(() => {
+
         fetchCategories();
     }, []);
 
@@ -65,40 +68,34 @@ const Assets = () => {
         Quantity: asset.branch_values[0]?.asset_current_unit || 0,
     }));
 
-    // Get current items for pagination
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredAssets.slice(indexOfFirstItem, indexOfLastItem);
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= pagination.lastPage) {
+            fetchBranchAssets(page);
+        }
+    };
 
-    // Change page
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    // const paginate = (pageNumber) => {
+    //     setPagination(prev => ({ ...prev, current_page: pageNumber }));
+    // };
 
-    // Calculate total pages
-    const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
-
-    // Function to determine which page numbers to show
     const getPageRange = () => {
-        const delta = 2; // Number of pages to show before and after current page
+        const delta = 2;
         const range = [];
         const rangeWithDots = [];
         let l;
 
-        // Always include page 1
         range.push(1);
 
-        // Calculate the range of pages to show around current page
-        for (let i = currentPage - delta; i <= currentPage + delta; i++) {
-            if (i > 1 && i < totalPages) {
+        for (let i = pagination.currentPage - delta; i <= pagination.currentPage + delta; i++) {
+            if (i > 1 && i < pagination.lastPage) {
                 range.push(i);
             }
         }
 
-        // Always include the last page if there are more than 1 pages
-        if (totalPages > 1) {
-            range.push(totalPages);
+        if (pagination.lastPage > 1) {
+            range.push(pagination.lastPage);
         }
 
-        // Add dots where needed
         for (let i of range) {
             if (l) {
                 if (i - l === 2) {
@@ -157,33 +154,59 @@ const Assets = () => {
                         )}
                     </div>
 
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 mb-4">
-                        {/* Search Input */}
-                        <div className="w-full lg:w-1/3">
-                            <input
-                                type="text"
-                                placeholder="Search by name/code..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Filters */}
-                        <div className="flex flex-wrap gap-4">
-                            <div>
-                                {/* <label className="block mb-1 text-xs font-bold">Categories:</label> */}
-                                <select
-                                    value={filters.category}
-                                    onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                                    className="px-2 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">All Categories</option>
-                                    {[...new Set(assets.map(a => a.asset_category_name).filter(Boolean))].map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
+                    <div>
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 mb-4">
+                            {/* Search Input */}
+                            <div className="w-full lg:w-1/4">
+                                <input
+                                    type="text"
+                                    placeholder="Search by name/code..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full px-4 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
                             </div>
+
+                            {/* Filters */}
+                            <div className="flex flex-wrap gap-4">
+                                <div>
+                                    {/* <label className="block mb-1 text-xs font-bold">Categories:</label> */}
+                                    <select
+                                        value={filters.category}
+                                        onChange={(e) => {
+                                            setPagination(prev => ({ ...prev, current_page: 1 })); // Reset to first page
+                                            setFilters({ ...filters, category: e.target.value });
+                                        }}
+                                        className="px-2 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                            {/* <button
+                                onClick={() => fetchBranchAssets(filters)}
+                                className="rounded bg-blue-600 text-white px-4 py-1 hover:bg-blue-700 text-sm"
+                            >
+                                Apply
+                            </button> */}
+                            <button
+                                onClick={() => {
+                                    const defaultFilters = {
+                                        category: ''
+                                    };
+                                    setFilters(defaultFilters);
+                                    setSearchTerm('');
+                                }}
+                                className="rounded bg-gray-300 text-gray-800 px-4 py-1 hover:bg-gray-400 text-sm"
+                            >
+                                Clear
+                            </button>
                         </div>
                     </div>
 
@@ -225,7 +248,7 @@ const Assets = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {currentItems.map((asset) => (
+                                    {assets.map((asset) => (
                                         <tr
                                             key={asset.id}
                                             className="hover:bg-gray-50 group cursor-pointer"
@@ -296,59 +319,58 @@ const Assets = () => {
                     </div>
 
                     {/* Pagination */}
-                    {filteredAssets.length > 0 && (
-                        <div className="flex justify-between items-center mt-4">
-                            <div className="text-sm text-gray-700">
-                                Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
-                                <span className="font-medium">
-                                    {indexOfLastItem > filteredAssets.length ? filteredAssets.length : indexOfLastItem}
-                                </span>{" "}
-                                of <span className="font-medium">{filteredAssets.length}</span> results
-                            </div>
-                            <nav className="flex items-center">
-                                <button
-                                    onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
-                                    disabled={currentPage === 1}
-                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === 1
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-gray-700 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    Previous
-                                </button>
-                                <div className="hidden md:flex">
-                                    {getPageRange().map((number, index) => (
-                                        number === '...' ? (
-                                            <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700">
-                                                {number}
-                                            </span>
-                                        ) : (
-                                            <button
-                                                key={`page-${number}`}
-                                                onClick={() => paginate(number)}
-                                                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${currentPage === number
-                                                    ? "bg-blue-600 text-white"
-                                                    : "text-gray-700 hover:bg-gray-50"
-                                                    }`}
-                                            >
-                                                {number}
-                                            </button>
-                                        )
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                                    disabled={currentPage === totalPages || totalPages === 0}
-                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === totalPages || totalPages === 0
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-gray-700 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    Next
-                                </button>
-                            </nav>
-                        </div>
-                    )}
+                    {pagination.total > 0 && (
+    <div className="flex justify-between items-center mt-4">
+        <div className="text-sm text-gray-700">
+            Showing <span className="font-medium">
+                {(pagination.currentPage - 1) * pagination.perPage + 1}
+            </span> to <span className="font-medium">
+                {Math.min(pagination.currentPage * pagination.perPage, pagination.total)}
+            </span> of <span className="font-medium">{pagination.total}</span> results
+        </div>
+        <nav className="flex items-center">
+            <button
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1}
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                    pagination.currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-gray-700 hover:bg-gray-50"
+                }`}
+            >
+                Previous
+            </button>
+            <div className="hidden md:flex">
+                {getPageRange().map((number, index) => (
+                    number === '...' ? (
+                        <span key={`ellipsis-${index}`} className="px-4 py-2 text-sm text-gray-700">...</span>
+                    ) : (
+                        <button
+                            key={`page-${number}`}
+                            onClick={() => handlePageChange(number)}
+                            className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
+                                pagination.currentPage === number
+                                    ? "bg-blue-600 text-white"
+                                    : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                            {number}
+                        </button>
+                    )
+                ))}
+            </div>
+            <button
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.lastPage}
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                    pagination.currentPage === pagination.lastPage ? "text-gray-400 cursor-not-allowed" : "text-gray-700 hover:bg-gray-50"
+                }`}
+            >
+                Next
+            </button>
+        </nav>
+    </div>
+)}
+
+
 
                     {showModal && (
                         <AddAsset setShowModal={setShowModal} />

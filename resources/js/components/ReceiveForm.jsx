@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useSuppliers } from "../context/SuppliersContext";
@@ -6,7 +6,8 @@ import { useAuth } from "../context/AuthContext";
 
 function ReceiveForm({ setShowReceiveForm, onSubmit }) {
   const { user } = useAuth();
-  const { assets, createAssetIn, fetchBranchAssets } = useAssetMeta();
+  const { assets, createAssetIn, fetchBranchAssets, itemList,
+    fetchItemList } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
   const [submitting, setSubmitting] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
@@ -26,15 +27,17 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
 
   useEffect(() => {
     fetchSuppliers();
-    fetchBranchAssets();
+    fetchItemList();
   }, []);
+
+  console.log("itemList", itemList);
 
   const columns = [
     {
       key: "item",
       label: "Item",
       type: "select",
-      options: assets.map((a) => ({ value: a.id, label: a.name })),
+      options: itemList.map((a) => ({ value: a.id, label: a.name })),
       width: "w-80"
     },
     { key: "unitMeasure", label: "Unit of Measure", align: "text-center" },
@@ -47,7 +50,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
     const updated = [...items];
 
     if (field === 'item') {
-      const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
+      const selectedAsset = itemList.find(a => a.id === Number(value)); // Fix here
       updated[index].item = value;
 
       if (selectedAsset) {
