@@ -240,14 +240,15 @@ function InventoryReport() {
                                                 </td>
                                             )}
 
-                                            <td className="px-4 py-2 border hover:underline"
+                                            <td className="px-4 py-2 border hover:underline hover:cursor-pointer"
                                                 onClick={() => handleOpenTransaction(assetIn?.transaction_id)}>{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}
                                             </td>
                                             <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
                                             <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
                                             <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
 
-                                            <td className="px-4 py-2 border hover:underline" onClick={() => handleOpenTransaction(assetOut?.transaction_id)}>
+                                            <td className="px-4 py-2 border hover:underline hover:cursor-pointer"
+                                                onClick={() => handleOpenTransaction(assetOut?.transaction_id)}>
                                                 {assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}
                                             </td>
                                             <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>

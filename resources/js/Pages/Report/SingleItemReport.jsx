@@ -127,13 +127,13 @@ function SingleItemReport({ id, branch_id }) {
                 const outTx = assetOuts[i];
                 return (
                   <tr key={i} className="border-t">
-                    <td className="px-4 py-2 border hover:underline" onClick={() => handleOpenTransaction(inTx?.transaction_id)}>
+                    <td className="px-4 py-2 border hover:underline hover:cursor-pointer" onClick={() => handleOpenTransaction(inTx?.transaction_id)}>
                       {inTx?.created_at ? new Date(inTx.created_at).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-4 py-2 border">{inTx?.asset_transaction_type || '-'}</td>
                     <td className="px-4 py-2 border">{inTx?.supplier_name || inTx?.assets_from_branch_name || '-'}</td>
                     <td className="px-4 py-2 border text-center">{inTx?.asset_unit ?? '-'}</td>
-                    <td className="px-4 py-2 border hover:underline" onClick={() => handleOpenTransaction(outTx?.transaction_id)}>
+                    <td className="px-4 py-2 border hover:underline hover:cursor-pointer" onClick={() => handleOpenTransaction(outTx?.transaction_id)}>
                       {outTx?.created_at ? new Date(outTx.created_at).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-4 py-2 border">{outTx?.asset_transaction_type || '-'}</td>
