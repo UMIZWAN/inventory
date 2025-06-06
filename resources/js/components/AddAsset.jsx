@@ -87,7 +87,7 @@ function AddAsset({ setShowModal }) {
                 <h2 className="text-2xl font-semibold mb-6 text-gray-800">Add New Asset</h2>
                 <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex flex-col">
-                        {label("Name", true)}
+                        {label("Item Name", true)}
                         <input name="name" value={form.name} onChange={handleChange} required className="p-2 border rounded" />
                     </div>
 
