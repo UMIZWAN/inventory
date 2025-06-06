@@ -240,7 +240,7 @@ const MasterListPage = () => {
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Total Quantity
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -302,7 +302,7 @@ const MasterListPage = () => {
                                                         {/* {item.asset_stable_unit || 0} {item.asset_unit_measure} */}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     {getStatusBadge(item.total_units, item.asset_stable_unit)}
                                                 </td>
                                                 <td className="px-6 py-4">

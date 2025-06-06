@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../api/api';
 import ExportButton from '../../components/ExportButton';
 import TransactionModalWrapper from '../../components/TransactionModalWrapper';
+import Pagination from '../../components/Pagination';
 
 function InventoryReport() {
     const { user } = useAuth();
@@ -21,6 +22,12 @@ function InventoryReport() {
     const [report, setReport] = useState([]);
     const [txnId, setTxnId] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        perPage: 10,
+        total: 0,
+        lastPage: 1
+    });
 
     useEffect(() => {
         // setFilters((prev) => ({ ...prev, branch: user?.branch_id || '' }));
@@ -29,7 +36,7 @@ function InventoryReport() {
         fetchBranches();
     }, []);
 
-    const fetchReport = async (filters = {}) => {
+    const fetchReport = async (filters = {}, page = 1) => {
         try {
             const params = new URLSearchParams();
 
@@ -38,9 +45,16 @@ function InventoryReport() {
             if (filters.category) params.append('category', filters.category);
             if (filters.from) params.append('from', filters.from);
             if (filters.to) params.append('to', filters.to);
+            params.append('page', page);
 
             const response = await api.get(`/api/report?${params.toString()}`);
             setReport(response.data.data);
+            setPagination({
+                currentPage: response.data.meta.current_page,
+                perPage: response.data.meta.per_page,
+                total: response.data.meta.total,
+                lastPage: response.data.meta.last_page,
+            });
         } catch (error) {
             console.error("Failed to fetch report:", error);
         }
@@ -265,8 +279,11 @@ function InventoryReport() {
                                 });
                             })}
                         </tbody>
-
                     </table>
+                    <Pagination
+                        pagination={pagination}
+                        onPageChange={(page) => fetchReport(filters, page)}
+                    />
                 </div>
             </div>
 
