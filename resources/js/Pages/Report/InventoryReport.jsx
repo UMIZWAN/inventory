@@ -257,7 +257,11 @@ function InventoryReport() {
                                             <td className="px-4 py-2 border hover:underline hover:cursor-pointer"
                                                 onClick={() => handleOpenTransaction(assetIn?.transaction_id)}>{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}
                                             </td>
-                                            <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
+                                            <td className="px-2 py-2 border text-center">
+                                                {assetIn?.asset_transaction_type === 'ASSET IN' ? 'MKT IN' :
+                                                    assetIn?.asset_transaction_type === 'ASSET TRANSFER' ? 'TRANSFER' : (assetIn?.asset_transaction_type || '-')}
+                                            </td>
+
                                             <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
                                             <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
 
@@ -265,7 +269,10 @@ function InventoryReport() {
                                                 onClick={() => handleOpenTransaction(assetOut?.transaction_id)}>
                                                 {assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}
                                             </td>
-                                            <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>
+                                            <td className="px-2 py-2 border text-center">
+                                                {assetOut?.asset_transaction_type === 'ASSET OUT' ? 'INVOICE' :
+                                                    assetOut?.asset_transaction_type === 'ASSET TRANSFER' ? 'TRANSFER' : (assetOut?.asset_transaction_type || '-')}
+                                            </td>
                                             <td className="px-4 py-2 border">{assetOut?.asset_transaction_purpose_name || '-'}</td>
                                             <td className="px-4 py-2 border text-center">{assetOut?.asset_unit ?? '-'}</td>
 
