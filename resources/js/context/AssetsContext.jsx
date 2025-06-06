@@ -64,6 +64,17 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
+  const fetchAllBranchAssets = async (params = {}) => {
+    try {
+
+      const response = await api.get('/api/assets/get-by-branch', { params });
+      return response.data.data; // Assuming API returns all assets here
+    } catch (err) {
+      console.error("Export failed", err);
+      return [];
+    }
+  };
+
   const fetchItemList = () => {
     setLoading(true);
     api.get('/api/assets/get-itemlist')
@@ -88,21 +99,6 @@ export const AssetMetaProvider = ({ children }) => {
       .then(response => {
         if (response.data.success) {
           setBranchItem(response.data.data);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching assets:', error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
-  const getOneAsset = (id) => {
-    api.get(`/api/assets/${id}`)
-      .then(response => {
-        if (response.data.success) {
-          setAssets(response.data.data);
         }
       })
       .catch(error => {
@@ -367,6 +363,7 @@ export const AssetMetaProvider = ({ children }) => {
         assets,
         pagination, setPagination,
         fetchBranchAssets,
+        fetchAllBranchAssets,
         fetchAssets,
         fetchItemList,
         itemList,

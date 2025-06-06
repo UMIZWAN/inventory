@@ -10,10 +10,12 @@ import { useAuth } from '../../context/AuthContext';
 import { Head } from "@inertiajs/react";
 import api from '../../api/api';
 import Pagination from '../../components/Pagination';
+import * as XLSX from "xlsx";
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, categories, fetchCategories, fetchBranchAssets, pagination, setPagination } = useAssetMeta();
+    const { assets, categories, fetchCategories, fetchBranchAssets, 
+        fetchAllBranchAssets, pagination, setPagination } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +25,7 @@ const Assets = () => {
 
     const [toast, setToast] = useState(null);
 
-     useEffect(() => {
+    useEffect(() => {
         const params = {
             page: pagination.current_page,
             page: pagination.currentPage,
@@ -41,35 +43,39 @@ const Assets = () => {
 
     const handleView = (asset) => setSelectedAsset(asset);
 
-    const filteredAssets = assets.filter(asset => {
-        const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            asset.asset_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            asset.asset_type?.toLowerCase().includes(searchTerm.toLowerCase());
+    const handleExport = async (format = "xlsx") => {
+        const params = {
+            page: 1,
+            per_page: 10000,
+            search: searchTerm,
+            asset_category_id: filters.category,
+        };
 
-        const matchesCategory = filters.category ? asset.asset_category_name === filters.category : true;
+        try {
+            const fullAssets = await fetchAllBranchAssets(params);
 
-        const current = Number(asset.asset_current_value);
-        const stable = Number(asset.asset_stable_value);
-        let computedStatus = 'Normal';
-        if (current <= 0) computedStatus = 'Critical';
-        else if (current <= stable / 3) computedStatus = 'Very Low';
-        else if (current <= (2 * stable) / 3) computedStatus = 'Low';
+            const fullExportData = fullAssets.map(asset => ({
+                Code: asset.asset_running_number || '—',
+                Name: asset.name || '—',
+                Type: asset.asset_type || '—',
+                Category: asset.asset_category_name || '—',
+                'Unit Cost': user?.add_edit_asset ? `RM ${Number(asset.asset_purchase_cost).toFixed(2)}` : '',
+                Price: `RM ${Number(asset.asset_sales_cost).toFixed(2)}`,
+                Branch: asset.branch_values[0]?.asset_branch_name || '—',
+                Quantity: asset.branch_values[0]?.asset_current_unit || 0,
+            }));
 
-        const matchesStatus = filters.status ? computedStatus === filters.status : true;
+            const worksheet = XLSX.utils.json_to_sheet(fullExportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
 
-        return matchesSearch && matchesCategory && matchesStatus;
-    });
+            const file = format === "csv" ? `Assets_List.csv` : `Assets_List.xlsx`;
+            XLSX.writeFile(workbook, file, { bookType: format });
 
-    const exportData = filteredAssets.map(asset => ({
-        Code: asset.asset_running_number || '—',
-        Name: asset.name || '—',
-        Type: asset.asset_type || '—',
-        Category: asset.asset_category_name || '—',
-        'Unit Cost': user?.add_edit_asset ? `RM ${Number(asset.asset_purchase_cost).toFixed(2)}` : '',
-        Price: `RM ${Number(asset.asset_sales_cost).toFixed(2)}`,
-        Branch: asset.branch_values[0]?.asset_branch_name || '—',
-        Quantity: asset.branch_values[0]?.asset_current_unit || 0,
-    }));
+        } catch (error) {
+            console.error("Export failed:", error);
+        }
+    };
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= pagination.lastPage) {
@@ -177,7 +183,11 @@ const Assets = () => {
                     </div>
 
                     <div className='flex justify-end mb-4'>
-                        <ExportButton data={exportData} filename="Assets_List" sheetName="Assets" />
+                        <ExportButton
+                            filename="Assets_List"
+                            sheetName="Assets"
+                            onClick={handleExport}
+                        />
                     </div>
 
                     <div className="bg-white rounded-lg shadow overflow-hidden">
