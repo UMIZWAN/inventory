@@ -15,7 +15,6 @@ Font.register({
 
 // PDF Document Component
 const InvoicePDF = ({ transaction, getAssetDetails }) => {
-    console.log(items);
     const items = transaction?.transaction_items || transaction?.assets_transaction_item_list || [];
     let totalAmount = 0;
 
@@ -192,28 +191,42 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                 </div>
 
                 <div className="bg-white p-4">
-                    <div className="mb-6 space-y-1">
-                        <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
-                        <p><strong>Branch:</strong> {transaction.assets_from_branch_name || transaction.from_branch.name}</p>
+                    <div className="flex justify-between mb-4 mr-8">
+                        <div className="mb-6 space-y-1">
+                            <p><strong>Branch:</strong> {transaction.assets_from_branch_name || transaction.from_branch.name}</p>
 
-                        {type === "transfer" && (
-                            <>
-                                {transaction.assets_transaction_purpose &&
-                                    JSON.parse(transaction.assets_transaction_purpose).includes("SELL") && (
-                                        <p><strong>Recipient:</strong> {transaction.assets_recipient_name}</p>
-                                    )}
-                                <p><strong>Purpose:</strong> {transaction.asset_transaction_purpose_name || transaction.purpose.asset_transaction_purpose_name}</p>
-                                <p><strong>Type:</strong> {transaction.assets_transaction_type}</p>
-                                <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString()}</p>
-                            </>
-                        )}
+                            {type === "transfer" && (
+                                <>
+                                    <p><strong>Purpose:</strong> {transaction.asset_transaction_purpose_name || transaction.purpose.asset_transaction_purpose_name}</p>
+                                </>
+                            )}
 
-                        {type === "receive" && (
-                            <>
-                                <p><strong>Supplier:</strong> {transaction.supplier_name}</p>
-                                <p><strong>Received Date:</strong> {new Date(transaction.received_at).toLocaleDateString()}</p>
-                            </>
-                        )}
+                            {type === "receive" && (
+                                <>
+                                    <p><strong>Supplier:</strong> {transaction.supplier_name}</p>
+                                </>
+                            )}
+                        </div>
+                        <div className="mb-6 space-y-1">
+
+                            {type === "transfer" && (
+                                <>
+                                    {transaction.assets_transaction_purpose &&
+                                        JSON.parse(transaction.assets_transaction_purpose).includes("SELL") && (
+                                            <p><strong>Recipient:</strong> {transaction.assets_recipient_name}</p>
+                                        )}
+                                    <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString()}</p>
+                                </>
+                            )}
+
+                            {type === "receive" && (
+                                <>
+                                    <p><strong>Received Date:</strong> {new Date(transaction.received_at).toLocaleDateString()}</p>
+                                </>
+                            )}
+
+                            <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
+                        </div>
                     </div>
 
                     <h3 className="text-xl font-semibold mb-2">Item List</h3>

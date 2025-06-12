@@ -193,7 +193,7 @@ const ItemDetails = ({ asset, onClose }) => {
                             {isEditing('name')}
                         </div>
                         <div>
-                            <label className="text-sm font-semibold text-gray-600">Type:</label>
+                            <label className="text-sm font-semibold text-gray-600">Type/Size:</label>
                             {isEditing('asset_type')}
                         </div>
                         <div>

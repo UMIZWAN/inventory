@@ -4,6 +4,9 @@ import Layout from '../../components/layout/Layout';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/api';
 import ExportButton from '../../components/ExportButton';
+import TransactionModalWrapper from '../../components/TransactionModalWrapper';
+import Pagination from '../../components/Pagination';
+import * as XLSX from "xlsx";
 
 function InventoryReport() {
     const { user } = useAuth();
@@ -18,6 +21,14 @@ function InventoryReport() {
         to: '',
     });
     const [report, setReport] = useState([]);
+    const [txnId, setTxnId] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        perPage: 10,
+        total: 0,
+        lastPage: 1
+    });
 
     useEffect(() => {
         // setFilters((prev) => ({ ...prev, branch: user?.branch_id || '' }));
@@ -26,7 +37,7 @@ function InventoryReport() {
         fetchBranches();
     }, []);
 
-    const fetchReport = async (filters = {}) => {
+    const fetchReport = async (filters = {}, page = 1) => {
         try {
             const params = new URLSearchParams();
 
@@ -35,55 +46,105 @@ function InventoryReport() {
             if (filters.category) params.append('category', filters.category);
             if (filters.from) params.append('from', filters.from);
             if (filters.to) params.append('to', filters.to);
+            params.append('page', page);
 
             const response = await api.get(`/api/report?${params.toString()}`);
             setReport(response.data.data);
+            setPagination({
+                currentPage: response.data.meta.current_page,
+                perPage: response.data.meta.per_page,
+                total: response.data.meta.total,
+                lastPage: response.data.meta.last_page,
+            });
         } catch (error) {
             console.error("Failed to fetch report:", error);
         }
     };
 
-    const exportData = [];
-    const merges = [];
+    const handleExport = async (format = "xlsx") => {
+        try {
+            const params = new URLSearchParams();
 
-    let rowIndex = 1; // header row is index 0
+            if (filters.branch) params.append('asset_branch_id', filters.branch);
+            if (filters.search) params.append('search', filters.search);
+            if (filters.category) params.append('category', filters.category);
+            if (filters.from) params.append('from', filters.from);
+            if (filters.to) params.append('to', filters.to);
+            params.append('per_page', 10000); // Ensure we get all records
+            params.append('page', 1);
 
-    report?.forEach((item) => {
-        const branch = item.branch_values[0];
-        const assetIns = branch?.asset_in || [];
-        const assetOuts = branch?.asset_out || [];
-        const maxRows = Math.max(assetIns.length, assetOuts.length, 1);
+            const response = await api.get(`/api/report?${params.toString()}`);
+            const fullData = response.data.data;
 
-        for (let i = 0; i < maxRows; i++) {
-            const assetIn = assetIns[i] || {};
-            const assetOut = assetOuts[i] || {};
+            let exportData = [];
+            let merges = [];
+            let rowIndex = 1;
 
-            exportData.push({
-                Code: i === 0 ? item.asset_running_number : '',
-                Name: i === 0 ? item.name : '',
-                "Stock In Date": assetIn.created_at ? new Date(assetIn.created_at).toLocaleDateString() : '',
-                "Stock In Type": assetIn.asset_transaction_type || '',
-                "Stock In From": assetIn.supplier_name || assetIn.assets_from_branch_name || '',
-                "Stock In Qty": assetIn.asset_unit || '',
-                "Stock Out Date": assetOut.created_at ? new Date(assetOut.created_at).toLocaleDateString() : '',
-                "Stock Out Type": assetOut.asset_transaction_type || '',
-                "Stock Out Purpose": assetOut.asset_transaction_purpose_name || '',
-                "Stock Out Qty": assetOut.asset_unit || '',
-                "Current Unit": i === 0 ? branch?.asset_current_unit || '' : ''
+            fullData.forEach((item) => {
+                const branch = item.branch_values[0];
+                const assetIns = branch?.asset_in || [];
+                const assetOuts = branch?.asset_out || [];
+                const maxRows = Math.max(assetIns.length, assetOuts.length, 1);
+
+                for (let i = 0; i < maxRows; i++) {
+                    const assetIn = assetIns[i] || {};
+                    const assetOut = assetOuts[i] || {};
+
+                    exportData.push({
+                        Code: i === 0 ? item.asset_running_number : '',
+                        Name: i === 0 ? item.name : '',
+                        "Stock In Date": assetIn.created_at ? new Date(assetIn.created_at).toLocaleDateString() : '',
+                        "Stock In Type": assetIn.asset_transaction_type === 'ASSET IN' ? 'MKT IN' :
+                            assetIn.asset_transaction_type === 'ASSET TRANSFER' ? 'TRANSFER' :
+                                (assetIn.asset_transaction_type || ''),
+                        "Stock In From": assetIn.supplier_name || assetIn.assets_from_branch_name || '',
+                        "Stock In Qty": assetIn.asset_unit || '',
+                        "Stock Out Date": assetOut.created_at ? new Date(assetOut.created_at).toLocaleDateString() : '',
+                        "Stock Out Type": assetOut.asset_transaction_type === 'ASSET OUT' ? 'INVOICE' :
+                            assetOut.asset_transaction_type === 'ASSET TRANSFER' ? 'TRANSFER' :
+                                (assetOut.asset_transaction_type || ''),
+                        "Stock Out Purpose": assetOut.asset_transaction_purpose_name || '',
+                        "Stock Out Qty": assetOut.asset_unit || '',
+                        "Current Unit": i === 0 ? branch?.asset_current_unit || '' : ''
+                    });
+                }
+
+                if (maxRows > 1) {
+                    merges.push(
+                        { s: { r: rowIndex, c: 0 }, e: { r: rowIndex + maxRows - 1, c: 0 } },
+                        { s: { r: rowIndex, c: 1 }, e: { r: rowIndex + maxRows - 1, c: 1 } },
+                        { s: { r: rowIndex, c: 10 }, e: { r: rowIndex + maxRows - 1, c: 10 } }
+                    );
+                }
+
+                rowIndex += maxRows;
             });
-        }
 
-        if (maxRows > 1) {
-            // Merge "Code" (A), "Name" (B), and "Current Unit" (K)
-            merges.push(
-                { s: { r: rowIndex, c: 0 }, e: { r: rowIndex + maxRows - 1, c: 0 } }, // Column A
-                { s: { r: rowIndex, c: 1 }, e: { r: rowIndex + maxRows - 1, c: 1 } }, // Column B
-                { s: { r: rowIndex, c: 10 }, e: { r: rowIndex + maxRows - 1, c: 10 } } // Column K
-            );
-        }
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            if (merges.length > 0) {
+                worksheet["!merges"] = merges;
+            }
 
-        rowIndex += maxRows;
-    });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+
+            const file = format === "csv" ? `Inventory_Report.csv` : `Inventory_Report.xlsx`;
+            XLSX.writeFile(workbook, file, { bookType: format });
+
+        } catch (error) {
+            console.error("Export failed:", error);
+        }
+    };
+
+    const handleOpenTransaction = (id) => {
+        setTxnId(id);
+        setIsOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsOpen(false);
+        setTxnId(null); // optional: clear ID
+    };
 
     return (
         <Layout>
@@ -179,7 +240,11 @@ function InventoryReport() {
                     </div>
                 </div>
 
-                <ExportButton data={exportData} merges={merges} filename="Inventory_Report" sheetName="Inventory" />
+                <ExportButton
+                    filename="Inventory_Report"
+                    sheetName="Inventory"
+                    onClick={handleExport}
+                />
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm text-left border border-gray-200">
@@ -227,13 +292,25 @@ function InventoryReport() {
                                                 </td>
                                             )}
 
-                                            <td className="px-4 py-2 border">{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}</td>
-                                            <td className="px-2 py-2 border text-center">{assetIn?.asset_transaction_type || '-'}</td>
+                                            <td className="px-4 py-2 border hover:underline hover:cursor-pointer"
+                                                onClick={() => handleOpenTransaction(assetIn?.transaction_id)}>{assetIn ? new Date(assetIn.created_at).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td className="px-2 py-2 border text-center">
+                                                {assetIn?.asset_transaction_type === 'ASSET IN' ? 'MKT IN' :
+                                                    assetIn?.asset_transaction_type === 'ASSET TRANSFER' ? 'TRANSFER' : (assetIn?.asset_transaction_type || '-')}
+                                            </td>
+
                                             <td className="px-4 py-2 border">{assetIn?.supplier_name || assetIn?.assets_from_branch_name || '-'}</td>
                                             <td className="px-4 py-2 border text-center">{assetIn?.asset_unit ?? '-'}</td>
 
-                                            <td className="px-4 py-2 border">{assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}</td>
-                                            <td className="px-2 py-2 border text-center">{assetOut?.asset_transaction_type || '-'}</td>
+                                            <td className="px-4 py-2 border hover:underline hover:cursor-pointer"
+                                                onClick={() => handleOpenTransaction(assetOut?.transaction_id)}>
+                                                {assetOut ? new Date(assetOut.created_at).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td className="px-2 py-2 border text-center">
+                                                {assetOut?.asset_transaction_type === 'ASSET OUT' ? 'INVOICE' :
+                                                    assetOut?.asset_transaction_type === 'ASSET TRANSFER' ? 'TRANSFER' : (assetOut?.asset_transaction_type || '-')}
+                                            </td>
                                             <td className="px-4 py-2 border">{assetOut?.asset_transaction_purpose_name || '-'}</td>
                                             <td className="px-4 py-2 border text-center">{assetOut?.asset_unit ?? '-'}</td>
 
@@ -247,10 +324,21 @@ function InventoryReport() {
                                 });
                             })}
                         </tbody>
-
                     </table>
+                    <Pagination
+                        pagination={pagination}
+                        onPageChange={(page) => fetchReport(filters, page)}
+                    />
                 </div>
             </div>
+
+            {isOpen && (
+                <TransactionModalWrapper
+                    id={txnId}
+                    isOpen={isOpen}
+                    onClose={closeModal}
+                />
+            )}
         </Layout>
     );
 }

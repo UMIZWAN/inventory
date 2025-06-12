@@ -9,109 +9,80 @@ import ExportButton from '../../components/ExportButton';
 import { useAuth } from '../../context/AuthContext';
 import { Head } from "@inertiajs/react";
 import api from '../../api/api';
+import Pagination from '../../components/Pagination';
+import * as XLSX from "xlsx";
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, fetchCategories, fetchBranchAssets, loading } = useAssetMeta();
+    const { assets, categories, fetchCategories, fetchBranchAssets, 
+        fetchAllBranchAssets, pagination, setPagination } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [searchType, setSearchType] = useState('');
     const [filters, setFilters] = useState({
         category: '',
-        tag: '',
-        location: '',
-        status: '',
     });
 
-    // Pagination state
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(10);
     const [toast, setToast] = useState(null);
 
     useEffect(() => {
-        fetchBranchAssets();
+        const params = {
+            page: pagination.current_page,
+            page: pagination.currentPage,
+            search: searchTerm,
+            type: searchType,
+            asset_category_id: filters.category,
+        };
+        fetchBranchAssets(params);
+    }, [pagination.currentPage, searchTerm, searchType, filters.category]);
+
+
+    useEffect(() => {
+
         fetchCategories();
     }, []);
 
     const handleView = (asset) => setSelectedAsset(asset);
 
-    const filteredAssets = assets.filter(asset => {
-        const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            asset.asset_running_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            asset.asset_type?.toLowerCase().includes(searchTerm.toLowerCase());
+    const handleExport = async (format = "xlsx") => {
+        const params = {
+            page: 1,
+            per_page: 10000,
+            search: searchTerm,
+            asset_category_id: filters.category,
+        };
 
-        const matchesCategory = filters.category ? asset.asset_category_name === filters.category : true;
+        try {
+            const fullAssets = await fetchAllBranchAssets(params);
 
-        const current = Number(asset.asset_current_value);
-        const stable = Number(asset.asset_stable_value);
-        let computedStatus = 'Normal';
-        if (current <= 0) computedStatus = 'Critical';
-        else if (current <= stable / 3) computedStatus = 'Very Low';
-        else if (current <= (2 * stable) / 3) computedStatus = 'Low';
+            const fullExportData = fullAssets.map(asset => ({
+                Code: asset.asset_running_number || '—',
+                Name: asset.name || '—',
+                Type: asset.asset_type || '—',
+                Category: asset.asset_category_name || '—',
+                'Unit Cost': user?.add_edit_asset ? `RM ${Number(asset.asset_purchase_cost).toFixed(2)}` : '',
+                Price: `RM ${Number(asset.asset_sales_cost).toFixed(2)}`,
+                Branch: asset.branch_values[0]?.asset_branch_name || '—',
+                Quantity: asset.branch_values[0]?.asset_current_unit || 0,
+            }));
 
-        const matchesStatus = filters.status ? computedStatus === filters.status : true;
+            const worksheet = XLSX.utils.json_to_sheet(fullExportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Assets");
 
-        return matchesSearch && matchesCategory && matchesStatus;
-    });
+            const file = format === "csv" ? `Assets_List.csv` : `Assets_List.xlsx`;
+            XLSX.writeFile(workbook, file, { bookType: format });
 
-    const exportData = filteredAssets.map(asset => ({
-        Code: asset.asset_running_number || '—',
-        Name: asset.name || '—',
-        Type: asset.asset_type || '—',
-        Category: asset.asset_category_name || '—',
-        'Unit Cost': user?.add_edit_asset ? `RM ${Number(asset.asset_purchase_cost).toFixed(2)}` : '',
-        Price: `RM ${Number(asset.asset_sales_cost).toFixed(2)}`,
-        Branch: asset.branch_values[0]?.asset_branch_name || '—',
-        Quantity: asset.branch_values[0]?.asset_current_unit || 0,
-    }));
-
-    // Get current items for pagination
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredAssets.slice(indexOfFirstItem, indexOfLastItem);
-
-    // Change page
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    // Calculate total pages
-    const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
-
-    // Function to determine which page numbers to show
-    const getPageRange = () => {
-        const delta = 2; // Number of pages to show before and after current page
-        const range = [];
-        const rangeWithDots = [];
-        let l;
-
-        // Always include page 1
-        range.push(1);
-
-        // Calculate the range of pages to show around current page
-        for (let i = currentPage - delta; i <= currentPage + delta; i++) {
-            if (i > 1 && i < totalPages) {
-                range.push(i);
-            }
+        } catch (error) {
+            console.error("Export failed:", error);
         }
+    };
 
-        // Always include the last page if there are more than 1 pages
-        if (totalPages > 1) {
-            range.push(totalPages);
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= pagination.lastPage) {
+            setPagination(prev => ({ ...prev, currentPage: page }));
         }
-
-        // Add dots where needed
-        for (let i of range) {
-            if (l) {
-                if (i - l === 2) {
-                    rangeWithDots.push(l + 1);
-                } else if (i - l !== 1) {
-                    rangeWithDots.push('...');
-                }
-            }
-            rangeWithDots.push(i);
-            l = i;
-        }
-
-        return rangeWithDots;
     };
 
     const handleDuplicate = async (asset) => {
@@ -157,38 +128,79 @@ const Assets = () => {
                         )}
                     </div>
 
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 mb-4">
-                        {/* Search Input */}
-                        <div className="w-full lg:w-1/3">
-                            <input
-                                type="text"
-                                placeholder="Search by name/code..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Filters */}
-                        <div className="flex flex-wrap gap-4">
-                            <div>
-                                {/* <label className="block mb-1 text-xs font-bold">Categories:</label> */}
-                                <select
-                                    value={filters.category}
-                                    onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                                    className="px-2 py-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="">All Categories</option>
-                                    {[...new Set(assets.map(a => a.asset_category_name).filter(Boolean))].map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
+                    <div>
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 mb-4">
+                            {/* Search Input */}
+                            <div className="w-full lg:w-1/4">
+                                <input
+                                    type="text"
+                                    placeholder="Search by name/code..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full px-4 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
                             </div>
+
+                            {/* Search Type */}
+                            <div className="w-full lg:w-1/5">
+                                <input
+                                    type="text"
+                                    placeholder="Type/Size..."
+                                    value={searchType}
+                                    onChange={(e) => setSearchType(e.target.value)}
+                                    className="w-full px-4 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            {/* Filters */}
+                            <div className="flex flex-wrap gap-4">
+                                <div>
+                                    {/* <label className="block mb-1 text-xs font-bold">Categories:</label> */}
+                                    <select
+                                        value={filters.category}
+                                        onChange={(e) => {
+                                            setPagination(prev => ({ ...prev, current_page: 1 })); // Reset to first page
+                                            setFilters({ ...filters, category: e.target.value });
+                                        }}
+                                        className="px-2 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                            {/* <button
+                                onClick={() => fetchBranchAssets(filters)}
+                                className="rounded bg-blue-600 text-white px-4 py-1 hover:bg-blue-700 text-sm"
+                            >
+                                Apply
+                            </button> */}
+                            <button
+                                onClick={() => {
+                                    const defaultFilters = {
+                                        category: ''
+                                    };
+                                    setFilters(defaultFilters);
+                                    setSearchTerm('');
+                                }}
+                                className="rounded bg-gray-300 text-gray-800 px-4 py-1 hover:bg-gray-400 text-sm"
+                            >
+                                Clear
+                            </button>
                         </div>
                     </div>
 
                     <div className='flex justify-end mb-4'>
-                        <ExportButton data={exportData} filename="Assets_List" sheetName="Assets" />
+                        <ExportButton
+                            filename="Assets_List"
+                            sheetName="Assets"
+                            onClick={handleExport}
+                        />
                     </div>
 
                     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -225,7 +237,7 @@ const Assets = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {currentItems.map((asset) => (
+                                    {assets.map((asset) => (
                                         <tr
                                             key={asset.id}
                                             className="hover:bg-gray-50 group cursor-pointer"
@@ -296,59 +308,10 @@ const Assets = () => {
                     </div>
 
                     {/* Pagination */}
-                    {filteredAssets.length > 0 && (
-                        <div className="flex justify-between items-center mt-4">
-                            <div className="text-sm text-gray-700">
-                                Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
-                                <span className="font-medium">
-                                    {indexOfLastItem > filteredAssets.length ? filteredAssets.length : indexOfLastItem}
-                                </span>{" "}
-                                of <span className="font-medium">{filteredAssets.length}</span> results
-                            </div>
-                            <nav className="flex items-center">
-                                <button
-                                    onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
-                                    disabled={currentPage === 1}
-                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === 1
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-gray-700 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    Previous
-                                </button>
-                                <div className="hidden md:flex">
-                                    {getPageRange().map((number, index) => (
-                                        number === '...' ? (
-                                            <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700">
-                                                {number}
-                                            </span>
-                                        ) : (
-                                            <button
-                                                key={`page-${number}`}
-                                                onClick={() => paginate(number)}
-                                                className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${currentPage === number
-                                                    ? "bg-blue-600 text-white"
-                                                    : "text-gray-700 hover:bg-gray-50"
-                                                    }`}
-                                            >
-                                                {number}
-                                            </button>
-                                        )
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={() => paginate(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                                    disabled={currentPage === totalPages || totalPages === 0}
-                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${currentPage === totalPages || totalPages === 0
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-gray-700 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    Next
-                                </button>
-                            </nav>
-                        </div>
-                    )}
+                    <Pagination
+                        pagination={pagination}
+                        onPageChange={handlePageChange}
+                    />
 
                     {showModal && (
                         <AddAsset setShowModal={setShowModal} />

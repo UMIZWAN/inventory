@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
 import ExportButton from '../../components/ExportButton';
+import TransactionModalWrapper from '../../components/TransactionModalWrapper';
 
 function SingleItemReport({ id, branch_id }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [txnId, setTxnId] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     async function fetchReport() {
@@ -71,6 +74,16 @@ function SingleItemReport({ id, branch_id }) {
     }
   }
 
+  const handleOpenTransaction = (id) => {
+    setTxnId(id);
+    setIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+    setTxnId(null); // optional: clear ID
+  };
+
   return (
     <Layout>
       <div className="bg-white p-6 rounded shadow mt-6 space-y-4">
@@ -114,11 +127,15 @@ function SingleItemReport({ id, branch_id }) {
                 const outTx = assetOuts[i];
                 return (
                   <tr key={i} className="border-t">
-                    <td className="px-4 py-2 border">{inTx?.created_at ? new Date(inTx.created_at).toLocaleDateString() : '-'}</td>
+                    <td className="px-4 py-2 border hover:underline hover:cursor-pointer" onClick={() => handleOpenTransaction(inTx?.transaction_id)}>
+                      {inTx?.created_at ? new Date(inTx.created_at).toLocaleDateString() : '-'}
+                    </td>
                     <td className="px-4 py-2 border">{inTx?.asset_transaction_type || '-'}</td>
                     <td className="px-4 py-2 border">{inTx?.supplier_name || inTx?.assets_from_branch_name || '-'}</td>
                     <td className="px-4 py-2 border text-center">{inTx?.asset_unit ?? '-'}</td>
-                    <td className="px-4 py-2 border">{outTx?.created_at ? new Date(outTx.created_at).toLocaleDateString() : '-'}</td>
+                    <td className="px-4 py-2 border hover:underline hover:cursor-pointer" onClick={() => handleOpenTransaction(outTx?.transaction_id)}>
+                      {outTx?.created_at ? new Date(outTx.created_at).toLocaleDateString() : '-'}
+                    </td>
                     <td className="px-4 py-2 border">{outTx?.asset_transaction_type || '-'}</td>
                     <td className="px-4 py-2 border">{outTx?.asset_transaction_purpose_name || '-'}</td>
                     <td className="px-4 py-2 border text-center">{outTx?.asset_unit ?? '-'}</td>
@@ -129,6 +146,14 @@ function SingleItemReport({ id, branch_id }) {
           </table>
         </div>
       </div>
+
+      {isOpen && (
+        <TransactionModalWrapper
+          id={txnId}
+          isOpen={isOpen}
+          onClose={closeModal}
+        />
+      )}
     </Layout>
   );
 }

@@ -3,34 +3,39 @@ import api from "../../api/api";
 import Layout from '../../components/layout/Layout';
 import { Head } from "@inertiajs/react";
 import ExportButton from "../../components/ExportButton";
+import { useAuth } from "../../context/AuthContext";
 
 const MasterListPage = () => {
+    const { user } = useAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredItems, setFilteredItems] = useState([]);
+    const [editRowId, setEditRowId] = useState(null);
+    const [editedValue, setEditedValue] = useState("");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
-    useEffect(() => {
-        const fetchItems = async () => {
-            try {
-                setLoading(true);
-                const response = await api.get("/api/assets");
-                if (response.data.success && response.data.data) {
-                    setItems(response.data.data);
-                    setFilteredItems(response.data.data);
-                } else {
-                    console.error("No assets found or invalid response format");
-                }
-            } catch (error) {
-                console.error("Error fetching assets:", error);
-            } finally {
-                setLoading(false);
+    const fetchItems = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get("/api/assets");
+            if (response.data.success && response.data.data) {
+                setItems(response.data.data);
+                setFilteredItems(response.data.data);
+            } else {
+                console.error("No assets found or invalid response format");
             }
-        };
+        } catch (error) {
+            console.error("Error fetching assets:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchItems();
     }, []);
 
@@ -50,6 +55,29 @@ const MasterListPage = () => {
         // Reset to first page when search changes
         setCurrentPage(1);
     }, [searchTerm, items]);
+
+    const handleEdit = (id, currentValue) => {
+        setEditRowId(id);
+        setEditedValue(currentValue);
+    };
+
+    const handleSaveEdit = async (id) => {
+        setItems((prevItems) =>
+            prevItems.map((item) =>
+                item.id === id ? { ...item, asset_running_number: editedValue } : item
+            )
+        );
+
+        await api.put(`/api/assets/${id}`, { asset_running_number: editedValue });
+
+        setEditRowId(null);
+        setEditedValue("");
+    };
+
+    const handleCancelEdit = () => {
+        setEditRowId(null);
+        setEditedValue("");
+    };
 
     const getStatusBadge = (totalUnits, stableUnit) => {
         if (!totalUnits || !stableUnit) {
@@ -163,7 +191,7 @@ const MasterListPage = () => {
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search by name, asset number, category or tag..."
+                            placeholder="Search by name, code or category..."
                             className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -212,7 +240,7 @@ const MasterListPage = () => {
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Total Quantity
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -224,8 +252,39 @@ const MasterListPage = () => {
                                     {currentItems.length > 0 ? (
                                         currentItems.map((item) => (
                                             <tr key={item.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500">{item.asset_running_number}</div>
+                                                <td className="px-6 py-4 whitespace-nowrap relative group">
+                                                    {editRowId === item.id ? (
+                                                        <input
+                                                            type="text"
+                                                            className="text-sm text-gray-900 border border-gray-300 rounded-md px-2 py-1 w-full"
+                                                            value={editedValue}
+                                                            onChange={(e) => setEditedValue(e.target.value)}
+                                                            onBlur={() => handleSaveEdit(item.id)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Enter") {
+                                                                    e.preventDefault();
+                                                                    e.target.blur(); // Triggers onBlur for saving + defocus
+                                                                }
+                                                                if (e.key === "Escape") {
+                                                                    handleCancelEdit();
+                                                                }
+                                                            }}
+                                                            autoFocus
+                                                        />
+                                                    ) : (
+                                                        <div className="text-sm text-gray-500 flex items-center justify-between">
+                                                            <span>{item.asset_running_number}</span>
+                                                            {user?.add_edit_asset && (
+                                                                <button
+                                                                    onClick={() => handleEdit(item.id, item.asset_running_number)}
+                                                                    className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity hover:text-blue-600"
+                                                                    title="Edit"
+                                                                >
+                                                                    ✎
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">
@@ -243,7 +302,7 @@ const MasterListPage = () => {
                                                         {/* {item.asset_stable_unit || 0} {item.asset_unit_measure} */}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     {getStatusBadge(item.total_units, item.asset_stable_unit)}
                                                 </td>
                                                 <td className="px-6 py-4">

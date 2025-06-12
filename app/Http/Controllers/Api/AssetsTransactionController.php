@@ -705,22 +705,15 @@ class AssetsTransactionController extends Controller
             ], 500);
         }
     }
+
     public function getReport(Request $request)
     {
-        // item code - asset
-        // stock in date - asset transaction item list created at
-        // stock out date - asset transaction item list created at
-        // stock in qty - asset transaction item list asset unit sum
-        // stock out qty - asset transaction item list asset unit sum
-        // stock in from - asset transaction supplier id , asset from branch id
-        // stock out purpose - asset transaction purpose id
-        // stock in /out type - asset transaction type
-        // stock current qty - asset branch values asset current unit
         $branchId = $request->asset_branch_id;
         $search = $request->search;
         $category = $request->category;
         $from = $request->from;
         $to = $request->to;
+        $perPage = $request->get('per_page', 10); // Default to 15 items per page
 
         $query = Assets::query();
 
@@ -779,13 +772,17 @@ class AssetsTransactionController extends Controller
             }
         ]);
 
-        $data = $query->get();
+        $paginated = $query->paginate($perPage);
 
         return response()->json([
-            // 'data' => $data
-            'data' => ReportResource::collection($data)
-            // 'data' => new ReportResource($data)
-        ], 201);
+            'data' => ReportResource::collection($paginated),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+            ]
+        ]);
     }
 
     public function getSingleReport(Request $request)

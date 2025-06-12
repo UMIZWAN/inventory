@@ -1,12 +1,17 @@
 import * as XLSX from "xlsx";
 
-export default function ExportButton({ data, merges = [], filename = "Export", sheetName = "Sheet1" }) {
-  const handleDownload = (format = "xlsx") => {
+export default function ExportButton({ data, merges = [], filename = "Export", sheetName = "Sheet1", onClick }) {
+  const handleDownload = async (format = "xlsx") => {
+    if (onClick) {
+      // Let parent component handle data fetching + export
+      await onClick(format);
+      return;
+    }
+
     if (!data || data.length === 0) return;
 
     const worksheet = XLSX.utils.json_to_sheet(data);
 
-    // Apply merges
     if (merges.length > 0) {
       worksheet["!merges"] = merges;
     }
@@ -17,6 +22,7 @@ export default function ExportButton({ data, merges = [], filename = "Export", s
     const file = format === "csv" ? `${filename}.csv` : `${filename}.xlsx`;
     XLSX.writeFile(workbook, file, { bookType: format });
   };
+
 
   return (
     <div className="flex gap-2">
