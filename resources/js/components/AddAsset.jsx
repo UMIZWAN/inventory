@@ -97,7 +97,7 @@ function AddAsset({ setShowModal }) {
                     </div>
 
                     <div className="flex flex-col">
-                        {label("Type")}
+                        {label("Type/Size")}
                         <input name="asset_type" value={form.asset_type} onChange={handleChange} className="p-2 border rounded" />
                     </div>
 
