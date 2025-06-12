@@ -19,6 +19,7 @@ const Assets = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [searchType, setSearchType] = useState('');
     const [filters, setFilters] = useState({
         category: '',
     });
@@ -30,10 +31,11 @@ const Assets = () => {
             page: pagination.current_page,
             page: pagination.currentPage,
             search: searchTerm,
+            type: searchType,
             asset_category_id: filters.category,
         };
         fetchBranchAssets(params);
-    }, [pagination.currentPage, searchTerm, filters.category]);
+    }, [pagination.currentPage, searchTerm, searchType, filters.category]);
 
 
     useEffect(() => {
@@ -135,6 +137,17 @@ const Assets = () => {
                                     placeholder="Search by name/code..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full px-4 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            {/* Search Type */}
+                            <div className="w-full lg:w-1/5">
+                                <input
+                                    type="text"
+                                    placeholder="Type/Size..."
+                                    value={searchType}
+                                    onChange={(e) => setSearchType(e.target.value)}
                                     className="w-full px-4 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>

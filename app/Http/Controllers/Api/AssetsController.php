@@ -411,6 +411,7 @@ class AssetsController extends Controller
             // Optional query parameters
             $perPage = $request->input('per_page', 10); // default to 10 per page
             $search = $request->search;
+            $type = $request->type;
             $categoryId = $request->input('asset_category_id');
 
             $query = Assets::with(['category', 'tag'])
@@ -425,6 +426,12 @@ class AssetsController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('asset_running_number', 'like', "%$search%")
                         ->orWhere('name', 'like', "%$search%");
+                });
+            }
+
+            if ($type) {
+                $query->where(function ($q) use ($type) {
+                    $q->where('asset_type', 'like', "%$type%");
                 });
             }
 
