@@ -11,13 +11,18 @@ import { Head } from "@inertiajs/react";
 import api from '../../api/api';
 import Pagination from '../../components/Pagination';
 import * as XLSX from "xlsx";
+import ReceiveForm from '../../components/ReceiveForm';
+import CheckoutForm from '../../components/CheckoutForm';
+import TransferForm from './TransferForm';
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, categories, fetchCategories, fetchBranchAssets, 
+    const { assets, categories, fetchCategories, fetchBranchAssets,
         fetchAllBranchAssets, pagination, setPagination } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
+    const [selectedAssets, setSelectedAssets] = useState([]);
+    const [actionType, setActionType] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchType, setSearchType] = useState('');
     const [filters, setFilters] = useState({
@@ -106,6 +111,27 @@ const Assets = () => {
         }
     };
 
+    const handleSelect = (id) => {
+        setSelectedAssets(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedAssets.length > 0) {
+            setSelectedAssets([]);
+        } else {
+            setSelectedAssets(assets.map(asset => asset.id));
+        }
+    };
+
+    const handleBulkAction = (type) => {
+        if (!selectedAssets.length) return;
+
+        setActionType(type);
+        // Example: open a modal, or navigate to another form, or populate a pre-filled form
+    };
+
     return (
         <>
             <Layout>
@@ -115,15 +141,39 @@ const Assets = () => {
                         {toast}
                     </div>
                 )}
+
+                {actionType === "receive" && (
+                    <ReceiveForm
+                        setShowReceiveForm={() => setActionType(null)}
+                        selectedItems={selectedAssets}
+                    />
+                )}
+
+                {actionType === "invoice" && (
+                    <CheckoutForm
+                        setShowCheckoutForm={() => setActionType(null)}
+                        selectedItems={selectedAssets}
+                        defaultType={actionType} // e.g. 'sold' or 'request'
+                    />
+                )}
+
+                {["REQUESTED", "IN-TRANSIT"].includes(actionType) && (
+                    <TransferForm
+                        setShowCheckoutForm={() => setActionType(null)}
+                        selectedItems={selectedAssets}
+                        transferStatus={actionType} // e.g. 'sold' or 'request'
+                    />
+                )}
+
                 <div className="p-6 max-w-9xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold">Assets List</h1>
                         {user?.add_edit_asset && (
                             <button
                                 onClick={() => setShowModal(true)}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+                                className="text-sm bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700"
                             >
-                                + Add Item
+                                + New Stock Registration
                             </button>
                         )}
                     </div>
@@ -195,12 +245,46 @@ const Assets = () => {
                         </div>
                     </div>
 
-                    <div className='flex justify-end mb-4'>
+                    <div className='flex justify-between py-4'>
                         <ExportButton
                             filename="Assets_List"
                             sheetName="Assets"
                             onClick={handleExport}
                         />
+
+                        {selectedAssets.length > 0 && (
+                            <div className="flex justify-between items-center bg-gray-100">
+                                <span className="text-sm text-gray-700 mr-2">
+                                    {selectedAssets.length} item(s) selected
+                                </span>
+                                <div className="space-x-2">
+                                    <button
+                                        className="text-sm bg-blue-400 text-white px-3 py-1 rounded hover:bg-blue-700 shadow-sm"
+                                        onClick={() => handleBulkAction("receive")}
+                                    >
+                                        Receive
+                                    </button>
+                                    <button
+                                        className="text-sm bg-emerald-400 text-white px-3 py-1 rounded hover:bg-green-700"
+                                        onClick={() => handleBulkAction("REQUESTED")}
+                                    >
+                                        Request
+                                    </button>
+                                    <button
+                                        className="text-sm bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                                        onClick={() => handleBulkAction("IN-TRANSIT")}
+                                    >
+                                        Transfer
+                                    </button>
+                                    <button
+                                        className="text-sm bg-purple-400 text-white px-3 py-1 rounded hover:bg-purple-700"
+                                        onClick={() => handleBulkAction("invoice")}
+                                    >
+                                        Invoice
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -208,6 +292,13 @@ const Assets = () => {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
+                                        <th className="px-4 py-3 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedAssets.length === assets.length && assets.length > 0}
+                                                onChange={handleSelectAll}
+                                            />
+                                        </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Code
                                         </th>
@@ -243,6 +334,17 @@ const Assets = () => {
                                             className="hover:bg-gray-50 group cursor-pointer"
                                             onClick={() => handleView(asset)}
                                         >
+                                            <td className="px-4 py-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedAssets.includes(asset.id)}
+                                                    onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        handleSelect(asset.id);
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_running_number || '—'}
                                             </td>

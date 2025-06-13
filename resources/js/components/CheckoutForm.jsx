@@ -151,7 +151,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                     &times;
                 </button> */}
             <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
-                <h1 className="text-2xl font-bold mb-6 text-center">Invoice Form</h1>
+                <h1 className="text-2xl font-bold mb-6 text-center">Invoice</h1>
                 <div className="flex justify-center items-center">
 
                     <div className="rounded-lg p-4 space-y-6">

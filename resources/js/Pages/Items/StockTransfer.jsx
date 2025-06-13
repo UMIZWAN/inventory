@@ -31,7 +31,7 @@ function StockTransfer() {
       key: "asset_transfer_list",
       label: (
         <>
-          Marketing Transfer{" "}
+          Transfer List{" "}
           {incomingTransfersCount > 0 && (
             <span className="ml-2 bg-red-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
               {incomingTransfersCount}
