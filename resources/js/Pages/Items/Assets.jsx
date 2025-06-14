@@ -14,6 +14,7 @@ import * as XLSX from "xlsx";
 import ReceiveForm from '../../components/ReceiveForm';
 import CheckoutForm from '../../components/CheckoutForm';
 import TransferForm from './TransferForm';
+import { FiPackage, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
 
 const Assets = () => {
     const { user } = useAuth();
@@ -275,33 +276,37 @@ const Assets = () => {
                         />
 
                         {selectedAssets.length > 0 && (
-                            <div className="flex justify-between items-center bg-gray-100">
+                            <div className="flex justify-between items-center bg-gray-100 rounded">
                                 <span className="text-sm text-gray-700 mr-2">
                                     {selectedAssets.length} item(s) selected
                                 </span>
-                                <div className="space-x-2">
+                                <div className="flex space-x-2">
                                     <button
-                                        className="text-sm bg-blue-400 text-white px-3 py-1 rounded hover:bg-blue-700 shadow-sm"
+                                        className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 shadow-sm"
                                         onClick={() => handleBulkAction("receive")}
                                     >
+                                        <FiPackage className="text-blue-500 mr-1" />
                                         Receive
                                     </button>
                                     <button
-                                        className="text-sm bg-emerald-400 text-white px-3 py-1 rounded hover:bg-green-700"
+                                        className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 shadow-sm"
                                         onClick={() => handleBulkAction("REQUESTED")}
                                     >
+                                        <FiSend className="text-emerald-500 mr-1" />
                                         Request
                                     </button>
                                     <button
-                                        className="text-sm bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                                        className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 shadow-sm"
                                         onClick={() => handleBulkAction("IN-TRANSIT")}
                                     >
+                                        <FiTruck className="text-yellow-500 mr-1" />
                                         Transfer
                                     </button>
                                     <button
-                                        className="text-sm bg-purple-400 text-white px-3 py-1 rounded hover:bg-purple-700"
+                                        className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 shadow-sm"
                                         onClick={() => handleBulkAction("invoice")}
                                     >
+                                        <FiFileText className="text-purple-500 mr-1" />
                                         Invoice
                                     </button>
                                 </div>
