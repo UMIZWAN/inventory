@@ -27,7 +27,7 @@ export default function TransferList({ status, mode }) {
     status: '',
     itemName: '',
   });
-  
+
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const status = query.get('status');
@@ -345,7 +345,17 @@ export default function TransferList({ status, mode }) {
                   </td>
                   {/* <td className="px-4 py-2 border">{txn.assets_transaction_type}</td> */}
                   <td className="px-4 py-2 border">
-                    {txn.assets_from_branch_name} ➔ {txn.assets_to_branch_name}
+                    {(txn.assets_transaction_status === 'REQUESTED' ||
+                      txn.assets_transaction_status === 'APPROVED' ||
+                      txn.assets_transaction_status === 'REJECTED') ? (
+                      <>
+                        {txn.assets_to_branch_name} ← {txn.assets_from_branch_name}
+                      </>
+                    ) : (
+                      <>
+                        {txn.assets_from_branch_name} ➔ {txn.assets_to_branch_name}
+                      </>
+                    )}
                   </td>
                   <td className="px-4 py-2 border">
                     <div className="space-y-4 mt-2">
