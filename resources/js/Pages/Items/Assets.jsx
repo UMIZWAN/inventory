@@ -336,7 +336,7 @@ const Assets = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Code
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                             Item
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -395,9 +395,14 @@ const Assets = () => {
                                                             }}
                                                         />
                                                     </div>
-                                                    <div className="flex justify-between items-center w-full ml-2">
+                                                    <div className="flex justify-between items-center ml-2">
                                                         <div>
-                                                            <div className="text-sm font-medium text-gray-900">{asset.name}</div>
+                                                            <div
+                                                                className="text-sm font-medium text-gray-900 truncate max-w-xs break-words"
+                                                                title={asset.name} // shows full name on hover
+                                                            >
+                                                                {asset.name}
+                                                            </div>
                                                             <div className="text-xs text-gray-500">{asset.asset_type}</div>
                                                         </div>
                                                         {user?.add_edit_asset && (
