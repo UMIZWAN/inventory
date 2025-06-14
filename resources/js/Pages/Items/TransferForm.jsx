@@ -6,7 +6,7 @@ import { useOptions } from "../../context/OptionContext";
 import { router } from "@inertiajs/react";
 import Layout from "../../components/layout/Layout";
 
-function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, transferStatus }) {
+function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, transferStatus, selectedItems }) {
   const { user } = useAuth();
   const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
@@ -86,6 +86,27 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, 
     { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right", readOnly: true },
     { key: "amount", label: "Total Price", type: "number", min: 0, step: "0.01", align: "text-right", readOnly: true },
   ];
+
+  useEffect(() => {
+    if (selectedItems?.length) {
+      const mapped = selectedItems.map(id => {
+        const asset = assets.find(a => a.id === id);
+        return {
+          item: asset?.id || "",
+          name: asset?.name || "",
+          quantity: 1,
+          category: asset?.asset_category_name || "",
+          unitMeasure: asset?.asset_unit_measure || "",
+          price: parseFloat(asset?.asset_sales_cost || 0),
+          amount: parseFloat(asset?.asset_sales_cost || 0), // Initialize amount
+        };
+      });
+      setForm(prev => ({
+        ...prev,
+        items: mapped,
+      }));
+    }
+  }, [selectedItems]);
 
   const addItem = () => {
     setForm({ ...form, items: [...form.items, { item: '', quantity: 1, price: 0 }] });
@@ -173,7 +194,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, 
 
   return (
     <>
-    {/* <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> */}
+      {/* <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> */}
       <div className="overflow-x-auto bg-white shadow rounded-lg p-12 space-y-4">
 
         {/* <button
@@ -270,6 +291,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, 
                 value={form.purpose}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                required
               >
                 <option value="">[Select Type]</option>
                 {invType.map((inv) => (
@@ -372,7 +394,7 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, 
           </div>
         </form>
       </div>
-    
+
     </>
   );
 }

@@ -6,7 +6,7 @@ import { useOptions } from "../context/OptionContext";
 import TransactionDetail from "./TransactionDetail";
 import { router } from "@inertiajs/react";
 
-export default function CheckoutForm({ setShowCheckoutForm }) {
+export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     const { user } = useAuth();
     const { fetchInvType, invType } = useOptions();
     const { assets, createStockOut, fetchBranchAssets } = useAssetMeta();
@@ -88,6 +88,23 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
         { key: "price", label: "Price", type: "readonly" },
         { key: "amount", label: "Total Price", type: "readonly" },
     ];
+
+    useEffect(() => {
+        if (selectedItems?.length) {
+            const mapped = selectedItems.map(id => {
+                const asset = assets.find(a => a.id === id);
+                return {
+                    item: asset?.id || "",
+                    name: asset?.name || "",
+                    quantity: 1,
+                    unit: asset?.asset_unit_measure || "",
+                    price: parseFloat(asset?.asset_sales_cost || 0),
+                    amount: parseFloat(asset?.asset_sales_cost || 0),
+                };
+            });
+            setItems(mapped);
+        }
+    }, [selectedItems]);
 
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
 

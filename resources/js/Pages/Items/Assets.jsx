@@ -150,24 +150,46 @@ const Assets = () => {
                 )}
 
                 {actionType === "invoice" && (
-                    <CheckoutForm
-                        setShowCheckoutForm={() => setActionType(null)}
-                        selectedItems={selectedAssets}
-                        defaultType={actionType} // e.g. 'sold' or 'request'
-                    />
+                    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+                        <div className="bg-white shadow-md rounded-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto relative">
+                            <button
+                                onClick={() => setActionType(null)}
+                                className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                                aria-label="Close"
+                            >
+                                &times;
+                            </button>
+                            <CheckoutForm
+                                setShowCheckoutForm={() => setActionType(null)}
+                                selectedItems={selectedAssets}
+                                defaultType={actionType} // e.g. 'sold' or 'request'
+                            />
+                        </div>
+                    </div>
                 )}
 
                 {["REQUESTED", "IN-TRANSIT"].includes(actionType) && (
-                    <TransferForm
-                        setShowCheckoutForm={() => setActionType(null)}
-                        selectedItems={selectedAssets}
-                        transferStatus={actionType} // e.g. 'sold' or 'request'
-                    />
+                    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+                        <div className="bg-white shadow-md rounded-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto relative">
+                            <button
+                                onClick={() => setActionType(null)}
+                                className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                                aria-label="Close"
+                            >
+                                &times;
+                            </button>
+                            <TransferForm
+                                setShowCheckoutForm={() => setActionType(null)}
+                                selectedItems={selectedAssets}
+                                transferStatus={actionType} // e.g. 'sold' or 'request'
+                            />
+                        </div>
+                    </div>
                 )}
 
                 <div className="p-6 max-w-9xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
-                        <h1 className="text-2xl font-bold">Assets List</h1>
+                        <h1 className="text-2xl font-bold">Stock List</h1>
                         {user?.add_edit_asset && (
                             <button
                                 onClick={() => setShowModal(true)}
