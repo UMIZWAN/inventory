@@ -398,7 +398,7 @@ const Assets = () => {
                                                     <div className="flex justify-between items-center ml-2">
                                                         <div>
                                                             <div
-                                                                className="text-sm font-medium text-gray-900 truncate max-w-xs break-words"
+                                                                className="text-sm font-medium text-gray-900 truncate max-w-2xs break-words"
                                                                 title={asset.name} // shows full name on hover
                                                             >
                                                                 {asset.name}
@@ -412,7 +412,7 @@ const Assets = () => {
                                                                     handleDuplicate(asset);
                                                                 }}
                                                                 title="Duplicate"
-                                                                className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1"
+                                                                className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1 ml-4"
                                                             >
                                                                 <FiCopy className="w-4 h-4" />
                                                             </button>
