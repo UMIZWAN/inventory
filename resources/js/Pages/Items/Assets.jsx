@@ -283,7 +283,7 @@ const Assets = () => {
                                 <div className="flex space-x-2">
                                     {user?.receive_transaction && (
                                         <button
-                                            className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded hover:bg-blue-50 shadow-sm"
+                                            className="flex items-center text-sm bg-white text-blue-700 px-3 py-1 rounded hover:bg-blue-50 shadow-sm shadow-blue-600/50"
                                             onClick={() => handleBulkAction("receive")}
                                         >
                                             <FiPackage className="text-blue-500 mr-1" />
@@ -293,7 +293,7 @@ const Assets = () => {
                                     {user?.add_edit_transaction && (
                                         <>
                                             <button
-                                                className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded hover:bg-emerald-50 shadow-sm"
+                                                className="flex items-center text-sm bg-white text-emerald-700 px-3 py-1 rounded hover:bg-emerald-50 shadow-sm shadow-emerald-600/50"
                                                 onClick={() => handleBulkAction("REQUESTED")}
                                             >
                                                 <FiSend className="text-emerald-500 mr-1" />
@@ -301,14 +301,14 @@ const Assets = () => {
                                             </button>
 
                                             <button
-                                                className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded hover:bg-yellow-50 shadow-sm"
+                                                className="flex items-center text-sm bg-white text-yellow-700 px-3 py-1 rounded hover:bg-yellow-50 shadow-sm shadow-yellow-600/50"
                                                 onClick={() => handleBulkAction("IN-TRANSIT")}
                                             >
                                                 <FiTruck className="text-yellow-500 mr-1" />
                                                 Transfer
                                             </button>
                                             <button
-                                                className="flex items-center text-sm bg-white text-gray-700 px-3 py-1 rounded hover:bg-purple-50 shadow-sm"
+                                                className="flex items-center text-sm bg-white text-purple-700 px-3 py-1 rounded hover:bg-purple-50 shadow-sm shadow-purple-600/50"
                                                 onClick={() => handleBulkAction("invoice")}
                                             >
                                                 <FiFileText className="text-purple-500 mr-1" />
