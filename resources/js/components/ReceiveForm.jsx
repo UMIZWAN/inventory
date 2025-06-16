@@ -4,7 +4,7 @@ import { useAssetMeta } from "../context/AssetsContext";
 import { useSuppliers } from "../context/SuppliersContext";
 import { useAuth } from "../context/AuthContext";
 
-function ReceiveForm({ setShowReceiveForm, onSubmit }) {
+function ReceiveForm({ setShowReceiveForm, onSubmit, selectedItems }) {
   const { user } = useAuth();
   const { assets, createAssetIn, fetchBranchAssets, itemList,
     fetchItemList } = useAssetMeta();
@@ -30,8 +30,6 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
     fetchItemList();
   }, []);
 
-  console.log("itemList", itemList);
-
   const columns = [
     {
       key: "item",
@@ -45,6 +43,23 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
     { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-center" },
     { key: "price", label: "Selling Price", type: "number", min: 0, step: "0.01", align: "text-center" },
   ];
+
+  useEffect(() => {
+    if (selectedItems?.length) {
+      const mapped = selectedItems.map(id => {
+        const asset = assets.find(a => a.id === id);
+        return {
+          item: asset?.id || "",
+          name: asset?.name || "",
+          recvQty: 1,
+          unitMeasure: asset?.asset_unit_measure || "",
+          unitCost: parseFloat(asset?.asset_sales_cost || 0),
+          price: parseFloat(asset?.asset_sales_cost || 0),
+        };
+      });
+      setItems(mapped);
+    }
+  }, [selectedItems]);
 
   const handleChange = (index, field, value) => {
     const updated = [...items];
@@ -121,7 +136,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit }) {
         >
           &times;
         </button>
-        
+
         <h1 className="text-2xl font-bold mb-6">Receive Stock</h1>
 
         <div className="flex items-center gap-4">

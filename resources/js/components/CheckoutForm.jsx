@@ -6,7 +6,7 @@ import { useOptions } from "../context/OptionContext";
 import TransactionDetail from "./TransactionDetail";
 import { router } from "@inertiajs/react";
 
-export default function CheckoutForm({ setShowCheckoutForm }) {
+export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     const { user } = useAuth();
     const { fetchInvType, invType } = useOptions();
     const { assets, createStockOut, fetchBranchAssets } = useAssetMeta();
@@ -89,6 +89,23 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
         { key: "amount", label: "Total Price", type: "readonly" },
     ];
 
+    useEffect(() => {
+        if (selectedItems?.length) {
+            const mapped = selectedItems.map(id => {
+                const asset = assets.find(a => a.id === id);
+                return {
+                    item: asset?.id || "",
+                    name: asset?.name || "",
+                    quantity: 1,
+                    unit: asset?.asset_unit_measure || "",
+                    price: parseFloat(asset?.asset_sales_cost || 0),
+                    amount: parseFloat(asset?.asset_sales_cost || 0),
+                };
+            });
+            setItems(mapped);
+        }
+    }, [selectedItems]);
+
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
 
     const handleSubmit = async () => {
@@ -151,7 +168,7 @@ export default function CheckoutForm({ setShowCheckoutForm }) {
                     &times;
                 </button> */}
             <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
-                <h1 className="text-2xl font-bold mb-6 text-center">Invoice Form</h1>
+                <h1 className="text-2xl font-bold mb-6 text-center">Invoice</h1>
                 <div className="flex justify-center items-center">
 
                     <div className="rounded-lg p-4 space-y-6">

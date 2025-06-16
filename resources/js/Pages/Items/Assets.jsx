@@ -11,13 +11,19 @@ import { Head } from "@inertiajs/react";
 import api from '../../api/api';
 import Pagination from '../../components/Pagination';
 import * as XLSX from "xlsx";
+import ReceiveForm from '../../components/ReceiveForm';
+import CheckoutForm from '../../components/CheckoutForm';
+import TransferForm from './TransferForm';
+import { FiPackage, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
 
 const Assets = () => {
     const { user } = useAuth();
-    const { assets, categories, fetchCategories, fetchBranchAssets, 
+    const { assets, categories, fetchCategories, fetchBranchAssets,
         fetchAllBranchAssets, pagination, setPagination } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
+    const [selectedAssets, setSelectedAssets] = useState([]);
+    const [actionType, setActionType] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchType, setSearchType] = useState('');
     const [filters, setFilters] = useState({
@@ -106,6 +112,27 @@ const Assets = () => {
         }
     };
 
+    const handleSelect = (id) => {
+        setSelectedAssets(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedAssets.length > 0) {
+            setSelectedAssets([]);
+        } else {
+            setSelectedAssets(assets.map(asset => asset.id));
+        }
+    };
+
+    const handleBulkAction = (type) => {
+        if (!selectedAssets.length) return;
+
+        setActionType(type);
+        // Example: open a modal, or navigate to another form, or populate a pre-filled form
+    };
+
     return (
         <>
             <Layout>
@@ -115,15 +142,61 @@ const Assets = () => {
                         {toast}
                     </div>
                 )}
+
+                {actionType === "receive" && (
+                    <ReceiveForm
+                        setShowReceiveForm={() => setActionType(null)}
+                        selectedItems={selectedAssets}
+                    />
+                )}
+
+                {actionType === "invoice" && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+                        <div className="bg-white shadow-md rounded-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto relative">
+                            <button
+                                onClick={() => setActionType(null)}
+                                className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                                aria-label="Close"
+                            >
+                                &times;
+                            </button>
+                            <CheckoutForm
+                                setShowCheckoutForm={() => setActionType(null)}
+                                selectedItems={selectedAssets}
+                                defaultType={actionType} // e.g. 'sold' or 'request'
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {["REQUESTED", "IN-TRANSIT"].includes(actionType) && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+                        <div className="bg-white shadow-md rounded-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto relative">
+                            <button
+                                onClick={() => setActionType(null)}
+                                className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                                aria-label="Close"
+                            >
+                                &times;
+                            </button>
+                            <TransferForm
+                                setShowCheckoutForm={() => setActionType(null)}
+                                selectedItems={selectedAssets}
+                                transferStatus={actionType} // e.g. 'sold' or 'request'
+                            />
+                        </div>
+                    </div>
+                )}
+
                 <div className="p-6 max-w-9xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
-                        <h1 className="text-2xl font-bold">Assets List</h1>
+                        <h1 className="text-2xl font-bold">Stock List</h1>
                         {user?.add_edit_asset && (
                             <button
                                 onClick={() => setShowModal(true)}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+                                className="text-sm bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700"
                             >
-                                + Add Item
+                                + New Stock Registration
                             </button>
                         )}
                     </div>
@@ -195,12 +268,57 @@ const Assets = () => {
                         </div>
                     </div>
 
-                    <div className='flex justify-end mb-4'>
+                    <div className='flex justify-between py-4'>
                         <ExportButton
                             filename="Assets_List"
                             sheetName="Assets"
                             onClick={handleExport}
                         />
+
+                        {selectedAssets.length > 0 && (
+                            <div className="flex justify-between items-center bg-gray-100 rounded">
+                                <span className="text-sm text-gray-700 mr-2">
+                                    {selectedAssets.length} item(s) selected
+                                </span>
+                                <div className="flex space-x-2">
+                                    {user?.receive_transaction && (
+                                        <button
+                                            className="flex items-center text-sm bg-white text-blue-700 px-3 py-1 rounded hover:bg-blue-50 shadow-sm shadow-blue-600/50"
+                                            onClick={() => handleBulkAction("receive")}
+                                        >
+                                            <FiPackage className="text-blue-500 mr-1" />
+                                            Receive
+                                        </button>
+                                    )}
+                                    {user?.add_edit_transaction && (
+                                        <>
+                                            <button
+                                                className="flex items-center text-sm bg-white text-emerald-700 px-3 py-1 rounded hover:bg-emerald-50 shadow-sm shadow-emerald-600/50"
+                                                onClick={() => handleBulkAction("REQUESTED")}
+                                            >
+                                                <FiSend className="text-emerald-500 mr-1" />
+                                                Request
+                                            </button>
+
+                                            <button
+                                                className="flex items-center text-sm bg-white text-yellow-700 px-3 py-1 rounded hover:bg-yellow-50 shadow-sm shadow-yellow-600/50"
+                                                onClick={() => handleBulkAction("IN-TRANSIT")}
+                                            >
+                                                <FiTruck className="text-yellow-500 mr-1" />
+                                                Transfer
+                                            </button>
+                                            <button
+                                                className="flex items-center text-sm bg-white text-purple-700 px-3 py-1 rounded hover:bg-purple-50 shadow-sm shadow-purple-600/50"
+                                                onClick={() => handleBulkAction("invoice")}
+                                            >
+                                                <FiFileText className="text-purple-500 mr-1" />
+                                                Invoice
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -208,10 +326,17 @@ const Assets = () => {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
+                                        <th className="px-4 py-3 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedAssets.length === assets.length && assets.length > 0}
+                                                onChange={handleSelectAll}
+                                            />
+                                        </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Code
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                             Item
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -243,6 +368,17 @@ const Assets = () => {
                                             className="hover:bg-gray-50 group cursor-pointer"
                                             onClick={() => handleView(asset)}
                                         >
+                                            <td className="px-4 py-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedAssets.includes(asset.id)}
+                                                    onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        handleSelect(asset.id);
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_running_number || '—'}
                                             </td>
@@ -259,9 +395,14 @@ const Assets = () => {
                                                             }}
                                                         />
                                                     </div>
-                                                    <div className="flex justify-between items-center w-full ml-2">
+                                                    <div className="flex justify-between items-center ml-2">
                                                         <div>
-                                                            <div className="text-sm font-medium text-gray-900">{asset.name}</div>
+                                                            <div
+                                                                className="text-sm font-medium text-gray-900 truncate max-w-2xs break-words"
+                                                                title={asset.name} // shows full name on hover
+                                                            >
+                                                                {asset.name}
+                                                            </div>
                                                             <div className="text-xs text-gray-500">{asset.asset_type}</div>
                                                         </div>
                                                         {user?.add_edit_asset && (
@@ -271,7 +412,7 @@ const Assets = () => {
                                                                     handleDuplicate(asset);
                                                                 }}
                                                                 title="Duplicate"
-                                                                className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1"
+                                                                className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1 ml-4"
                                                             >
                                                                 <FiCopy className="w-4 h-4" />
                                                             </button>

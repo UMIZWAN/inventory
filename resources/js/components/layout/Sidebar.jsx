@@ -205,7 +205,7 @@ const Sidebar = () => {
                         <Link href="/items/item-list">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                                 <FiPackage className="text-sky-600" />
-                                <span className="font-medium">Item List</span>
+                                <span className="font-medium">Stock List</span>
                             </li>
                         </Link>
                     )}
@@ -214,7 +214,7 @@ const Sidebar = () => {
                         <Link href="/items/asset-transaction">
                         <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                           <FiRepeat className="text-sky-600" />
-                          <span className="font-medium">Transaction</span>
+                          <span className="font-medium">Stock Movement</span>
                           {hasIncomingTransfer && (
                             <span
                               className={`absolute right-3 w-2 h-2 rounded-full ${
@@ -234,7 +234,7 @@ const Sidebar = () => {
                         <Link href="/inventory">
                         <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                           <TbReportAnalytics className="text-sky-600" />
-                          <span className="font-medium">Inventory</span>
+                          <span className="font-medium">IN-OUT History</span>
                         </li>
                       </Link>
                     )}

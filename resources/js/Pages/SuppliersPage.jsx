@@ -34,7 +34,7 @@ const SuppliersPage = () => {
         <Layout>
             <div className="p-4">
                 <Head title="Suppliers" />
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="max-w-9xl mx-auto sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold">Suppliers</h1>
                         {user?.settings && (
@@ -56,9 +56,9 @@ const SuppliersPage = () => {
                                     <table className="min-w-full divide-y divide-gray-300">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Detail</th>
-                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider text-center">Actions</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Name</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Detail</th>
+                                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
@@ -76,20 +76,20 @@ const SuppliersPage = () => {
                                                                 {s.supplier_email}
                                                             </div>
                                                             <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                                                                <FaMapLocationDot className="self-center" />
-                                                                {s.supplier_address}
+                                                                <FaMapLocationDot className="self-start mt-1" />
+                                                                <span className="whitespace-pre-line">{s.supplier_address}</span>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">
-                                                    {user?.settings && (
-                                                        <button
-                                                            className="text-blue-600 hover:underline"
-                                                            onClick={() => handleEdit(s)}
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                    )}
+                                                        {user?.settings && (
+                                                            <button
+                                                                className="text-blue-600 hover:underline"
+                                                                onClick={() => handleEdit(s)}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}

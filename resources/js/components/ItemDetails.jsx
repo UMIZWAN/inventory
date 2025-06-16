@@ -183,7 +183,8 @@ const ItemDetails = ({ asset, onClose }) => {
                                 type="file"
                                 name="asset_image"
                                 onChange={handleFileChange}
-                                className="mt-2 w-40 text-sm px-2 py-1 border rounded"
+                                className="mt-2 w-40 p-1 text-slate-500 text-sm rounded file:bg-blue-200 file:text-blue-700 
+                                file:font-semibold file:border-none file:px-1 file:py-1 file:mr-3 file:rounded hover:file:bg-blue-100 border"
                             />
                         )}
                     </div>
