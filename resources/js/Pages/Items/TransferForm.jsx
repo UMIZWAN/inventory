@@ -6,9 +6,9 @@ import { useOptions } from "../../context/OptionContext";
 import { router } from "@inertiajs/react";
 import Layout from "../../components/layout/Layout";
 
-function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, transferStatus, selectedItems }) {
+function TransferForm({ setShowTransferForm, initialData, isEditMode, transferStatus, selectedItems }) {
   const { user } = useAuth();
-  const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
+  const { branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({

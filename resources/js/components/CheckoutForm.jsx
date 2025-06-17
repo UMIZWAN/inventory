@@ -9,7 +9,7 @@ import { router } from "@inertiajs/react";
 export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     const { user } = useAuth();
     const { fetchInvType, invType } = useOptions();
-    const { assets, createStockOut, fetchBranchAssets, branchItem, fetchBranchItem } = useAssetMeta();
+    const { createStockOut, branchItem, fetchBranchItem } = useAssetMeta();
     const [type, setType] = useState("sold");
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));

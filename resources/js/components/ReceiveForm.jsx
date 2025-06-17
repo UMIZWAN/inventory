@@ -4,10 +4,9 @@ import { useAssetMeta } from "../context/AssetsContext";
 import { useSuppliers } from "../context/SuppliersContext";
 import { useAuth } from "../context/AuthContext";
 
-function ReceiveForm({ setShowReceiveForm, onSubmit, selectedItems }) {
+function ReceiveForm({ setShowReceiveForm, selectedItems }) {
   const { user } = useAuth();
-  const { assets, createAssetIn, fetchBranchAssets, itemList,
-    fetchItemList } = useAssetMeta();
+  const { createAssetIn, itemList, fetchItemList } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
   const [submitting, setSubmitting] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
