@@ -34,7 +34,6 @@ const Assets = () => {
 
     useEffect(() => {
         const params = {
-            page: pagination.current_page,
             page: pagination.currentPage,
             search: searchTerm,
             type: searchType,
@@ -180,7 +179,7 @@ const Assets = () => {
                                 &times;
                             </button>
                             <TransferForm
-                                setShowCheckoutForm={() => setActionType(null)}
+                                setShowTransferForm={() => setActionType(null)}
                                 selectedItems={selectedAssets}
                                 transferStatus={actionType} // e.g. 'sold' or 'request'
                             />

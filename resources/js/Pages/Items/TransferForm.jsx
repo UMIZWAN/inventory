@@ -6,9 +6,9 @@ import { useOptions } from "../../context/OptionContext";
 import { router } from "@inertiajs/react";
 import Layout from "../../components/layout/Layout";
 
-function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, transferStatus, selectedItems }) {
+function TransferForm({ setShowTransferForm, initialData, isEditMode, transferStatus, selectedItems }) {
   const { user } = useAuth();
-  const { assets, branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
+  const { branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -56,6 +56,27 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, 
     }))
 
   useEffect(() => {
+    if (selectedItems?.length) {
+      const mapped = selectedItems.map(id => {
+        const asset = branchItem.find(a => a.id === id);
+        return {
+          item: asset?.id || "",
+          name: asset?.name || "",
+          quantity: 1,
+          category: asset?.asset_category_name || "",
+          unitMeasure: asset?.asset_unit_measure || "",
+          price: parseFloat(asset?.asset_sales_cost || 0),
+          amount: parseFloat(asset?.asset_sales_cost || 0), // Initialize amount
+        };
+      });
+      setForm(prev => ({
+        ...prev,
+        items: mapped,
+      }));
+    }
+  }, [selectedItems, branchItem]);
+
+  useEffect(() => {
     if (initialData) {
       setForm({
         requester: user?.id || "",
@@ -86,27 +107,6 @@ function TransferForm({ setShowTransferForm, initialData, onSubmit, isEditMode, 
     { key: "price", label: "Unit Price", type: "number", min: 0, step: "0.01", align: "text-right", readOnly: true },
     { key: "amount", label: "Total Price", type: "number", min: 0, step: "0.01", align: "text-right", readOnly: true },
   ];
-
-  useEffect(() => {
-    if (selectedItems?.length) {
-      const mapped = selectedItems.map(id => {
-        const asset = assets.find(a => a.id === id);
-        return {
-          item: asset?.id || "",
-          name: asset?.name || "",
-          quantity: 1,
-          category: asset?.asset_category_name || "",
-          unitMeasure: asset?.asset_unit_measure || "",
-          price: parseFloat(asset?.asset_sales_cost || 0),
-          amount: parseFloat(asset?.asset_sales_cost || 0), // Initialize amount
-        };
-      });
-      setForm(prev => ({
-        ...prev,
-        items: mapped,
-      }));
-    }
-  }, [selectedItems]);
 
   const addItem = () => {
     setForm({ ...form, items: [...form.items, { item: '', quantity: 1, price: 0 }] });

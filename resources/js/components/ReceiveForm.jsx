@@ -4,10 +4,9 @@ import { useAssetMeta } from "../context/AssetsContext";
 import { useSuppliers } from "../context/SuppliersContext";
 import { useAuth } from "../context/AuthContext";
 
-function ReceiveForm({ setShowReceiveForm, onSubmit, selectedItems }) {
+function ReceiveForm({ setShowReceiveForm, selectedItems }) {
   const { user } = useAuth();
-  const { assets, createAssetIn, fetchBranchAssets, itemList,
-    fetchItemList } = useAssetMeta();
+  const { createAssetIn, itemList, fetchItemList } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
   const [submitting, setSubmitting] = useState(false);
   const [receiveDate, setReceiveDate] = useState(new Date().toISOString().slice(0, 10));
@@ -47,7 +46,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit, selectedItems }) {
   useEffect(() => {
     if (selectedItems?.length) {
       const mapped = selectedItems.map(id => {
-        const asset = assets.find(a => a.id === id);
+        const asset = itemList.find(a => a.id === id);
         return {
           item: asset?.id || "",
           name: asset?.name || "",
@@ -59,7 +58,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit, selectedItems }) {
       });
       setItems(mapped);
     }
-  }, [selectedItems]);
+  }, [selectedItems, itemList]);
 
   const handleChange = (index, field, value) => {
     const updated = [...items];
