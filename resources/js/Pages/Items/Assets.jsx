@@ -34,7 +34,6 @@ const Assets = () => {
 
     useEffect(() => {
         const params = {
-            page: pagination.current_page,
             page: pagination.currentPage,
             search: searchTerm,
             type: searchType,

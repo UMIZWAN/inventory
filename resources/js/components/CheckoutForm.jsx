@@ -9,7 +9,7 @@ import { router } from "@inertiajs/react";
 export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     const { user } = useAuth();
     const { fetchInvType, invType } = useOptions();
-    const { assets, createStockOut, fetchBranchAssets } = useAssetMeta();
+    const { assets, createStockOut, fetchBranchAssets, branchItem, fetchBranchItem } = useAssetMeta();
     const [type, setType] = useState("sold");
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -24,7 +24,8 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
 
     useEffect(() => {
         fetchInvType();
-        fetchBranchAssets();
+        // fetchBranchAssets();
+        fetchBranchItem(user?.branch_id);
     }, [])
 
     const [items, setItems] = useState([
@@ -36,7 +37,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
         const updated = [...items];
 
         if (field === 'item') {
-            const selectedAsset = assets.find(a => a.id === Number(value)); // Fix here
+            const selectedAsset = branchItem.find(a => a.id === Number(value)); // Fix here
             updated[index].item = value;
 
             if (selectedAsset) {
@@ -77,7 +78,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             key: "item",
             label: "Item",
             type: "select",
-            options: assets.map((a) => ({
+            options: branchItem.map((a) => ({
                 value: a.id, label: a.name,
                 qty: a.branch_values[0]?.asset_current_unit
             })),
@@ -92,7 +93,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     useEffect(() => {
         if (selectedItems?.length) {
             const mapped = selectedItems.map(id => {
-                const asset = assets.find(a => a.id === id);
+                const asset = branchItem.find(a => a.id === id);
                 return {
                     item: asset?.id || "",
                     name: asset?.name || "",
@@ -104,7 +105,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             });
             setItems(mapped);
         }
-    }, [selectedItems]);
+    }, [selectedItems, branchItem]);
 
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
 
@@ -125,7 +126,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             };
 
             const invalidItem = form.items.find(({ item, quantity }) => {
-                const asset = assets.find(a => a.id === Number(item));
+                const asset = branchItem.find(a => a.id === Number(item));
                 if (!asset) return false;
 
                 const currentBranchStock = asset.branch_values[0].asset_current_unit ?? 0;
@@ -134,7 +135,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             });
 
             if (invalidItem) {
-                const assetName = assets.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
+                const assetName = branchItem.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
                 alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
                 return;
             }
@@ -207,6 +208,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                                         setPurposes(selectedId);
                                         setPurposeLabel(selected?.asset_transaction_purpose_name || '');
                                     }}
+                                    required
                                     className="w-full border border-gray-300 rounded px-3 py-2"
                                 >
                                     <option value="">[Select Type]</option>

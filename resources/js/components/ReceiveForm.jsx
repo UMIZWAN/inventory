@@ -47,7 +47,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit, selectedItems }) {
   useEffect(() => {
     if (selectedItems?.length) {
       const mapped = selectedItems.map(id => {
-        const asset = assets.find(a => a.id === id);
+        const asset = itemList.find(a => a.id === id);
         return {
           item: asset?.id || "",
           name: asset?.name || "",
@@ -59,7 +59,7 @@ function ReceiveForm({ setShowReceiveForm, onSubmit, selectedItems }) {
       });
       setItems(mapped);
     }
-  }, [selectedItems]);
+  }, [selectedItems, itemList]);
 
   const handleChange = (index, field, value) => {
     const updated = [...items];
