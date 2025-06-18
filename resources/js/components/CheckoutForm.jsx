@@ -14,7 +14,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     const [branch, setBranch] = useState(user?.branch_id || "");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [recipient, setRecipient] = useState('');
-    const [status, setStatus] = useState('IN PROGRESS');
+    const [status, setStatus] = useState('COMPLETED');
     const [remarks, setRemarks] = useState('');
     const [purposes, setPurposes] = useState();
     const [attachment, setAttachment] = useState(null);
@@ -27,6 +27,12 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
         // fetchBranchAssets();
         fetchBranchItem(user?.branch_id);
     }, [])
+
+    useEffect(() => {
+        if (purposeLabel === 'Event' || purposeLabel === 'Roadshow') {
+            setStatus('IN PROGRESS');
+        }
+    }, [purposeLabel]);
 
     const [items, setItems] = useState([
         { assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },
