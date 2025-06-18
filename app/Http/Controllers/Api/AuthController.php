@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\UserResource;
+use App\Models\UsersBranch;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -29,7 +30,7 @@ class AuthController extends Controller
         $user = User::where('email', $request['email'])->firstOrFail();
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        $user = $request->user()->load('accessLevel');
+        $user = $request->user()->load('accessLevel', 'userBranch');
 
         return response()->json([
             'access_token' => $token,
@@ -71,6 +72,8 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'access_level_id' => 'required|integer|exists:access_level,id',
+            'branch_id' => 'required|array',
+            'branch_id.*' => 'integer|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -82,8 +85,14 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'access_level_id' => $request->access_level_id,
-            'branch_id' => $request->branch_id,
         ]);
+
+        foreach ($request->branch_id as $branchId) {
+            UsersBranch::create([
+                'user_id' => $user->id,
+                'branch_id' => $branchId,
+            ]);
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -94,13 +103,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Update an existing user
-     *
-     * @param Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function updateUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -109,8 +111,6 @@ class AuthController extends Controller
         // if (! Gate::allows('update-user', $user)) {
         //     return response()->json(['message' => 'Unauthorized'], 403);
         // }
-
-        // Validate the input
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'email' => [
@@ -123,7 +123,8 @@ class AuthController extends Controller
             ],
             'password' => 'sometimes|required|string|min:8|confirmed',
             'access_level_id' => 'sometimes|required|integer|exists:access_level,id',
-            'branch_id' => 'sometimes|required|integer|exists:assets_branch,id',
+            'branch_id' => 'sometimes|required|array',
+            'branch_id.*' => 'integer|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -144,10 +145,6 @@ class AuthController extends Controller
             $user->password = Hash::make($request->password);
         }
 
-        if ($request->has('branch_id')) {
-            $user->branch_id = $request->branch_id;
-        }
-
         if ($request->has('access_level_id')) {
             $user->access_level_id = $request->access_level_id;
         }
@@ -155,8 +152,21 @@ class AuthController extends Controller
         // Save the updated user
         $user->save();
 
+        if ($request->has('branch_id')) {
+            // Remove old branches
+            UsersBranch::where('user_id', $user->id)->delete();
+
+            // Add new branches
+            foreach ($request->branch_id as $branchId) {
+                UsersBranch::create([
+                    'user_id' => $user->id,
+                    'branch_id' => $branchId,
+                ]);
+            }
+        }
+
         // Load the access_level relationship
-        $user->load('accessLevel');
+        $user->load('accessLevel', 'userBranch');
 
         // Return the updated user
         return response()->json([
@@ -169,7 +179,7 @@ class AuthController extends Controller
     public function getAllUsers(Request $request)
     {
         try {
-            $query = User::with('accessLevel', 'branch');
+            $query = User::with('accessLevel', 'userBranch');
 
             // Filter by name
             if ($request->has('name')) {
@@ -186,9 +196,10 @@ class AuthController extends Controller
                 $query->where('access_level_id', $request->access_level_id);
             }
 
-            // Filter by branch
             if ($request->has('branch_id')) {
-                $query->where('branch_id', $request->branch_id);
+                $query->whereHas('userBranch', function ($q) use ($request) {
+                    $q->where('branch_id', $request->branch_id);
+                });
             }
 
             // Paginate results
