@@ -8,6 +8,7 @@ import Layout from '../../components/layout/Layout';
 import AddUserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 import { useAuth } from '../../context/AuthContext';
+import Pagination from '../../components/Pagination';
 
 const UserPage = ({ auth }) => {
     const { user } = useAuth();
@@ -18,18 +19,35 @@ const UserPage = ({ auth }) => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState(null);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        perPage: 10,
+        total: 0,
+        lastPage: 1
+    });
+
 
     useEffect(() => {
         fetchUsers();
     }, []);
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (page = 1) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get('/api/users-list');
+            const response = await api.get(`/api/users-list?page=${page}`);
             if (response.data.success) {
-                setUsers(response.data.data);
+                const response = await api.get(`/api/users-list?page=${page}`);
+                if (response.data.success) {
+                    setUsers(response.data.data); // UserResource::collection
+                    setPagination({
+                        currentPage: response.data.meta.current_page,
+                        perPage: response.data.meta.per_page,
+                        total: response.data.meta.total,
+                        lastPage: response.data.meta.last_page
+                    });
+                }
+
             } else {
                 setError(response.data.message || 'Failed to fetch users');
             }
@@ -244,6 +262,10 @@ const UserPage = ({ auth }) => {
                                             )}
                                         </tbody>
                                     </table>
+                                    <Pagination
+                                        pagination={pagination}
+                                        onPageChange={(page) => fetchUsers(page)}
+                                    />
                                 </div>
                             )}
                         </div>
