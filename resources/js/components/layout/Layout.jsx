@@ -3,6 +3,7 @@ import { IoIosNotificationsOutline, IoMdLogOut } from "react-icons/io";
 import Sidebar from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { router } from "@inertiajs/react";
+import { Link } from '@inertiajs/react';
 import { FiRepeat } from "react-icons/fi";
 
 const Layout = ({ children }) => {
@@ -29,7 +30,9 @@ const Layout = ({ children }) => {
                 <h1 className="text-lg font-bold">Marketing Inventory System</h1>
                 {user && (
                     <div className="flex items-center gap-4">
-                        <span className="text-gray-600">{user.name}</span>
+                        <Link href="/profile" className="flex items-center gap-2 ">
+                        <span className="text-gray-600 hover:text-blue-600 hover:underline">{user.name}</span>
+                        </Link>
                         {/* <button className="text-white px-1 py-1 rounded-full hover:bg-sky-100">
                             <IoIosNotificationsOutline className="text-2xl text-gray-600" />
                         </button> */}

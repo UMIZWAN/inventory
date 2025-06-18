@@ -11,6 +11,10 @@ Route::get('/users', function () {
     return Inertia::render('Users/UserPage');
 })->name('users');
 
+Route::get('/profile', function () {
+    return Inertia::render('Users/Profile');
+});
+
 Route::get('/access-levels', function () {
     return Inertia::render('AccessLevels/AccessLevelsPage');
 })->name('access-levels');
