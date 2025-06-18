@@ -19,6 +19,7 @@ const UserPage = ({ auth }) => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const [pagination, setPagination] = useState({
         currentPage: 1,
         perPage: 10,
@@ -26,28 +27,34 @@ const UserPage = ({ auth }) => {
         lastPage: 1
     });
 
-
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        const params = {
+            page: pagination.currentPage,
+            search: searchTerm,
+        };
+        fetchUsers(params);
+    }, [pagination.currentPage, searchTerm]);
 
     const fetchUsers = async (page = 1) => {
         setLoading(true);
         setError(null);
-        try {
-            const response = await api.get(`/api/users-list?page=${page}`);
-            if (response.data.success) {
-                const response = await api.get(`/api/users-list?page=${page}`);
-                if (response.data.success) {
-                    setUsers(response.data.data); // UserResource::collection
-                    setPagination({
-                        currentPage: response.data.meta.current_page,
-                        perPage: response.data.meta.per_page,
-                        total: response.data.meta.total,
-                        lastPage: response.data.meta.last_page
-                    });
-                }
 
+        try {
+            const response = await api.get('/api/users-list', {
+                params: {
+                    page,
+                    name: searchTerm, // you can also send `email: searchTerm` or both
+                },
+            });
+
+            if (response.data.success) {
+                setUsers(response.data.data);
+                setPagination({
+                    currentPage: response.data.meta.current_page,
+                    perPage: response.data.meta.per_page,
+                    total: response.data.meta.total,
+                    lastPage: response.data.meta.last_page,
+                });
             } else {
                 setError(response.data.message || 'Failed to fetch users');
             }
@@ -58,6 +65,7 @@ const UserPage = ({ auth }) => {
             setLoading(false);
         }
     };
+
 
     const handleUserClick = (user) => {
         setSelectedUser(selectedUser?.id === user.id ? null : user);
@@ -125,6 +133,21 @@ const UserPage = ({ auth }) => {
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
+                                    <div className="mb-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Search by name..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    fetchUsers(1); // start from page 1
+                                                }
+                                            }}
+                                            className="ml-1 mt-1 px-3 py-1 rounded-full border border-gray-300 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
