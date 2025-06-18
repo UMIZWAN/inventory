@@ -19,7 +19,6 @@ const Layout = ({ children }) => {
 
     const handleLogout = () => {
         logout();
-        localStorage.removeItem('access_token');
         router.visit('/');
     };
 
