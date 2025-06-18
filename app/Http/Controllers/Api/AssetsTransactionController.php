@@ -109,7 +109,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
                     'assets_transaction_item_list.*.asset_unit' => 'required|integer',
-                    'attachment' => 'nullable|file|mimes:pdf,xls,xlsx,doc,docx|max:10240', // Added attachment validation (max 10MB)
+                    'attachment' => 'nullable|file|mimes:pdf,xls,xlsx,doc,docx,jpg,jpeg,png,gif,bmp,webp|max:10240',
                 ]);
 
                 if ($validator->fails()) {
