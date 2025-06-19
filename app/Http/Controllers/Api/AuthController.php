@@ -17,6 +17,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 
 
+
 class AuthController extends Controller
 {
     public function login(Request $request)
@@ -73,7 +74,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'access_level_id' => 'required|integer|exists:access_level,id',
             'branch_id' => 'required|array',
-            'branch_id.*' => 'integer|exists:branches,id',
+            'branch_id.*' => 'integer|exists:assets_branch,id',
         ]);
 
         if ($validator->fails()) {
@@ -87,12 +88,18 @@ class AuthController extends Controller
             'access_level_id' => $request->access_level_id,
         ]);
 
-        foreach ($request->branch_id as $branchId) {
-            UsersBranch::create([
-                'user_id' => $user->id,
-                'branch_id' => $branchId,
-            ]);
+        try {
+            foreach ($request->branch_id as $branchId) {
+                UsersBranch::create([
+                    'user_id' => $user->id,
+                    'branch_id' => $branchId,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('User branch assign error: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed assigning branches', 'error' => $e->getMessage()], 500);
         }
+
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -206,20 +213,9 @@ class AuthController extends Controller
             $perPage = $request->input('per_page', 10);
             $users = $query->paginate($perPage);
 
-            return response()->json([
+            return UserResource::collection($users)->additional([
                 'success' => true,
-                'message' => 'Users retrieved successfully',
-                'data' => UserResource::collection(Cache::remember('users_cache', 3600, function () use ($users) {
-                    return $users;
-                })),
-                'pagination' => [
-                    'total' => $users->total(),
-                    'per_page' => $users->perPage(),
-                    'current_page' => $users->currentPage(),
-                    'last_page' => $users->lastPage(),
-                    'from' => $users->firstItem(),
-                    'to' => $users->lastItem()
-                ]
+                'message' => 'Users retrieved successfully'
             ]);
         } catch (Exception $e) {
             return response()->json([

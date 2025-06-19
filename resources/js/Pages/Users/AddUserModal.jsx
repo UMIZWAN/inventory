@@ -8,7 +8,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         password: '',
         password_confirmation: '',
         access_level_id: '',
-        branch_id: ''
+        branch_id: []
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -46,16 +46,30 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
+        setFormData(prev => ({
+            ...prev,
             [name]: value
         }));
-        
-        // Clear error for this field when user starts typing
+
         if (errors[name]) {
             setErrors(prevErrors => ({
                 ...prevErrors,
                 [name]: null
+            }));
+        }
+    };
+
+    const handleBranchChange = (e) => {
+        const selected = Array.from(e.target.selectedOptions, option => option.value);
+        setFormData(prev => ({
+            ...prev,
+            branch_id: selected
+        }));
+
+        if (errors.branch_id) {
+            setErrors(prevErrors => ({
+                ...prevErrors,
+                branch_id: null
             }));
         }
     };
@@ -67,19 +81,17 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
         try {
             const response = await api.post('/api/users', formData);
-            
+
             if (response.data.data) {
-                // Reset form
                 setFormData({
                     name: '',
                     email: '',
                     password: '',
                     password_confirmation: '',
                     access_level_id: '',
-                    branch_id: ''
+                    branch_id: []
                 });
-                
-                // Close modal and notify parent component
+
                 onUserAdded(response.data.data);
                 onClose();
             }
@@ -120,123 +132,103 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                            Name
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Name</label>
                         <input
                             type="text"
-                            id="name"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Enter name"
                         />
-                        {errors.name && <p className="text-red-500 text-xs italic mt-1">{errors.name}</p>}
+                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-                            Email
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Email</label>
                         <input
                             type="email"
-                            id="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Enter email"
                         />
-                        {errors.email && <p className="text-red-500 text-xs italic mt-1">{errors.email}</p>}
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-                            Password
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Password</label>
                         <input
                             type="password"
-                            id="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Enter password"
                         />
-                        {errors.password && <p className="text-red-500 text-xs italic mt-1">{errors.password}</p>}
+                        {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password_confirmation">
-                            Confirm Password
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Confirm Password</label>
                         <input
                             type="password"
-                            id="password_confirmation"
                             name="password_confirmation"
                             value={formData.password_confirmation}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.password_confirmation ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.password_confirmation ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Confirm password"
                         />
-                        {errors.password_confirmation && <p className="text-red-500 text-xs italic mt-1">{errors.password_confirmation}</p>}
+                        {errors.password_confirmation && <p className="text-red-500 text-xs mt-1">{errors.password_confirmation}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="access_level_id">
-                            Access Level
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Access Level</label>
                         <select
-                            id="access_level_id"
                             name="access_level_id"
                             value={formData.access_level_id}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.access_level_id ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.access_level_id ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                         >
                             <option value="">Select Access Level</option>
                             {accessLevels.map(level => (
-                                <option key={level.id} value={level.id}>
-                                    {level.name}
-                                </option>
+                                <option key={level.id} value={level.id}>{level.name}</option>
                             ))}
                         </select>
-                        {errors.access_level_id && <p className="text-red-500 text-xs italic mt-1">{errors.access_level_id}</p>}
+                        {errors.access_level_id && <p className="text-red-500 text-xs mt-1">{errors.access_level_id}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="branch_id">
-                            Branch
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Branches (Hold Ctrl or Cmd to select multiple)</label>
                         <select
-                            id="branch_id"
                             name="branch_id"
+                            multiple
                             value={formData.branch_id}
-                            onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.branch_id ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            onChange={handleBranchChange}
+                            className={`w-full border ${errors.branch_id ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm h-32`}
                         >
-                            <option value="">Select Branch</option>
                             {branches.map(branch => (
                                 <option key={branch.id} value={branch.id}>
                                     {branch.name}
                                 </option>
                             ))}
                         </select>
-                        {errors.branch_id && <p className="text-red-500 text-xs italic mt-1">{errors.branch_id}</p>}
+                        {errors.branch_id && <p className="text-red-500 text-xs mt-1">{errors.branch_id}</p>}
                     </div>
 
-                    <div className="flex items-center justify-end">
+                    <div className="flex justify-end">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2 focus:outline-none focus:shadow-outline"
+                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             {loading ? 'Adding...' : 'Add User'}
                         </button>
