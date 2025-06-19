@@ -13,7 +13,11 @@ function StockTransfer() {
   const { assetTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
 
   useEffect(() => {
-    fetchAssetTransaction(selectedBranch?.branch_id);
+    const params = {
+            branch_id: selectedBranch?.branch_id,
+            transactionType: "ASSET TRANSFER",
+        };
+    fetchAssetTransaction(params);
     // fetchBranchAssets();
   }, [selectedBranch]);
 

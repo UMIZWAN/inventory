@@ -17,7 +17,7 @@ export default function TransferList({ status, mode }) {
   const [showTransferForm, setShowTransferForm] = useState(false);
   const [transferStatus, setTransferStatus] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-console.log(assetTransfer)
+
   const [filters, setFilters] = useState({
     searchTerm: '',
     fromDate: '',

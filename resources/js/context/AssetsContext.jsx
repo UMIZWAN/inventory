@@ -243,13 +243,13 @@ export const AssetMetaProvider = ({ children }) => {
   //   }
   // };
 
-  const fetchAssetTransaction = async ({ branchId = null, transactionType = null } = {}) => {
+  const fetchAssetTransaction = async (params = {}) => {
     setLoading(true);
 
     try {
-      const params = {};
-      if (branchId) params.branch_id = branchId;
-      if (transactionType) params.assets_transaction_type = transactionType;
+      // const params = {};
+      // if (branchId) params.branch_id = branchId;
+      // if (transactionType) params.assets_transaction_type = transactionType;
 
       const res = await api.get('/api/assets-transaction', { params });
       const transactions = res.data.data;
