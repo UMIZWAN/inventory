@@ -17,7 +17,7 @@ import TransferForm from './TransferForm';
 import { FiPackage, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
 
 const Assets = () => {
-    const { user } = useAuth();
+    const { user, selectedBranch } = useAuth();
     const { assets, categories, fetchCategories, fetchBranchAssets,
         fetchAllBranchAssets, pagination, setPagination } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
@@ -38,10 +38,10 @@ const Assets = () => {
             search: searchTerm,
             type: searchType,
             asset_category_id: filters.category,
+            branch_id: selectedBranch?.branch_id,
         };
         fetchBranchAssets(params);
-    }, [pagination.currentPage, searchTerm, searchType, filters.category]);
-
+    }, [pagination.currentPage, searchTerm, searchType, filters.category, selectedBranch]);
 
     useEffect(() => {
 

@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // Optional: show loading state
+  const [selectedBranch, setSelectedBranch] = useState(user?.users_branch?.[0] || null);
 
   const login = async (email, password) => {
     try {
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.get("/api/profile");
       setUser(response.data.data);
+      setSelectedBranch(response.data.data.users_branch?.[0] || null);
     } catch (err) {
       console.error("Fetch user error:", err.response?.data || err.message);
       setUser(null);
@@ -63,7 +65,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading, fetchUser, handleClearCache }}>
+    <AuthContext.Provider
+      value={{
+        user, setUser, login, logout, loading, fetchUser, handleClearCache,
+        selectedBranch,
+        setSelectedBranch,
+      }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,7 +7,7 @@ import { Link } from '@inertiajs/react';
 import { FiRepeat } from "react-icons/fi";
 
 const Layout = ({ children }) => {
-    const { user, logout, handleClearCache } = useAuth();
+    const { user, logout, selectedBranch, setSelectedBranch } = useAuth();
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -29,19 +29,25 @@ const Layout = ({ children }) => {
                 <h1 className="text-lg font-bold">Marketing Inventory System</h1>
                 {user && (
                     <div className="flex items-center gap-4">
-                        <Link href="/profile" className="flex items-center gap-2 ">
-                        <span className="text-gray-600 hover:text-blue-600 hover:underline">{user.name}</span>
-                        </Link>
-                        {/* <button className="text-white px-1 py-1 rounded-full hover:bg-sky-100">
-                            <IoIosNotificationsOutline className="text-2xl text-gray-600" />
-                        </button> */}
-                        {/* <button
-                            onClick={handleClearCache}
-                            className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-3 py-1 rounded shadow"
+                        <select
+                            value={selectedBranch?.branch_id || ''}
+                            onChange={(e) => {
+                                const selected = user.users_branch.find(b => b.branch_id == e.target.value);
+                                setSelectedBranch(selected);
+                            }}
+                            className="border rounded px-2 py-1 text-sm shadow-sm"
                         >
-                            <FiRepeat />
-                            <span>Clear Cache</span>
-                        </button> */}
+                            {user.users_branch.map(branch => (
+                                <option key={branch.branch_id} value={branch.branch_id}>
+                                    {branch.branch_name}
+                                </option>
+                            ))}
+                        </select>
+
+                        <Link href="/profile" className="flex items-center gap-2">
+                            <span className="text-gray-600 hover:text-blue-600 hover:underline">{user.name}</span>
+                        </Link>
+
                         <button
                             onClick={handleLogout}
                             className="bg-white text-red-600 shadow-sm shadow-red-600/50 px-2 py-1 rounded hover:bg-red-100"
@@ -51,6 +57,7 @@ const Layout = ({ children }) => {
                         </button>
                     </div>
                 )}
+
             </header>
 
             {/* Main layout container */}

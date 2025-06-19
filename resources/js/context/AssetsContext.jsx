@@ -220,18 +220,45 @@ export const AssetMetaProvider = ({ children }) => {
   // --------------------------------------------------------------------------------
   // Asset Transaction functions
   // --------------------------------------------------------------------------------
-  const fetchAssetTransaction = async () => {
+  // const fetchAssetTransaction = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await api.get('/api/assets-transaction');
+  //     const transactions = res.data.data;
+
+  //     // Separate transactions by type and branch
+  //     const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN' && tx.assets_from_branch_id === user?.branch_id);
+  //     const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT' && tx.assets_from_branch_id === user?.branch_id);
+  //     const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER' && (tx.assets_from_branch_id === user?.branch_id || tx.assets_to_branch_id === user?.branch_id));
+
+  //     // Update your states accordingly
+  //     setAssetIn(assetIn);
+  //     setAssetOut(assetOut);
+  //     setAssetTransfer(assetTransfer);
+
+  //   } catch (error) {
+  //     console.error('Error fetching asset transactions:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchAssetTransaction = async ({ branchId = null, transactionType = null } = {}) => {
     setLoading(true);
+
     try {
-      const res = await api.get('/api/assets-transaction');
+      const params = {};
+      if (branchId) params.branch_id = branchId;
+      if (transactionType) params.assets_transaction_type = transactionType;
+
+      const res = await api.get('/api/assets-transaction', { params });
       const transactions = res.data.data;
 
-      // Separate transactions by type and branch
-      const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN' && tx.assets_from_branch_id === user?.branch_id);
-      const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT' && tx.assets_from_branch_id === user?.branch_id);
-      const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER' && (tx.assets_from_branch_id === user?.branch_id || tx.assets_to_branch_id === user?.branch_id));
+      // You can still categorize them after fetch if needed
+      const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN');
+      const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
+      const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
 
-      // Update your states accordingly
       setAssetIn(assetIn);
       setAssetOut(assetOut);
       setAssetTransfer(assetTransfer);
@@ -242,6 +269,7 @@ export const AssetMetaProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
 
   const createTransfer = async (form, totalAmount) => {
     try {
@@ -279,7 +307,7 @@ export const AssetMetaProvider = ({ children }) => {
       const payload = {
         assets_transaction_type: 'ASSET OUT', // Always "ASSET OUT"
         assets_transaction_status: form.status.toUpperCase(),
-        assets_from_branch_id: user?.branch_id,
+        assets_from_branch_id: form.branch,
         assets_recipient_name: form.recipient,
         created_by: user?.id,
         created_at: form.date,
@@ -314,7 +342,7 @@ export const AssetMetaProvider = ({ children }) => {
       const payload = {
         assets_transaction_running_number: form.referenceNo,
         assets_transaction_type: 'ASSET IN',
-        assets_from_branch_id: user?.branch_id,
+        assets_from_branch_id: form.branch,
         supplier_id: form.supplierId,
         created_by: user?.id,
         // created_at: form.date,

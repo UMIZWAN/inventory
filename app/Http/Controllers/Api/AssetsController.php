@@ -406,7 +406,7 @@ class AssetsController extends Controller
     public function getByBranch(Request $request)
     {
         try {
-            $branchId = Auth::user()->branch_id;
+            $branchId = $request->input('branch_id', Auth::user()->branch_id);
 
             // Optional query parameters
             $perPage = $request->input('per_page', 10); // default to 10 per page

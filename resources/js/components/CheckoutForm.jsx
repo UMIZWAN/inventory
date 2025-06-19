@@ -7,11 +7,11 @@ import TransactionDetail from "./TransactionDetail";
 import { router } from "@inertiajs/react";
 
 export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
-    const { user } = useAuth();
+    const { user, selectedBranch } = useAuth();
     const { fetchInvType, invType } = useOptions();
     const { createStockOut, branchItem, fetchBranchItem } = useAssetMeta();
     const [type, setType] = useState("sold");
-    const [branch, setBranch] = useState(user?.branch_id || "");
+    const branch = selectedBranch?.branch_id || "";
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [recipient, setRecipient] = useState('');
     const [status, setStatus] = useState('COMPLETED');
@@ -24,9 +24,11 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
 
     useEffect(() => {
         fetchInvType();
-        // fetchBranchAssets();
-        fetchBranchItem(user?.branch_id);
     }, [])
+
+    useEffect(() => {
+        fetchBranchItem(selectedBranch?.branch_id);
+    }, [selectedBranch])
 
     useEffect(() => {
         if (purposeLabel === 'Event' || purposeLabel === 'Roadshow') {
@@ -185,11 +187,10 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                             <div>
                                 <label className="block mb-1 font-medium">Branch</label>
                                 <input
-                                    type="text"
+                                    name="branch"
+                                    readOnly
                                     className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
-                                    placeholder="Branch"
-                                    value={user?.branch_name}
-                                    onChange={(e) => setBranch(e.target.value)}
+                                    value={selectedBranch?.branch_name || ''}
                                 />
                             </div>
                             <div>

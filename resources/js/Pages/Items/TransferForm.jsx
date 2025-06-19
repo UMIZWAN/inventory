@@ -7,7 +7,7 @@ import { router } from "@inertiajs/react";
 import Layout from "../../components/layout/Layout";
 
 function TransferForm({ setShowTransferForm, initialData, isEditMode, transferStatus, selectedItems }) {
-  const { user } = useAuth();
+  const { user, selectedBranch } = useAuth();
   const { branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
   const [submitting, setSubmitting] = useState(false);
@@ -17,22 +17,13 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
     date: new Date().toISOString().slice(0, 10),
     status: transferStatus,
     transaction_type: "ASSET_TRANSFER",
-    fromBranch: user?.branch_id || "",
-    toBranch: user?.branch_id || "",
+    fromBranch: selectedBranch?.branch_id || "",
+    toBranch: selectedBranch?.branch_id || "",
     shipping: "",
     items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: "",
   });
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get("status"); // "REQUESTED" or "IN-TRANSIT"
-
-    // if (status) {
-    //   setShowTransferForm({ show: true, status });
-    // }
-  }, []);
 
   useEffect(() => {
     fetchShipping();
@@ -44,9 +35,9 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
     if (form.status === "REQUESTED" && form.fromBranch) {
       fetchBranchItem(form.fromBranch);
     } else if (form.status === "IN-TRANSIT") {
-      fetchBranchItem(user?.branch_id);
+      fetchBranchItem(selectedBranch?.branch_id);
     }
-  }, [form.status, form.fromBranch]);
+  }, [form.status, form.fromBranch, selectedBranch]);
 
   const itemOptions =
     branchItem.map((item) => ({
@@ -85,7 +76,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
         status: transferStatus,
         transaction_type: "ASSET_TRANSFER",
         fromBranch: initialData.fromBranch || "",
-        toBranch: initialData.toBranch || user?.branch_id || "",
+        toBranch: initialData.toBranch || selectedBranch?.branch_id || "",
         items: initialData.items || [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
         remarks: initialData.remarks || "",
         purpose: initialData.purpose || [],
@@ -167,7 +158,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
         if (!asset) return false;
 
         const currentBranchStock = asset.branch_values?.find(
-          (bv) => bv.asset_branch_id === user.branch_id
+          (bv) => bv.asset_branch_id === selectedBranch.branch_id
         )?.asset_current_unit ?? 0;
 
         return quantity > currentBranchStock;
@@ -234,7 +225,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
                   <label className="block font-medium mb-1">To Branch</label>
                   <input
                     name="toBranch"
-                    value={user?.branch_name}
+                    value={selectedBranch?.branch_name}
                     readOnly
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
                   />
@@ -247,7 +238,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
                   <input
                     name="fromBranch"
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
-                    value={user?.branch_name}
+                    value={selectedBranch?.branch_name}
                     readOnly
                   />
                 </div>

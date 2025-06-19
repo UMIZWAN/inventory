@@ -9,18 +9,18 @@ import { useAssetMeta } from "../../context/AssetsContext";
 import { Head } from "@inertiajs/react";
 
 function StockTransfer() {
-  const { user } = useAuth();
+  const { user, selectedBranch } = useAuth();
   const { assetTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
 
   useEffect(() => {
-    fetchAssetTransaction();
+    fetchAssetTransaction(selectedBranch?.branch_id);
     // fetchBranchAssets();
-  }, []);
+  }, [selectedBranch]);
 
   const incomingTransfersCount = assetTransfer.filter(
     (txn) =>
       txn.assets_transaction_status === "IN-TRANSIT" &&
-      txn.assets_to_branch_id === user?.branch_id
+      txn.assets_to_branch_id === selectedBranch?.branch_id
   ).length;
 
   const tabs = [
