@@ -10,10 +10,12 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         access_level_id: '',
         branch_id: []
     });
+
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [accessLevels, setAccessLevels] = useState([]);
     const [branches, setBranches] = useState([]);
+    const [branchSearch, setBranchSearch] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -59,16 +61,20 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         }
     };
 
-    const handleBranchChange = (e) => {
-        const selected = Array.from(e.target.selectedOptions, option => option.value);
-        setFormData(prev => ({
-            ...prev,
-            branch_id: selected
-        }));
+    const handleBranchCheckboxChange = (e) => {
+        const value = parseInt(e.target.value);
+        const isChecked = e.target.checked;
+
+        setFormData(prev => {
+            const updated = isChecked
+                ? [...prev.branch_id, value]
+                : prev.branch_id.filter(id => id !== value);
+            return { ...prev, branch_id: updated };
+        });
 
         if (errors.branch_id) {
-            setErrors(prevErrors => ({
-                ...prevErrors,
+            setErrors(prev => ({
+                ...prev,
                 branch_id: null
             }));
         }
@@ -96,7 +102,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                 onClose();
             }
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.errors) {
+            if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
                 console.error('Error adding user:', error);
@@ -114,10 +120,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
             <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium">Add New User</h3>
-                    <button 
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-500"
-                    >
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -199,22 +202,54 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                         {errors.access_level_id && <p className="text-red-500 text-xs mt-1">{errors.access_level_id}</p>}
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-bold mb-1">Branches (Hold Ctrl or Cmd to select multiple)</label>
-                        <select
-                            name="branch_id"
-                            multiple
-                            value={formData.branch_id}
-                            onChange={handleBranchChange}
-                            className={`w-full border ${errors.branch_id ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm h-32`}
-                        >
-                            {branches.map(branch => (
-                                <option key={branch.id} value={branch.id}>
-                                    {branch.name}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.branch_id && <p className="text-red-500 text-xs mt-1">{errors.branch_id}</p>}
+                    <div className="mb-4 relative">
+                        <label className="block text-sm font-bold mb-2">Branches</label>
+
+                        <input
+                            type="text"
+                            placeholder="Search branches..."
+                            className="w-full border border-gray-300 rounded px-3 py-2 mb-2 text-sm focus:outline-none"
+                            onChange={(e) => setBranchSearch(e.target.value.toLowerCase())}
+                        />
+
+                        <div className="max-h-48 overflow-y-auto border border-gray-200 rounded p-2 bg-white shadow-sm">
+                            {branches
+                                .filter(branch => branch.name.toLowerCase().includes(branchSearch))
+                                .slice(0, 4)
+                                .map(branch => (
+                                    <label key={branch.id} className="flex items-center space-x-2 py-1">
+                                        <input
+                                            type="checkbox"
+                                            value={branch.id}
+                                            checked={formData.branch_id.includes(branch.id)}
+                                            onChange={handleBranchCheckboxChange}
+                                            className="form-checkbox h-4 w-4 text-blue-600"
+                                        />
+                                        <span className="text-sm text-gray-700">{branch.name}</span>
+                                    </label>
+                                ))}
+                        </div>
+
+                        {formData.branch_id.length > 0 && (
+                            <div className="mt-3">
+                                <p className="text-sm font-semibold mb-1 text-gray-700">Selected Branches:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.branch_id.map(id => {
+                                        const branch = branches.find(b => b.id === id);
+                                        return branch ? (
+                                            <span
+                                                key={id}
+                                                className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                                            >
+                                                {branch.name}
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {errors.branch_id && <p className="text-red-500 text-xs italic mt-1">{errors.branch_id}</p>}
                     </div>
 
                     <div className="flex justify-end">

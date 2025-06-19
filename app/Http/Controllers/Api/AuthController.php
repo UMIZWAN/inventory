@@ -131,7 +131,7 @@ class AuthController extends Controller
             'password' => 'sometimes|required|string|min:8|confirmed',
             'access_level_id' => 'sometimes|required|integer|exists:access_level,id',
             'branch_id' => 'sometimes|required|array',
-            'branch_id.*' => 'integer|exists:branches,id',
+            'branch_id.*' => 'integer|exists:assets_branch,id',
         ]);
 
         if ($validator->fails()) {
