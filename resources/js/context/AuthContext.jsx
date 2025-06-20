@@ -8,6 +8,33 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // Optional: show loading state
   const [selectedBranch, setSelectedBranch] = useState(user?.users_branch?.[0] || null);
 
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+
+    if (token) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+
+    // Load selected branch from localStorage
+    const storedBranch = localStorage.getItem("selected_branch");
+    if (storedBranch) {
+      try {
+        setSelectedBranch(JSON.parse(storedBranch));
+      } catch {
+        localStorage.removeItem("selected_branch");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedBranch) {
+      localStorage.setItem("selected_branch", JSON.stringify(selectedBranch));
+    }
+  }, [selectedBranch]);
+
+
   const login = async (email, password) => {
     try {
       const response = await api.post("/api/login", { email, password });
@@ -31,7 +58,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.get("/api/profile");
       setUser(response.data.data);
-      setSelectedBranch(response.data.data.users_branch?.[0] || null);
+
+      // Only set branch if not already set (e.g., from localStorage)
+      setSelectedBranch((prev) => {
+        if (prev) return prev;
+        return response.data.data.users_branch?.[0] || null;
+      });
     } catch (err) {
       console.error("Fetch user error:", err.response?.data || err.message);
       setUser(null);

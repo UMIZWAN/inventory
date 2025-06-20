@@ -215,7 +215,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                 <h1 className="text-2xl font-bold mb-6 text-center">Invoice</h1>
                 <div className="flex justify-center items-center">
 
-                    <form className="rounded-lg p-4 space-y-6">
+                    <form className="rounded-lg p-4 space-y-6" onSubmit={handleSubmit}>
 
                         {/* Form Inputs */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -302,6 +302,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                         </div>
                         <div>
                             <label className="block text-sm font-medium">Attachment (optional):</label>
+                            <p className="text-sm text-gray-500 italic">file only support: pdf,xls,xlsx,doc,docx</p>
                             <input
                                 type="file"
                                 className="mt-1 p-1 w-full text-slate-500 text-sm rounded leading-6 file:bg-blue-200 file:text-blue-700 
@@ -313,8 +314,9 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                         {/* Submit */}
                         <div className="text-right mt-4">
                             <button
+                                type="submit"
                                 className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-2"
-                                onClick={handleSubmit}
+                                // onClick={handleSubmit}
                             >
                                 Submit
                             </button>

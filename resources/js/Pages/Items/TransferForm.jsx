@@ -41,6 +41,14 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
     }
   }, [form.status, form.fromBranch, selectedBranch]);
 
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      fromBranch: transferStatus === "REQUESTED" ? prev.fromBranch : selectedBranch?.branch_id || "",
+      toBranch: transferStatus === "REQUESTED" ? selectedBranch?.branch_id || "" : prev.toBranch,
+    }));
+  }, [selectedBranch, transferStatus]);
+
   const itemOptions =
     branchItem.map((item) => ({
       value: item.id,
@@ -77,14 +85,14 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
         date: initialData.date || new Date().toISOString().slice(0, 10),
         status: transferStatus,
         transaction_type: "ASSET_TRANSFER",
-        fromBranch: initialData.fromBranch || "",
-        toBranch: initialData.toBranch || selectedBranch?.branch_id || "",
+        fromBranch: selectedBranch?.branch_id || initialData.fromBranch || "",
+        toBranch: selectedBranch?.branch_id || initialData.fromBranch || "",
         items: initialData.items || [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
         remarks: initialData.remarks || "",
         purpose: initialData.purpose || [],
       });
     }
-  }, []);
+  }, [selectedBranch]);
 
   const columns = [
     {
@@ -219,7 +227,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
       setSubmitting(false);
     }
   };
-  
+
   return (
     <>
       {/* <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> */}
