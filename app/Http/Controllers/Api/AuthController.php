@@ -50,7 +50,7 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         try {
-            $user = $request->user()->load('accessLevel');
+            $user = $request->user()->load('accessLevel', 'userBranch');
 
             return response()->json([
                 'success' => true,

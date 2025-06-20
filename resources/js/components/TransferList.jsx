@@ -9,8 +9,8 @@ import TransactionFilter from "./TransactionFilter";
 import ExportButton from "./ExportButton";
 
 export default function TransferList({ status, mode }) {
-  const { user } = useAuth();
-  const { assets, assetTransfer, createTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
+  const { user, selectedBranch } = useAuth();
+  const { assets, assetTransfer, createTransfer, fetchAssetTransfer, fetchBranchAssets } = useAssetMeta();
 
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -106,7 +106,7 @@ export default function TransferList({ status, mode }) {
 
       const res = await api.put(`/api/assets-transaction/${txn.id}`, payload);
       closeModal();
-      fetchAssetTransaction();
+      fetchAssetTransfer();
       fetchBranchAssets();
     } catch (err) {
       alert(err.response.data.error)
@@ -141,16 +141,16 @@ export default function TransferList({ status, mode }) {
     const matchesToBranch =
       !filters.toBranch || txn.assets_to_branch_id == filters.toBranch;
 
-    let matchesMode = true;
-    if (mode === "outgoing") {
-      matchesMode = txn.assets_from_branch_id === user?.branch_id;
-    } else if (mode === "incoming") {
-      matchesMode = txn.assets_to_branch_id === user?.branch_id;
-    } else if (mode === "both") {
-      matchesMode =
-        txn.assets_from_branch_id === user?.branch_id ||
-        txn.assets_to_branch_id === user?.branch_id;
-    }
+    // let matchesMode = true;
+    // if (mode === "outgoing") {
+    //   matchesMode = txn.assets_from_branch_id === selectedBranch?.branch_id;
+    // } else if (mode === "incoming") {
+    //   matchesMode = txn.assets_to_branch_id === user?.branch_id;
+    // } else if (mode === "both") {
+    //   matchesMode =
+    //     txn.assets_from_branch_id === user?.branch_id ||
+    //     txn.assets_to_branch_id === user?.branch_id;
+    // }
 
     return (
       matchesSearch &&
@@ -158,8 +158,8 @@ export default function TransferList({ status, mode }) {
       matchesDate &&
       matchesStatus &&
       matchesFromBranch &&
-      matchesToBranch &&
-      matchesMode
+      matchesToBranch
+      // matchesMode
     );
   });
 
@@ -167,7 +167,7 @@ export default function TransferList({ status, mode }) {
     const status = txn.assets_transaction_status;
     const actions = [];
 
-    if (status === "IN-TRANSIT" && txn.assets_to_branch_id === user?.branch_id) {
+    if (status === "IN-TRANSIT" && txn.assets_to_branch_id === selectedBranch?.branch_id) {
       actions.push({
         label: "Receive",
         status: "RECEIVED",
@@ -176,7 +176,7 @@ export default function TransferList({ status, mode }) {
       });
     }
 
-    if (status === "REQUESTED" && txn.assets_from_branch_id === user?.branch_id && user.approve_reject_transaction) {
+    if (status === "REQUESTED" && txn.assets_from_branch_id === selectedBranch?.branch_id && user.approve_reject_transaction) {
       actions.push({
         label: "Approve",
         status: "APPROVED",
@@ -189,7 +189,7 @@ export default function TransferList({ status, mode }) {
       });
     }
 
-    if (status === "APPROVED" && txn.assets_from_branch_id === user?.branch_id && user.approve_reject_transaction) {
+    if (status === "APPROVED" && txn.assets_from_branch_id === selectedBranch?.branch_id && user.approve_reject_transaction) {
       actions.push({
         label: "Send",
         status: "IN-TRANSIT",

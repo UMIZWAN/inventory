@@ -13,6 +13,7 @@ export default function Profile() {
     password_confirmation: '',
   });
 
+  console.log('User:', user);
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,

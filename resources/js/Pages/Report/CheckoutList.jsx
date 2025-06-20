@@ -9,9 +9,9 @@ import Layout from "../../components/layout/Layout";
 import { useOptions } from "../../context/OptionContext";
 
 export default function CheckoutList() {
-    const { user } = useAuth();
+    const { user, selectedBranch } = useAuth();
     const { fetchInvType } = useOptions();
-    const { assets, assetOut, createStockOut, fetchAssetTransaction } = useAssetMeta();
+    const { assets, assetOut, createStockOut, fetchAssetOut } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -25,7 +25,15 @@ export default function CheckoutList() {
     });
 
     useEffect(() => {
-        fetchAssetTransaction();
+        const params = {
+            branch_id: selectedBranch?.branch_id,
+            assets_transaction_type: "ASSET OUT",
+        };
+        fetchAssetOut(params);
+
+    }, [selectedBranch]);
+
+    useEffect(() => {
         fetchInvType();
     }, []);
 

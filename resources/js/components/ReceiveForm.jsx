@@ -5,7 +5,7 @@ import { useSuppliers } from "../context/SuppliersContext";
 import { useAuth } from "../context/AuthContext";
 
 function ReceiveForm({ setShowReceiveForm, selectedItems }) {
-  const { user } = useAuth();
+  const { user, selectedBranch } = useAuth();
   const { createAssetIn, itemList, fetchItemList } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
   const [submitting, setSubmitting] = useState(false);
@@ -13,7 +13,8 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
   const [referenceNo, setReferenceNo] = useState("");
   const [supplierId, setSupplierId] = useState("");
   const [note, setNote] = useState("");
-  const [branch, setBranch] = useState(user?.branch_id || "");
+  const [branch, setBranch] = useState(selectedBranch?.branch_id || "");
+  // const branch = selectedBranch?.branch_id || "";
   const [items, setItems] = useState([
     {
       item: '',
@@ -29,6 +30,7 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
     fetchItemList();
   }, []);
 
+  console.log("Selected Branch:", selectedBranch);
   const columns = [
     {
       key: "item",
@@ -173,8 +175,8 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
             <input
               name="branch"
               readOnly
-              className="w-full border rounded p-2 mt-1"
-              value={user?.branch_name}
+              className="w-full border rounded p-2 mt-1 bg-gray-100"
+              value={selectedBranch?.branch_name || ''}
             />
           </div>
         </div>
