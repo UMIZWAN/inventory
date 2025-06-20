@@ -10,14 +10,14 @@ import { Head } from "@inertiajs/react";
 
 function StockTransfer() {
   const { user, selectedBranch } = useAuth();
-  const { assetTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
+  const { assetTransfer, fetchAssetTransfer, fetchBranchAssets } = useAssetMeta();
 
   useEffect(() => {
     const params = {
             branch_id: selectedBranch?.branch_id,
-            transactionType: "ASSET TRANSFER",
+            assets_transaction_type: "ASSET TRANSFER",
         };
-    fetchAssetTransaction(params);
+    fetchAssetTransfer(params);
     // fetchBranchAssets();
   }, [selectedBranch]);
 

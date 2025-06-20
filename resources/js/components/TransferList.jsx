@@ -10,7 +10,7 @@ import ExportButton from "./ExportButton";
 
 export default function TransferList({ status, mode }) {
   const { user, selectedBranch } = useAuth();
-  const { assets, assetTransfer, createTransfer, fetchAssetTransaction, fetchBranchAssets } = useAssetMeta();
+  const { assets, assetTransfer, createTransfer, fetchAssetTransfer, fetchBranchAssets } = useAssetMeta();
 
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -106,7 +106,7 @@ export default function TransferList({ status, mode }) {
 
       const res = await api.put(`/api/assets-transaction/${txn.id}`, payload);
       closeModal();
-      fetchAssetTransaction();
+      fetchAssetTransfer();
       fetchBranchAssets();
     } catch (err) {
       alert(err.response.data.error)

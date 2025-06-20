@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TransactionFilter from "./TransactionFilter";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
@@ -7,8 +7,8 @@ import ReceiveForm from "./ReceiveForm";
 import TransactionDetail from "./TransactionDetail";
 
 export default function ReceiveList() {
-    const { user } = useAuth();
-    const { assets, assetIn } = useAssetMeta();
+    const { user, selectedBranch } = useAuth();
+    const { assets, assetIn, fetchAssetIn } = useAssetMeta();
     const [selected, setSelected] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [showReceiveForm, setShowReceiveForm] = useState(false);
@@ -19,6 +19,15 @@ export default function ReceiveList() {
         fromBranch: '',
         itemName: '',
     });
+
+    useEffect(() => {
+        const params = {
+                branch_id: selectedBranch?.branch_id,
+                assets_transaction_type: "ASSET IN",
+            };
+        fetchAssetIn(params);
+        // fetchBranchAssets();
+      }, [selectedBranch]);
 
     const openModal = (txn) => {
         setSelected(txn);

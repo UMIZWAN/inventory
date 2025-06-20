@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 const AssetsContext = createContext();
 
 export const AssetMetaProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, selectedBranch } = useAuth();
   const [assets, setAssets] = useState([]);
   const [allAssets, setAllAssets] = useState([]);
   const [itemList, setItemList] = useState([]);
@@ -220,48 +220,49 @@ export const AssetMetaProvider = ({ children }) => {
   // --------------------------------------------------------------------------------
   // Asset Transaction functions
   // --------------------------------------------------------------------------------
-  // const fetchAssetTransaction = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const res = await api.get('/api/assets-transaction');
-  //     const transactions = res.data.data;
 
-  //     // Separate transactions by type and branch
-  //     const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN' && tx.assets_from_branch_id === user?.branch_id);
-  //     const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT' && tx.assets_from_branch_id === user?.branch_id);
-  //     const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER' && (tx.assets_from_branch_id === user?.branch_id || tx.assets_to_branch_id === user?.branch_id));
-
-  //     // Update your states accordingly
-  //     setAssetIn(assetIn);
-  //     setAssetOut(assetOut);
-  //     setAssetTransfer(assetTransfer);
-
-  //   } catch (error) {
-  //     console.error('Error fetching asset transactions:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  const fetchAssetTransaction = async (params = {}) => {
+  const fetchAssetTransfer = async (params = {}) => {
     setLoading(true);
 
     try {
-      // const params = {};
-      // if (branchId) params.branch_id = branchId;
-      // if (transactionType) params.assets_transaction_type = transactionType;
+      const res = await api.get('/api/assets-transaction', { params });
+      const transactions = res.data.data;
+
+      setAssetTransfer(transactions);
+
+    } catch (error) {
+      console.error('Error fetching asset transactions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAssetIn = async (params = {}) => {
+    setLoading(true);
+
+    try {
 
       const res = await api.get('/api/assets-transaction', { params });
       const transactions = res.data.data;
 
-      // You can still categorize them after fetch if needed
-      const assetIn = transactions.filter(tx => tx.assets_transaction_type === 'ASSET IN');
-      const assetOut = transactions.filter(tx => tx.assets_transaction_type === 'ASSET OUT');
-      const assetTransfer = transactions.filter(tx => tx.assets_transaction_type === 'ASSET TRANSFER');
+      setAssetIn(transactions);
 
-      setAssetIn(assetIn);
-      setAssetOut(assetOut);
-      setAssetTransfer(assetTransfer);
+    } catch (error) {
+      console.error('Error fetching asset transactions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAssetOut = async (params = {}) => {
+    setLoading(true);
+
+    try {
+
+      const res = await api.get('/api/assets-transaction', { params });
+      const transactions = res.data.data;
+
+      setAssetOut(transactions);
 
     } catch (error) {
       console.error('Error fetching asset transactions:', error);
@@ -293,7 +294,7 @@ export const AssetMetaProvider = ({ children }) => {
 
       const res = await api.post("api/assets-transaction", payload);
 
-      fetchAssetTransaction();
+      fetchAssetTransfer({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET TRANSFER"}); // Refresh the list after update
       fetchBranchAssets();
       return res.data;
     } catch (error) {
@@ -328,7 +329,7 @@ export const AssetMetaProvider = ({ children }) => {
         },
       });
 
-      fetchAssetTransaction(); // Refresh the list after update
+      fetchAssetOut({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET OUT"}); // Refresh the list after update
       fetchBranchAssets(); // Refresh the assets list
       return res.data;
     } catch (error) {
@@ -362,7 +363,7 @@ export const AssetMetaProvider = ({ children }) => {
       };
 
       const res = await api.post("/api/assets-transaction", payload);
-      fetchAssetTransaction(); // Refresh the list after update
+      fetchAssetIn({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET IN"}); // Refresh the list after update
       fetchBranchAssets(); // Refresh the assets list
       return res.data;
     } catch (error) {
@@ -417,7 +418,9 @@ export const AssetMetaProvider = ({ children }) => {
         createTransfer,
         createStockOut,
         createAssetIn,
-        fetchAssetTransaction,
+        fetchAssetTransfer,
+        fetchAssetIn,
+        fetchAssetOut,
         allAssets,
         fetchReport,
         report,
