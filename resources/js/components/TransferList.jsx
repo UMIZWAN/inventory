@@ -106,8 +106,8 @@ export default function TransferList({ status, mode }) {
 
       const res = await api.put(`/api/assets-transaction/${txn.id}`, payload);
       closeModal();
-      fetchAssetTransfer();
-      fetchBranchAssets();
+      fetchAssetTransfer({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET TRANSFER"});
+      fetchBranchAssets({branch_id: selectedBranch?.branch_id});
     } catch (err) {
       alert(err.response.data.error)
     }

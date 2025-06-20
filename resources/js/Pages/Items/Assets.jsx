@@ -15,6 +15,8 @@ import ReceiveForm from '../../components/ReceiveForm';
 import CheckoutForm from '../../components/CheckoutForm';
 import TransferForm from './TransferForm';
 import { FiPackage, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
+import confirmAction from '../../components/ConfirmModal';
+import Swal from 'sweetalert2';
 
 const Assets = () => {
     const { user, selectedBranch } = useAuth();
@@ -93,21 +95,35 @@ const Assets = () => {
     const handleDuplicate = async (asset) => {
         if (!asset?.id) return;
 
-        try {
-            await api.post(`/api/assets/${asset.id}/copy`, null, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+        const result = await confirmAction({
+            title: 'Duplicate Asset?',
+            text: `Do you want to duplicate asset "${asset.name}"?`,
+            confirmButtonText: 'Yes, duplicate it!',
+        });
 
-            setToast('Asset duplicated successfully!');
-            setTimeout(() => {
-                setToast(null);
-            }, 2000);
+        if (result.isConfirmed) {
+            try {
+                await api.post(`/api/assets/${asset.id}/copy`, null, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
 
-            fetchBranchAssets();
-        } catch (error) {
-            alert('Error duplicating asset: ' + error.message);
+                // Optional: use SweetAlert toast
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Duplicated!',
+                    text: 'Asset duplicated successfully!',
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+
+                fetchBranchAssets({ branch_id: selectedBranch?.branch_id });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error duplicating asset: ' + error.message,
+                });
+            }
         }
     };
 

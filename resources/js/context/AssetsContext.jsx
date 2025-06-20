@@ -110,7 +110,6 @@ export const AssetMetaProvider = ({ children }) => {
   };
 
   const addAsset = async (form) => {
-    console.log('Adding asset:', form);
 
     try {
       await api.post('/api/assets', form, {
@@ -120,7 +119,7 @@ export const AssetMetaProvider = ({ children }) => {
       });
 
       fetchAssets(); // Refresh the list after update
-      fetchBranchAssets();
+      fetchBranchAssets({ branch_id: selectedBranch?.branch_id }); // Refresh branch assets
     } catch (err) {
       console.error('Failed to update asset:', err);
       throw err;
@@ -295,7 +294,7 @@ export const AssetMetaProvider = ({ children }) => {
       const res = await api.post("api/assets-transaction", payload);
 
       fetchAssetTransfer({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET TRANSFER"}); // Refresh the list after update
-      fetchBranchAssets();
+      fetchBranchAssets({branch_id:selectedBranch?.branch_id});
       return res.data;
     } catch (error) {
       console.error("Failed to create transfer:", error);
@@ -330,7 +329,7 @@ export const AssetMetaProvider = ({ children }) => {
       });
 
       fetchAssetOut({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET OUT"}); // Refresh the list after update
-      fetchBranchAssets(); // Refresh the assets list
+      fetchBranchAssets({branch_id:selectedBranch?.branch_id}); // Refresh the assets list
       return res.data;
     } catch (error) {
       console.error("Failed to create stock out:", error);
@@ -364,7 +363,7 @@ export const AssetMetaProvider = ({ children }) => {
 
       const res = await api.post("/api/assets-transaction", payload);
       fetchAssetIn({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET IN"}); // Refresh the list after update
-      fetchBranchAssets(); // Refresh the assets list
+      fetchBranchAssets({branch_id:selectedBranch?.branch_id}); // Refresh the assets list
       return res.data;
     } catch (error) {
       console.error("Failed to create asset in transaction:", error);

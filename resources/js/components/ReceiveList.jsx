@@ -26,7 +26,6 @@ export default function ReceiveList() {
                 assets_transaction_type: "ASSET IN",
             };
         fetchAssetIn(params);
-        // fetchBranchAssets();
       }, [selectedBranch]);
 
     const openModal = (txn) => {

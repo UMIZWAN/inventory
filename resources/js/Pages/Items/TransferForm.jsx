@@ -4,6 +4,8 @@ import { useAssetMeta } from "../../context/AssetsContext";
 import { useAuth } from "../../context/AuthContext";
 import { useOptions } from "../../context/OptionContext";
 import { router } from "@inertiajs/react";
+import confirmAction from '../../components/ConfirmModal';
+import Swal from 'sweetalert2';
 import Layout from "../../components/layout/Layout";
 
 function TransferForm({ setShowTransferForm, initialData, isEditMode, transferStatus, selectedItems }) {
@@ -166,23 +168,58 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
 
       if (invalidItem) {
         const assetName = branchItem.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
-        alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Insufficient Stock',
+          text: `Quantity for "${assetName}" exceeds available stock.`,
+        });
+        setSubmitting(false);
         return;
       }
     }
 
+    // 👇 Dynamic title & text based on form.status
+    const isTransit = form.status === 'IN-TRANSIT';
+    const confirm = await confirmAction({
+      title: isTransit ? 'Confirm Transfer?' : 'Confirm Request?',
+      text: isTransit
+        ? 'Are you sure you want to submit this asset transfer?'
+        : 'Are you sure you want to submit this asset request?',
+      confirmButtonText: isTransit ? 'Yes, transfer' : 'Yes, request',
+    });
+
+    if (!confirm.isConfirmed) {
+      setSubmitting(false);
+      return;
+    }
+
     try {
       await createTransfer(form, totalAmount);
-      router.visit("/items/asset-transaction")
+
+      await Swal.fire({
+        icon: 'success',
+        title: isTransit ? 'Transfer Submitted!' : 'Request Submitted!',
+        text: isTransit
+          ? 'The asset transfer has been submitted successfully.'
+          : 'The asset request has been submitted successfully.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      router.visit("/items/asset-transaction");
       // setShowTransferForm(false);
     } catch (error) {
       console.error("Submission failed:", error);
-      alert("Submission failed. Please try again.");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission Failed',
+        text: 'Something went wrong. Please try again.',
+      });
     } finally {
-      setSubmitting(false); // <-- End submitting
+      setSubmitting(false);
     }
   };
-
+  
   return (
     <>
       {/* <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> */}
