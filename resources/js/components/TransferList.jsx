@@ -7,6 +7,8 @@ import { useAssetMeta } from "../context/AssetsContext";
 import { useAuth } from "../context/AuthContext";
 import TransactionFilter from "./TransactionFilter";
 import ExportButton from "./ExportButton";
+import confirmAction from '../components/ConfirmModal';
+import Swal from 'sweetalert2';
 
 export default function TransferList({ status, mode }) {
   const { user, selectedBranch } = useAuth();
@@ -94,6 +96,23 @@ export default function TransferList({ status, mode }) {
   // };
 
   const handleAction = async (txn, newStatus, shippingId = null) => {
+    const statusLabelMap = {
+      RECEIVED: 'Receive',
+      APPROVED: 'Approve',
+      REJECTED: 'Reject',
+      'IN-TRANSIT': 'Send',
+    };
+
+    const actionLabel = statusLabelMap[newStatus] || 'Perform';
+
+    const confirm = await confirmAction({
+      title: `Confirm ${actionLabel}?`,
+      text: `Are you sure you want to ${actionLabel.toLowerCase()} this transaction?`,
+      confirmButtonText: `Yes, ${actionLabel.toLowerCase()}`,
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
       const payload = {
         assets_transaction_status: newStatus,
@@ -105,11 +124,28 @@ export default function TransferList({ status, mode }) {
       }
 
       const res = await api.put(`/api/assets-transaction/${txn.id}`, payload);
+
+      Swal.fire({
+        icon: 'success',
+        title: `${actionLabel}d!`,
+        text: `Transaction successfully ${actionLabel.toLowerCase()}d.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
       closeModal();
-      fetchAssetTransfer({branch_id: selectedBranch?.branch_id, assets_transaction_type: "ASSET TRANSFER"});
-      fetchBranchAssets({branch_id: selectedBranch?.branch_id});
+      fetchAssetTransfer({
+        branch_id: selectedBranch?.branch_id,
+        assets_transaction_type: "ASSET TRANSFER",
+      });
+      fetchBranchAssets({ branch_id: selectedBranch?.branch_id });
     } catch (err) {
-      alert(err.response.data.error)
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Action Failed',
+        text: err.response?.data?.error || 'Something went wrong.',
+      });
     }
   };
 
