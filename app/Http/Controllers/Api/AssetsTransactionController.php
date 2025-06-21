@@ -34,7 +34,22 @@ class AssetsTransactionController extends Controller
                 'fromBranch',
                 'toBranch',
                 'createdBy',
-            ])->latest()->get();
+            ])
+                ->when($request->has('branch_id'), function ($query) use ($request) {
+                    $branchId = $request->branch_id;
+                    $query->where(function ($q) use ($branchId) {
+                        $q->where('assets_from_branch_id', $branchId)
+                            ->orWhere('assets_to_branch_id', $branchId);
+                    });
+                })
+                ->when($request->has('assets_transaction_type'), function ($query) use ($request) {
+                    $assetTransactionType = $request->assets_transaction_type;
+                    $query->where(function ($q) use ($assetTransactionType) {
+                        $q->where('assets_transaction_type', $assetTransactionType);
+                    });
+                })
+                ->latest()
+                ->get();
 
             return response()->json([
                 'success' => true,

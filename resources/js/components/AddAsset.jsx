@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useAssetMeta } from '../context/AssetsContext';
 import { useAuth } from "../context/AuthContext";
+import confirmAction from '../components/ConfirmModal';
+import Swal from 'sweetalert2';
 
 function AddAsset({ setShowModal }) {
-    const { user } = useAuth();
+    const { user, selectedBranch } = useAuth();
     const { categories, branches, addAsset } = useAssetMeta();
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
@@ -23,13 +25,13 @@ function AddAsset({ setShowModal }) {
     const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
-        if (user?.branch_id) {
+        if (selectedBranch?.branch_id) {
             setForm((prev) => ({
                 ...prev,
-                assets_branch_id: user.branch_id,
+                assets_branch_id: selectedBranch.branch_id,
             }));
         }
-    }, [user]);
+    }, [selectedBranch]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -47,11 +49,28 @@ function AddAsset({ setShowModal }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const result = await confirmAction({
+            title: 'Add Asset?',
+            text: 'Are you sure you want to add this asset?',
+            confirmButtonText: 'Yes, add it',
+        });
+
+        if (!result.isConfirmed) return;
+
+        setShowModal(false);
         setSubmitting(true);
         try {
             await addAsset(form);
-            alert('Asset added successfully!');
-            setShowModal(false);
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Asset added!',
+                text: 'Asset added successfully.',
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
             setForm({
                 name: '',
                 asset_description: '',
@@ -69,7 +88,11 @@ function AddAsset({ setShowModal }) {
             setImagePreview(null);
         } catch (error) {
             console.error('Error adding asset:', error);
-            alert('Failed to add asset.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: 'Failed to add asset.',
+            });
         } finally {
             setSubmitting(false);
         }
@@ -93,7 +116,7 @@ function AddAsset({ setShowModal }) {
 
                     <div className="flex flex-col">
                         {label("Branch")}
-                        <input value={user?.branch_name || ''} disabled className="p-2 border rounded bg-gray-100 text-gray-500" />
+                        <input value={selectedBranch?.branch_name || ''} disabled className="p-2 border rounded bg-gray-100 text-gray-500" />
                     </div>
 
                     <div className="flex flex-col">

@@ -20,10 +20,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'access_level_id',
-        'branch_id',
     ];
 
     /**
@@ -54,8 +54,8 @@ class User extends Authenticatable
         return $this->belongsTo(AccessLevel::class, 'access_level_id');
     }
 
-    public function branch()
+    public function userBranch()
     {
-        return $this->belongsTo(AssetsBranch::class, 'branch_id');
+        return $this->hasMany(UsersBranch::class, 'user_id');
     }
 }

@@ -4,6 +4,9 @@ import Layout from '../../components/layout/Layout';
 import { Head } from "@inertiajs/react";
 import ExportButton from "../../components/ExportButton";
 import { useAuth } from "../../context/AuthContext";
+import placeholder from '../../assets/image/placeholder.png'; // Import a placeholder image
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 
 const MasterListPage = () => {
     const { user } = useAuth();
@@ -232,6 +235,9 @@ const MasterListPage = () => {
                                             Code
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Image
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Item Name
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -285,6 +291,20 @@ const MasterListPage = () => {
                                                             )}
                                                         </div>
                                                     )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex-shrink-0 h-10 w-10">
+                                                        <Zoom>
+                                                            <img className="h-10 w-10 rounded"
+                                                                src={item.asset_image ? `http://127.0.0.1:8000/${item.asset_image}` : placeholder}
+                                                                alt={item.name}
+                                                                onError={(e) => {
+                                                                    e.target.onerror = null;
+                                                                    e.target.src = placeholder;
+                                                                }}
+                                                            />
+                                                        </Zoom>
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">

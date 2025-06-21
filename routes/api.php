@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\SuppliersController;
 use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ShippingOptionController;
+use App\Http\Controllers\Api\UsersBranchController;
 use Illuminate\Support\Facades\Cache;
 
 Route::get('/user', function (Request $request) {
@@ -41,6 +42,7 @@ Route::get('/report', [AssetsTransactionController::class, 'getReport']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/users-branch', [UsersBranchController::class, 'index']);
     // User API
     Route::get('/users-list', [AuthController::class, 'getAllUsers']);
     Route::post('/users', [AuthController::class, 'addUser']);

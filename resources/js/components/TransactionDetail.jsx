@@ -121,10 +121,10 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
     const [balanceUnits, setBalanceUnits] = useState({});
 
     useEffect(() => {
-        const initialBalances = {};
-        getItemList.forEach((item, idx) => {
-            initialBalances[idx] = item.balance_unit || item.asset_unit; // fallback
-        });
+        const initialBalances = 0;
+        // getItemList.forEach((item, idx) => {
+        //     initialBalances[idx] = item.balance_unit || item.asset_unit; // fallback
+        // });
         setBalanceUnits(initialBalances);
     }, [transaction]);
 

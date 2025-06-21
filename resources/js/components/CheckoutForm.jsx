@@ -5,13 +5,15 @@ import { useAuth } from "../context/AuthContext";
 import { useOptions } from "../context/OptionContext";
 import TransactionDetail from "./TransactionDetail";
 import { router } from "@inertiajs/react";
+import confirmAction from '../components/ConfirmModal';
+import Swal from 'sweetalert2';
 
 export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
-    const { user } = useAuth();
+    const { user, selectedBranch } = useAuth();
     const { fetchInvType, invType } = useOptions();
     const { createStockOut, branchItem, fetchBranchItem } = useAssetMeta();
     const [type, setType] = useState("sold");
-    const [branch, setBranch] = useState(user?.branch_id || "");
+    const branch = selectedBranch?.branch_id || "";
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [recipient, setRecipient] = useState('');
     const [status, setStatus] = useState('COMPLETED');
@@ -24,9 +26,11 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
 
     useEffect(() => {
         fetchInvType();
-        // fetchBranchAssets();
-        fetchBranchItem(user?.branch_id);
     }, [])
+
+    useEffect(() => {
+        fetchBranchItem(selectedBranch?.branch_id);
+    }, [selectedBranch])
 
     useEffect(() => {
         if (purposeLabel === 'Event' || purposeLabel === 'Roadshow') {
@@ -115,8 +119,8 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
 
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
 
-    const handleSubmit = async () => {
-
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         try {
             const form = {
                 branch,
@@ -136,29 +140,62 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                 if (!asset) return false;
 
                 const currentBranchStock = asset.branch_values[0].asset_current_unit ?? 0;
-
                 return quantity > currentBranchStock;
             });
 
             if (invalidItem) {
                 const assetName = branchItem.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
-                alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Quantity',
+                    text: `Quantity for "${assetName}" exceeds available stock.`,
+                });
                 return;
             }
 
-            const result = await createStockOut(form); // Ensure it returns full stock out detail
-            // setCreatedStockOut(result);
-            // setShowDetailModal(true);
+            const confirm = await confirmAction({
+                title: 'Confirm Stock Out?',
+                text: 'Are you sure you want to submit this stock out request?',
+                confirmButtonText: 'Yes, submit',
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const result = await createStockOut(form);
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Submitted!',
+                text: 'Stock out request submitted successfully.',
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
             router.visit('/inv-list');
             setRecipient("");
-            setItems([{ assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },]);
+            setItems([
+                {
+                    assetId: "",
+                    name: "",
+                    quantity: 1,
+                    unit: "",
+                    price: 0,
+                    amount: 0,
+                    remark: "",
+                },
+            ]);
             setRemarks("");
             setPurposes("");
             setAttachment(null);
             // setShowCheckoutForm(false);
+
         } catch (error) {
             console.error(error);
-            alert('Failed to create stock out.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: 'Failed to create stock out.',
+            });
         }
     };
 
@@ -178,18 +215,17 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                 <h1 className="text-2xl font-bold mb-6 text-center">Invoice</h1>
                 <div className="flex justify-center items-center">
 
-                    <div className="rounded-lg p-4 space-y-6">
+                    <form className="rounded-lg p-4 space-y-6" onSubmit={handleSubmit}>
 
                         {/* Form Inputs */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block mb-1 font-medium">Branch</label>
                                 <input
-                                    type="text"
+                                    name="branch"
+                                    readOnly
                                     className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
-                                    placeholder="Branch"
-                                    value={user?.branch_name}
-                                    onChange={(e) => setBranch(e.target.value)}
+                                    value={selectedBranch?.branch_name || ''}
                                 />
                             </div>
                             <div>
@@ -266,6 +302,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                         </div>
                         <div>
                             <label className="block text-sm font-medium">Attachment (optional):</label>
+                            <p className="text-sm text-gray-500 italic">file only support: pdf,xls,xlsx,doc,docx</p>
                             <input
                                 type="file"
                                 className="mt-1 p-1 w-full text-slate-500 text-sm rounded leading-6 file:bg-blue-200 file:text-blue-700 
@@ -277,8 +314,9 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                         {/* Submit */}
                         <div className="text-right mt-4">
                             <button
+                                type="submit"
                                 className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-2"
-                                onClick={handleSubmit}
+                                // onClick={handleSubmit}
                             >
                                 Submit
                             </button>
@@ -291,7 +329,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                     </button> */}
                         </div>
 
-                    </div>
+                    </form>
                 </div>
             </div>
 

@@ -3,9 +3,11 @@ import ItemsTable from "./ItemsTable";
 import { useAssetMeta } from "../context/AssetsContext";
 import { useSuppliers } from "../context/SuppliersContext";
 import { useAuth } from "../context/AuthContext";
+import confirmAction from '../components/ConfirmModal';
+import Swal from 'sweetalert2';
 
 function ReceiveForm({ setShowReceiveForm, selectedItems }) {
-  const { user } = useAuth();
+  const { user, selectedBranch } = useAuth();
   const { createAssetIn, itemList, fetchItemList } = useAssetMeta();
   const { suppliers, fetchSuppliers } = useSuppliers();
   const [submitting, setSubmitting] = useState(false);
@@ -13,7 +15,8 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
   const [referenceNo, setReferenceNo] = useState("");
   const [supplierId, setSupplierId] = useState("");
   const [note, setNote] = useState("");
-  const [branch, setBranch] = useState(user?.branch_id || "");
+  const [branch, setBranch] = useState(selectedBranch?.branch_id || "");
+  // const branch = selectedBranch?.branch_id || "";
   const [items, setItems] = useState([
     {
       item: '',
@@ -101,9 +104,19 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
     return sum + qty * cost;
   }, 0);
 
-  const handleSubmit = async () => {
-    setSubmitting(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
+    const result = await confirmAction({
+      title: 'Receive Asset?',
+      text: 'Are you sure you want to submit this form?',
+      confirmButtonText: 'Yes, submit',
+    });
+
+    if (!result.isConfirmed) return;
+
+    setShowReceiveForm(false);
+    setSubmitting(true);
     try {
       await createAssetIn({
         date: receiveDate,
@@ -115,12 +128,24 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
         items,
         totalAmount
       });
-      alert("Stock received successfully.");
-      setShowReceiveForm(false);
-    } catch (err) {
-      alert("Failed to receive stock.");
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Form submitted!',
+        text: 'Stock Received successfully.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: 'Failed to receive stock.',
+      });
     } finally {
-      setSubmitting(false); // <-- End submitting
+      setSubmitting(false);
     }
   };
 
@@ -138,110 +163,112 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
 
         <h1 className="text-2xl font-bold mb-6">Receive Stock</h1>
 
-        <div className="flex items-center gap-4">
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium">Supplier</label>
+              <select
+                className="w-full border rounded p-2 mt-1"
+                value={supplierId}
+                onChange={(e) => setSupplierId(e.target.value)}
+                required
+              >
+                <option value="">[Select Supplier]</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>{s.supplier_name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium">Reference No.</label>
+              <input
+                type="text"
+                className="w-full border rounded p-2 mt-1"
+                value={referenceNo}
+                onChange={(e) => setReferenceNo(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Branch</label>
+              <input
+                name="branch"
+                readOnly
+                className="w-full border rounded p-2 mt-1 bg-gray-100"
+                value={selectedBranch?.branch_name || ''}
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium">Supplier</label>
-            <select
-              className="w-full border rounded p-2 mt-1"
-              value={supplierId}
-              onChange={(e) => setSupplierId(e.target.value)}
+            <label className="block text-sm font-medium">Receive Date</label>
+            <input
+              type="date"
+              className="border rounded p-2 mt-1"
+              value={receiveDate}
+              onChange={(e) => setReceiveDate(e.target.value)}
+            />
+          </div>
+
+          {/* Items Table */}
+          <ItemsTable
+            columns={columns}
+            items={items}
+            onChange={handleChange}
+            onAdd={addItem}
+            onRemove={(index) => {
+              if (items.length > 1) {
+                const updated = [...items];
+                updated.splice(index, 1);
+                setItems(updated);
+              }
+            }}
+          />
+
+          <div className="flex justify-end-safe">
+            <div>
+              <label className="block text-sm font-medium">Total Cost (RM)</label>
+              <input
+                type="text"
+                className="w-full border rounded p-2 mt-1 text-right bg-gray-100"
+                value={totalAmount.toFixed(2)}
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Remarks:</label>
+            <textarea
+              className="w-full border rounded p-2 mt-1 h-24"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              // onClick={handleSubmit}
+              disabled={submitting}
             >
-              <option value="">[Select Supplier]</option>
-              {suppliers.map((s) => (
-                <option key={s.id} value={s.id}>{s.supplier_name}</option>
-              ))}
-            </select>
+              Receive
+            </button>
+            <button
+              type="button"
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              onClick={() => setShowReceiveForm(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </button>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium">Reference No.</label>
-            <input
-              type="text"
-              className="w-full border rounded p-2 mt-1"
-              value={referenceNo}
-              onChange={(e) => setReferenceNo(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium">Branch</label>
-            <input
-              name="branch"
-              readOnly
-              className="w-full border rounded p-2 mt-1"
-              value={user?.branch_name}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Receive Date</label>
-          <input
-            type="date"
-            className="border rounded p-2 mt-1"
-            value={receiveDate}
-            onChange={(e) => setReceiveDate(e.target.value)}
-          />
-        </div>
-
-        {/* Items Table */}
-        <ItemsTable
-          columns={columns}
-          items={items}
-          onChange={handleChange}
-          onAdd={addItem}
-          onRemove={(index) => {
-            if (items.length > 1) {
-              const updated = [...items];
-              updated.splice(index, 1);
-              setItems(updated);
-            }
-          }}
-        />
-
-        <div className="flex justify-end-safe">
-          <div>
-            <label className="block text-sm font-medium">Total Cost (RM)</label>
-            <input
-              type="text"
-              className="w-full border rounded p-2 mt-1 text-right bg-gray-100"
-              value={totalAmount.toFixed(2)}
-              readOnly
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Remarks:</label>
-          <textarea
-            className="w-full border rounded p-2 mt-1 h-24"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-        </div>
-
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={handleSubmit}
-            disabled={submitting}
-          >
-            Receive
-          </button>
-          <button
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-            onClick={() => setShowReceiveForm(false)}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-        </div>
-
+        </form>
       </div>
     </div>
 

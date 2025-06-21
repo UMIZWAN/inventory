@@ -4,10 +4,12 @@ import { useAssetMeta } from "../../context/AssetsContext";
 import { useAuth } from "../../context/AuthContext";
 import { useOptions } from "../../context/OptionContext";
 import { router } from "@inertiajs/react";
+import confirmAction from '../../components/ConfirmModal';
+import Swal from 'sweetalert2';
 import Layout from "../../components/layout/Layout";
 
 function TransferForm({ setShowTransferForm, initialData, isEditMode, transferStatus, selectedItems }) {
-  const { user } = useAuth();
+  const { user, selectedBranch } = useAuth();
   const { branches, fetchBranches, createTransfer, branchItem, fetchBranchItem } = useAssetMeta();
   const { fetchShipping, shipping, fetchInvType, invType } = useOptions();
   const [submitting, setSubmitting] = useState(false);
@@ -17,22 +19,13 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
     date: new Date().toISOString().slice(0, 10),
     status: transferStatus,
     transaction_type: "ASSET_TRANSFER",
-    fromBranch: user?.branch_id || "",
-    toBranch: user?.branch_id || "",
+    fromBranch: selectedBranch?.branch_id || "",
+    toBranch: selectedBranch?.branch_id || "",
     shipping: "",
     items: [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
     remarks: "",
     purpose: "",
   });
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get("status"); // "REQUESTED" or "IN-TRANSIT"
-
-    // if (status) {
-    //   setShowTransferForm({ show: true, status });
-    // }
-  }, []);
 
   useEffect(() => {
     fetchShipping();
@@ -44,9 +37,17 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
     if (form.status === "REQUESTED" && form.fromBranch) {
       fetchBranchItem(form.fromBranch);
     } else if (form.status === "IN-TRANSIT") {
-      fetchBranchItem(user?.branch_id);
+      fetchBranchItem(selectedBranch?.branch_id);
     }
-  }, [form.status, form.fromBranch]);
+  }, [form.status, form.fromBranch, selectedBranch]);
+
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      fromBranch: transferStatus === "REQUESTED" ? prev.fromBranch : selectedBranch?.branch_id || "",
+      toBranch: transferStatus === "REQUESTED" ? selectedBranch?.branch_id || "" : prev.toBranch,
+    }));
+  }, [selectedBranch, transferStatus]);
 
   const itemOptions =
     branchItem.map((item) => ({
@@ -84,14 +85,14 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
         date: initialData.date || new Date().toISOString().slice(0, 10),
         status: transferStatus,
         transaction_type: "ASSET_TRANSFER",
-        fromBranch: initialData.fromBranch || "",
-        toBranch: initialData.toBranch || user?.branch_id || "",
+        fromBranch: selectedBranch?.branch_id || initialData.fromBranch || "",
+        toBranch: selectedBranch?.branch_id || initialData.fromBranch || "",
         items: initialData.items || [{ item: '', category: '', unitMeasure: '', quantity: 1, price: 0 }],
         remarks: initialData.remarks || "",
         purpose: initialData.purpose || [],
       });
     }
-  }, []);
+  }, [selectedBranch]);
 
   const columns = [
     {
@@ -167,7 +168,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
         if (!asset) return false;
 
         const currentBranchStock = asset.branch_values?.find(
-          (bv) => bv.asset_branch_id === user.branch_id
+          (bv) => bv.asset_branch_id === selectedBranch.branch_id
         )?.asset_current_unit ?? 0;
 
         return quantity > currentBranchStock;
@@ -175,20 +176,55 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
 
       if (invalidItem) {
         const assetName = branchItem.find(a => a.id === Number(invalidItem.item))?.name || "Unknown item";
-        alert(`Error: Quantity for "${assetName}" exceeds available stock.`);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Insufficient Stock',
+          text: `Quantity for "${assetName}" exceeds available stock.`,
+        });
+        setSubmitting(false);
         return;
       }
     }
 
+    // 👇 Dynamic title & text based on form.status
+    const isTransit = form.status === 'IN-TRANSIT';
+    const confirm = await confirmAction({
+      title: isTransit ? 'Confirm Transfer?' : 'Confirm Request?',
+      text: isTransit
+        ? 'Are you sure you want to submit this asset transfer?'
+        : 'Are you sure you want to submit this asset request?',
+      confirmButtonText: isTransit ? 'Yes, transfer' : 'Yes, request',
+    });
+
+    if (!confirm.isConfirmed) {
+      setSubmitting(false);
+      return;
+    }
+
     try {
       await createTransfer(form, totalAmount);
-      router.visit("/items/asset-transaction")
+
+      await Swal.fire({
+        icon: 'success',
+        title: isTransit ? 'Transfer Submitted!' : 'Request Submitted!',
+        text: isTransit
+          ? 'The asset transfer has been submitted successfully.'
+          : 'The asset request has been submitted successfully.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      router.visit("/items/asset-transaction");
       // setShowTransferForm(false);
     } catch (error) {
       console.error("Submission failed:", error);
-      alert("Submission failed. Please try again.");
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission Failed',
+        text: 'Something went wrong. Please try again.',
+      });
     } finally {
-      setSubmitting(false); // <-- End submitting
+      setSubmitting(false);
     }
   };
 
@@ -234,7 +270,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
                   <label className="block font-medium mb-1">To Branch</label>
                   <input
                     name="toBranch"
-                    value={user?.branch_name}
+                    value={selectedBranch?.branch_name}
                     readOnly
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
                   />
@@ -247,7 +283,7 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
                   <input
                     name="fromBranch"
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100"
-                    value={user?.branch_name}
+                    value={selectedBranch?.branch_name}
                     readOnly
                   />
                 </div>

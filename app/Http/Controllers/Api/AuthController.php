@@ -10,10 +10,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\UserResource;
+use App\Models\UsersBranch;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
+
 
 
 class AuthController extends Controller
@@ -29,7 +31,7 @@ class AuthController extends Controller
         $user = User::where('email', $request['email'])->firstOrFail();
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        $user = $request->user()->load('accessLevel');
+        $user = $request->user()->load('accessLevel', 'userBranch');
 
         return response()->json([
             'access_token' => $token,
@@ -48,7 +50,7 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         try {
-            $user = $request->user()->load('accessLevel');
+            $user = $request->user()->load('accessLevel', 'userBranch');
 
             return response()->json([
                 'success' => true,
@@ -71,6 +73,8 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'access_level_id' => 'required|integer|exists:access_level,id',
+            'branch_id' => 'required|array',
+            'branch_id.*' => 'integer|exists:assets_branch,id',
         ]);
 
         if ($validator->fails()) {
@@ -82,8 +86,20 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'access_level_id' => $request->access_level_id,
-            'branch_id' => $request->branch_id,
         ]);
+
+        try {
+            foreach ($request->branch_id as $branchId) {
+                UsersBranch::create([
+                    'user_id' => $user->id,
+                    'branch_id' => $branchId,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('User branch assign error: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed assigning branches', 'error' => $e->getMessage()], 500);
+        }
+
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -94,13 +110,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Update an existing user
-     *
-     * @param Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function updateUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -109,8 +118,6 @@ class AuthController extends Controller
         // if (! Gate::allows('update-user', $user)) {
         //     return response()->json(['message' => 'Unauthorized'], 403);
         // }
-
-        // Validate the input
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'email' => [
@@ -123,7 +130,8 @@ class AuthController extends Controller
             ],
             'password' => 'sometimes|required|string|min:8|confirmed',
             'access_level_id' => 'sometimes|required|integer|exists:access_level,id',
-            'branch_id' => 'sometimes|required|integer|exists:assets_branch,id',
+            'branch_id' => 'sometimes|required|array',
+            'branch_id.*' => 'integer|exists:assets_branch,id',
         ]);
 
         if ($validator->fails()) {
@@ -144,10 +152,6 @@ class AuthController extends Controller
             $user->password = Hash::make($request->password);
         }
 
-        if ($request->has('branch_id')) {
-            $user->branch_id = $request->branch_id;
-        }
-
         if ($request->has('access_level_id')) {
             $user->access_level_id = $request->access_level_id;
         }
@@ -155,8 +159,21 @@ class AuthController extends Controller
         // Save the updated user
         $user->save();
 
+        if ($request->has('branch_id')) {
+            // Remove old branches
+            UsersBranch::where('user_id', $user->id)->delete();
+
+            // Add new branches
+            foreach ($request->branch_id as $branchId) {
+                UsersBranch::create([
+                    'user_id' => $user->id,
+                    'branch_id' => $branchId,
+                ]);
+            }
+        }
+
         // Load the access_level relationship
-        $user->load('accessLevel');
+        $user->load('accessLevel', 'userBranch');
 
         // Return the updated user
         return response()->json([
@@ -169,7 +186,7 @@ class AuthController extends Controller
     public function getAllUsers(Request $request)
     {
         try {
-            $query = User::with('accessLevel', 'branch');
+            $query = User::with('accessLevel', 'userBranch');
 
             // Filter by name
             if ($request->has('name')) {
@@ -186,29 +203,19 @@ class AuthController extends Controller
                 $query->where('access_level_id', $request->access_level_id);
             }
 
-            // Filter by branch
             if ($request->has('branch_id')) {
-                $query->where('branch_id', $request->branch_id);
+                $query->whereHas('userBranch', function ($q) use ($request) {
+                    $q->where('branch_id', $request->branch_id);
+                });
             }
 
             // Paginate results
             $perPage = $request->input('per_page', 10);
             $users = $query->paginate($perPage);
 
-            return response()->json([
+            return UserResource::collection($users)->additional([
                 'success' => true,
-                'message' => 'Users retrieved successfully',
-                'data' => UserResource::collection(Cache::remember('users_cache', 3600, function () use ($users) {
-                    return $users;
-                })),
-                'pagination' => [
-                    'total' => $users->total(),
-                    'per_page' => $users->perPage(),
-                    'current_page' => $users->currentPage(),
-                    'last_page' => $users->lastPage(),
-                    'from' => $users->firstItem(),
-                    'to' => $users->lastItem()
-                ]
+                'message' => 'Users retrieved successfully'
             ]);
         } catch (Exception $e) {
             return response()->json([

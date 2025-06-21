@@ -8,12 +8,14 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         password: '',
         password_confirmation: '',
         access_level_id: '',
-        branch_id: ''
+        branch_id: []
     });
+
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [accessLevels, setAccessLevels] = useState([]);
     const [branches, setBranches] = useState([]);
+    const [branchSearch, setBranchSearch] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -46,16 +48,34 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
+        setFormData(prev => ({
+            ...prev,
             [name]: value
         }));
-        
-        // Clear error for this field when user starts typing
+
         if (errors[name]) {
             setErrors(prevErrors => ({
                 ...prevErrors,
                 [name]: null
+            }));
+        }
+    };
+
+    const handleBranchCheckboxChange = (e) => {
+        const value = parseInt(e.target.value);
+        const isChecked = e.target.checked;
+
+        setFormData(prev => {
+            const updated = isChecked
+                ? [...prev.branch_id, value]
+                : prev.branch_id.filter(id => id !== value);
+            return { ...prev, branch_id: updated };
+        });
+
+        if (errors.branch_id) {
+            setErrors(prev => ({
+                ...prev,
+                branch_id: null
             }));
         }
     };
@@ -67,24 +87,22 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
         try {
             const response = await api.post('/api/users', formData);
-            
+
             if (response.data.data) {
-                // Reset form
                 setFormData({
                     name: '',
                     email: '',
                     password: '',
                     password_confirmation: '',
                     access_level_id: '',
-                    branch_id: ''
+                    branch_id: []
                 });
-                
-                // Close modal and notify parent component
+
                 onUserAdded(response.data.data);
                 onClose();
             }
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.errors) {
+            if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
                 console.error('Error adding user:', error);
@@ -102,10 +120,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
             <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium">Add New User</h3>
-                    <button 
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-500"
-                    >
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -120,123 +135,135 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                            Name
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Name</label>
                         <input
                             type="text"
-                            id="name"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Enter name"
                         />
-                        {errors.name && <p className="text-red-500 text-xs italic mt-1">{errors.name}</p>}
+                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-                            Email
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Email</label>
                         <input
                             type="email"
-                            id="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Enter email"
                         />
-                        {errors.email && <p className="text-red-500 text-xs italic mt-1">{errors.email}</p>}
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-                            Password
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Password</label>
                         <input
                             type="password"
-                            id="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Enter password"
                         />
-                        {errors.password && <p className="text-red-500 text-xs italic mt-1">{errors.password}</p>}
+                        {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password_confirmation">
-                            Confirm Password
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Confirm Password</label>
                         <input
                             type="password"
-                            id="password_confirmation"
                             name="password_confirmation"
                             value={formData.password_confirmation}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.password_confirmation ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.password_confirmation ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                             placeholder="Confirm password"
                         />
-                        {errors.password_confirmation && <p className="text-red-500 text-xs italic mt-1">{errors.password_confirmation}</p>}
+                        {errors.password_confirmation && <p className="text-red-500 text-xs mt-1">{errors.password_confirmation}</p>}
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="access_level_id">
-                            Access Level
-                        </label>
+                        <label className="block text-sm font-bold mb-1">Access Level</label>
                         <select
-                            id="access_level_id"
                             name="access_level_id"
                             value={formData.access_level_id}
                             onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.access_level_id ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+                            className={`w-full border ${errors.access_level_id ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
                         >
                             <option value="">Select Access Level</option>
                             {accessLevels.map(level => (
-                                <option key={level.id} value={level.id}>
-                                    {level.name}
-                                </option>
+                                <option key={level.id} value={level.id}>{level.name}</option>
                             ))}
                         </select>
-                        {errors.access_level_id && <p className="text-red-500 text-xs italic mt-1">{errors.access_level_id}</p>}
+                        {errors.access_level_id && <p className="text-red-500 text-xs mt-1">{errors.access_level_id}</p>}
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="branch_id">
-                            Branch
-                        </label>
-                        <select
-                            id="branch_id"
-                            name="branch_id"
-                            value={formData.branch_id}
-                            onChange={handleChange}
-                            className={`shadow appearance-none border ${errors.branch_id ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
-                        >
-                            <option value="">Select Branch</option>
-                            {branches.map(branch => (
-                                <option key={branch.id} value={branch.id}>
-                                    {branch.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="mb-4 relative">
+                        <label className="block text-sm font-bold mb-2">Branches</label>
+
+                        <input
+                            type="text"
+                            placeholder="Search branches..."
+                            className="w-full border border-gray-300 rounded px-3 py-2 mb-2 text-sm focus:outline-none"
+                            onChange={(e) => setBranchSearch(e.target.value.toLowerCase())}
+                        />
+
+                        <div className="max-h-48 overflow-y-auto border border-gray-200 rounded p-2 bg-white shadow-sm">
+                            {branches
+                                .filter(branch => branch.name.toLowerCase().includes(branchSearch))
+                                .slice(0, 4)
+                                .map(branch => (
+                                    <label key={branch.id} className="flex items-center space-x-2 py-1">
+                                        <input
+                                            type="checkbox"
+                                            value={branch.id}
+                                            checked={formData.branch_id.includes(branch.id)}
+                                            onChange={handleBranchCheckboxChange}
+                                            className="form-checkbox h-4 w-4 text-blue-600"
+                                        />
+                                        <span className="text-sm text-gray-700">{branch.name}</span>
+                                    </label>
+                                ))}
+                        </div>
+
+                        {formData.branch_id.length > 0 && (
+                            <div className="mt-3">
+                                <p className="text-sm font-semibold mb-1 text-gray-700">Selected Branches:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.branch_id.map(id => {
+                                        const branch = branches.find(b => b.id === id);
+                                        return branch ? (
+                                            <span
+                                                key={id}
+                                                className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                                            >
+                                                {branch.name}
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         {errors.branch_id && <p className="text-red-500 text-xs italic mt-1">{errors.branch_id}</p>}
                     </div>
 
-                    <div className="flex items-center justify-end">
+                    <div className="flex justify-end">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2 focus:outline-none focus:shadow-outline"
+                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             {loading ? 'Adding...' : 'Add User'}
                         </button>

@@ -29,7 +29,7 @@ const UserPage = ({ auth }) => {
 
     useEffect(() => {
         const params = {
-            page: pagination.currentPage,
+            page: pagination.current_page,
             search: searchTerm,
         };
         fetchUsers(params);
@@ -178,9 +178,18 @@ const UserPage = ({ auth }) => {
                                                                         <MdAlternateEmail className="self-center" />
                                                                         {u.email}
                                                                     </div>
-                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                                                                        <FiMapPin className="self-center" />
-                                                                        {u.branch_name}
+                                                                    <div className="flex items-start gap-2 text-sm text-gray-700">
+                                                                        <FiMapPin className="mt-1" />
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            {u.users_branch?.map((branch) => (
+                                                                                <span
+                                                                                    key={branch.id}
+                                                                                    className="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-0.5 rounded-full"
+                                                                                >
+                                                                                    {branch.branch_name}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
                                                                     </div>
                                                                     <div className="flex items-stretch gap-2 text-sm text-gray-700">
                                                                         <FaUserShield className="self-center" />
