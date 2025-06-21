@@ -116,7 +116,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div className="fixed inset-0 bg-gray-600/80 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium">Add New User</h3>
@@ -233,7 +233,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                         {formData.branch_id.length > 0 && (
                             <div className="mt-3">
                                 <p className="text-sm font-semibold mb-1 text-gray-700">Selected Branches:</p>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2 overflow-y-auto">
                                     {formData.branch_id.map(id => {
                                         const branch = branches.find(b => b.id === id);
                                         return branch ? (
