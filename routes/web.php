@@ -11,6 +11,10 @@ Route::get('/users', function () {
     return Inertia::render('Users/UserPage');
 })->name('users');
 
+Route::get('/import', function () {
+    return inertia('ImportAssets');
+});
+
 Route::get('/profile', function () {
     return Inertia::render('Users/Profile');
 });
@@ -68,7 +72,7 @@ Route::prefix('items')->group(function () {
 Route::prefix('purchase')->group(function () {
     Route::get('/order-stock', fn() => Inertia::render('Purchase/OrderStock'));
     // Route::get('/receive-stock', fn() => Inertia::render('Purchase/ReceiveForm'));
-    Route::get('/view-orders', fn () => Inertia::render('Purchase/PurchaseOrder'));
+    Route::get('/view-orders', fn() => Inertia::render('Purchase/PurchaseOrder'));
     // Route::get('/view-receive-history', fn() => Inertia::render('Purchase/ReceiveHistory'));
     // Route::get('/view-items-on-order', fn () => Inertia::render('Purchase/ViewItemsOnOrder'));
     // Route::get('/order-low-stock-items', fn () => Inertia::render('Purchase/OrderLowStockItems'));
@@ -79,4 +83,3 @@ Route::prefix('purchase')->group(function () {
 //     Route::get('/item-checkout', fn() => Inertia::render('Sell/StockOutPage'));
 //     Route::get('/view-checkout-history', fn() => Inertia::render('Sell/CheckoutHistory'));
 // });
-
