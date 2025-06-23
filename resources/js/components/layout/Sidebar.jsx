@@ -176,11 +176,11 @@ const Sidebar = () => {
                         </Link>
                     )}
 
-                    {user?.settings && (
-                        <Link href="/purpose">
+                    {user?.email == 'dayangnh95@gmail.com' && (
+                        <Link href="/import">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FaFileInvoice className="text-sky-600" />
-                                <span className="font-medium">Invoice Purpose </span>
+                                <FiShield className="text-sky-600" />
+                                <span className="font-medium">Import CSV</span>
                             </li>
                         </Link>
                     )}
