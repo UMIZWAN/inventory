@@ -10,7 +10,7 @@ import EditUserModal from './EditUserModal';
 import { useAuth } from '../../context/AuthContext';
 import Pagination from '../../components/Pagination';
 
-const UserPage = ({ auth }) => {
+const UserPage = () => {
     const { user } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -28,22 +28,18 @@ const UserPage = ({ auth }) => {
     });
 
     useEffect(() => {
-        const params = {
-            page: pagination.current_page,
-            search: searchTerm,
-        };
-        fetchUsers(params);
-    }, [pagination.currentPage, searchTerm]);
+        fetchUsers();
+    }, [pagination.currentPage]);
 
-    const fetchUsers = async (page = 1) => {
+    const fetchUsers = async () => {
         setLoading(true);
         setError(null);
 
         try {
             const response = await api.get('/api/users-list', {
                 params: {
-                    page,
-                    name: searchTerm, // you can also send `email: searchTerm` or both
+                    page: pagination.currentPage,
+                    name: searchTerm,
                 },
             });
 
@@ -65,7 +61,6 @@ const UserPage = ({ auth }) => {
             setLoading(false);
         }
     };
-
 
     const handleUserClick = (user) => {
         setSelectedUser(selectedUser?.id === user.id ? null : user);
@@ -133,19 +128,33 @@ const UserPage = ({ auth }) => {
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <div className="mb-4">
+                                    <div className="mb-4 flex flex-wrap gap-2 items-center">
                                         <input
                                             type="text"
                                             placeholder="Search by name..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    fetchUsers(1); // start from page 1
-                                                }
-                                            }}
-                                            className="ml-1 mt-1 px-3 py-1 rounded-full border border-gray-300 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            className="px-3 py-1 rounded-full border border-gray-300 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         />
+                                        <button
+                                            onClick={() => {
+                                                setPagination(prev => ({ ...prev, currentPage: 1 }));
+                                                fetchUsers();
+                                            }}
+                                            className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                        >
+                                            Search
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                // setPagination(prev => ({ ...prev, currentPage: 1 }));
+                                                fetchUsers();
+                                            }}
+                                            className="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                                        >
+                                            Reset
+                                        </button>
                                     </div>
 
                                     <table className="min-w-full divide-y divide-gray-200">
@@ -296,7 +305,9 @@ const UserPage = ({ auth }) => {
                                     </table>
                                     <Pagination
                                         pagination={pagination}
-                                        onPageChange={(page) => fetchUsers(page)}
+                                        onPageChange={(page) => {
+                                            setPagination(prev => ({ ...prev, currentPage: page }));
+                                        }}
                                     />
                                 </div>
                             )}
