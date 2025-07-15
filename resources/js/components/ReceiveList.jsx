@@ -107,11 +107,9 @@ export default function ReceiveList() {
                             "Running No": txn.assets_transaction_running_number,
                             "Type": txn.assets_transaction_type,
                             "Branch": txn.assets_from_branch_name,
-                            "Items": txn.assets_transaction_item_list
-                                .map(item => {
-                                    const asset = assets.find(a => a.id === item.asset_id);
-                                    return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
-                                })
+                            "Items": txn?.assets_transaction_item_list?.map((item) => {
+                                        return `${item?.asset_name || 'Unknown'} (${item.asset_unit})`;
+                                    })
                                 .join(", "),
                             "Purpose": txn.assets_transaction_purpose
                                 ? JSON.parse(txn.assets_transaction_purpose).join(", ")

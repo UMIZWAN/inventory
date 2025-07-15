@@ -122,11 +122,9 @@ export default function CheckoutList() {
                             "Running No": txn.assets_transaction_running_number,
                             "Type": txn.assets_transaction_type,
                             "Branch": txn.assets_from_branch_name,
-                            "Items": txn.assets_transaction_item_list
-                                .map(item => {
-                                    const asset = assets.find(a => a.id === item.asset_id);
-                                    return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
-                                })
+                            "Items": txn?.assets_transaction_item_list?.map((item) => {
+                                        return `${item?.asset_name || 'Unknown'} (${item.asset_unit})`;
+                                    })
                                 .join(", "),
                             "Purpose": txn.asset_transaction_purpose_name,
                             "Date": new Date(txn.created_at).toLocaleDateString(),

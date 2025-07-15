@@ -343,11 +343,9 @@ export default function TransferList({ status, mode }) {
               "Type": txn.assets_transaction_type,
               "From Branch": txn.assets_from_branch_name,
               "To Branch": txn.assets_to_branch_name,
-              "Items": txn.assets_transaction_item_list
-                .map(item => {
-                  const asset = assets.find(a => a.id === item.asset_id);
-                  return `${asset?.name || 'Unknown'} (${item.asset_unit})`;
-                })
+              "Items": txn?.assets_transaction_item_list?.map((item) => {
+                return `${item?.asset_name || 'Unknown'} (${item.asset_unit})`;
+              })
                 .join(", "),
               "Status": txn.assets_transaction_status,
               "Date": new Date(txn.created_at).toLocaleDateString(),
