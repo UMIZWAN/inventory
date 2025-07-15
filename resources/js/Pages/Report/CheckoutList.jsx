@@ -118,17 +118,30 @@ export default function CheckoutList() {
 
                 {user?.download_reports && (
                     <ExportButton
-                        data={filteredList.map((txn) => ({
-                            "Running No": txn.assets_transaction_running_number,
-                            "Type": txn.assets_transaction_type,
-                            "Branch": txn.assets_from_branch_name,
-                            "Items": txn?.assets_transaction_item_list?.map((item) => {
-                                        return `${item?.asset_name || 'Unknown'} (${item.asset_unit})`;
-                                    })
-                                .join(", "),
-                            "Purpose": txn.asset_transaction_purpose_name,
-                            "Date": new Date(txn.created_at).toLocaleDateString(),
-                        }))}
+                        data={filteredTransfers.flatMap((txn) =>
+                            txn.assets_transaction_item_list.map((item) => ({
+                                "Running No": txn.assets_transaction_running_number,
+                                "Type": txn.assets_transaction_type,
+                                "From Branch": txn.assets_from_branch_name,
+                                "To Branch": txn.assets_to_branch_name,
+                                "Item": item.asset_name || "Unknown",
+                                "Quantity": item.asset_unit || 0,
+                                "Unit Price": (Number(item.assets.asset_sales_cost) || 0).toFixed(2),
+                                "Total Price": ((Number(item.asset_unit) || 0) * (Number(item.assets.asset_sales_cost) || 0)).toFixed(2),
+                                "Purpose": (() => {
+                                    const val = txn.asset_transaction_purpose_name;
+                                    try {
+                                        const parsed = JSON.parse(val);
+                                        return Array.isArray(parsed) ? parsed.join(", ") : val;
+                                    } catch {
+                                        return val || "-";
+                                    }
+                                })(),
+                                "Status": txn.assets_transaction_status,
+                                "Date": new Date(txn.created_at).toLocaleDateString("en-US"),
+                                "Remark": txn.assets_transaction_remark || "",
+                            }))
+                        )}
                         filename="AssetOut"
                         sheetName="Checkout"
                     />
