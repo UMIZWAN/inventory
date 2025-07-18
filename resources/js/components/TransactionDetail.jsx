@@ -45,10 +45,12 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                         </Text>
                     </View>
 
-                    {/* <View style={{ marginTop: 20 }}>
-                        <Text style={styles.label}>Bill to:</Text>
-                        <Text style={{ marginTop: 8 }}>{transaction.assets_recipient_name}</Text>
-                    </View> */}
+                    {["New SA", "Insurance", "CSI", "Cash"].includes(transaction?.asset_transaction_purpose_name) && (
+                        <View style={{ marginTop: 20 }}>
+                            <Text style={styles.label}>Customer Name:</Text>
+                            <Text style={{ marginTop: 8 }}>{transaction.assets_recipient_name}</Text>
+                        </View>
+                    )}
                 </View>
 
                 <View style={styles.section}>
@@ -206,6 +208,15 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                     <p><strong>Supplier:</strong> {transaction.supplier_name}</p>
                                 </>
                             )}
+
+                            {["New SA", "Insurance", "CSI", "Cash", "CASH"].includes(transaction.asset_transaction_purpose_name) && (
+                                <div className="mb-2">
+                                    <p>
+                                        <strong>Customer Name:</strong> {transaction.assets_recipient_name}
+                                    </p>
+                                </div>
+                            )}
+
                         </div>
                         <div className="mb-6 space-y-1">
 
@@ -226,6 +237,8 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                             )}
 
                             <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
+
+
                         </div>
                     </div>
 

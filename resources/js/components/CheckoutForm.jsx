@@ -272,6 +272,20 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                                     />
                                 </div>
                             )}
+                            {["New SA", "Insurance", "CSI", "Cash", "CASH"].includes(purposeLabel) && (
+                                <div className="mb-4">
+                                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                                        Customer Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={recipient}
+                                        onChange={(e) => setRecipient(e.target.value)}
+                                    />
+                                </div>
+                            )}
+
                         </div>
 
                         {/* Items Table */}
@@ -316,7 +330,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                             <button
                                 type="submit"
                                 className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-2"
-                                // onClick={handleSubmit}
+                            // onClick={handleSubmit}
                             >
                                 Submit
                             </button>

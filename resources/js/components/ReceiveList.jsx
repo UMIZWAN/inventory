@@ -103,7 +103,7 @@ export default function ReceiveList() {
 
                 {user?.download_reports && (
                     <ExportButton
-                        data={filteredTransfers.flatMap((txn) =>
+                        data={filteredList.flatMap((txn) =>
                             txn.assets_transaction_item_list.map((item) => ({
                                 "Running No": txn.assets_transaction_running_number,
                                 "Type": txn.assets_transaction_type,
