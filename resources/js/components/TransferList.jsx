@@ -29,7 +29,6 @@ export default function TransferList({ status, mode }) {
     status: '',
     itemName: '',
   });
-  console.log(assetTransfer);
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);

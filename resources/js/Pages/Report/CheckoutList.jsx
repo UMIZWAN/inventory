@@ -118,7 +118,7 @@ export default function CheckoutList() {
 
                 {user?.download_reports && (
                     <ExportButton
-                        data={filteredTransfers.flatMap((txn) =>
+                        data={filteredList.flatMap((txn) =>
                             txn.assets_transaction_item_list.map((item) => ({
                                 "Running No": txn.assets_transaction_running_number,
                                 "Type": txn.assets_transaction_type,
@@ -137,6 +137,7 @@ export default function CheckoutList() {
                                         return val || "-";
                                     }
                                 })(),
+                                "Customer Name": txn.assets_recipient_name,
                                 "Status": txn.assets_transaction_status,
                                 "Date": new Date(txn.created_at).toLocaleDateString("en-US"),
                                 "Remark": txn.assets_transaction_remark || "",
