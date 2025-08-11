@@ -58,6 +58,7 @@ const Assets = () => {
             per_page: 10000,
             search: searchTerm,
             asset_category_id: filters.category,
+            branch_id: selectedBranch?.branch_id
         };
 
         try {
