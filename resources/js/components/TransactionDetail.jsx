@@ -301,7 +301,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 <strong>Attachment:</strong>{" "}
                                 {transaction.attachment ? (
                                     <a
-                                        href={`http://127.0.0.1:8000/storage/${transaction.attachment}`}
+                                        href={`http://127.0.0.1:8000/${transaction.attachment}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-blue-600 underline hover:text-blue-800"

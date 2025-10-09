@@ -143,10 +143,9 @@ class AssetsTransactionController extends Controller
                     // Handle attachment upload
                     if ($request->hasFile('attachment')) {
                         $attachment = $request->file('attachment');
-                        // Store the file in the 'public/attachments' directory
-                        $attachmentPath = $attachment->store('public/attachments');
-                        // Get the URL for the stored file (optional, depends on how you serve files)
-                        // You might want to use Storage::url($attachmentPath) if serving directly via public disk
+                        $attachmentName = time() . '_' . uniqid() . '.' . $attachment->getClientOriginalExtension();
+                        $attachment->move(public_path('storage/attachments'), $attachmentName);
+                        $attachmentPath = 'storage/attachments/' . $attachmentName;
                     }
 
                     $transaction = AssetsTransaction::create([
@@ -160,8 +159,9 @@ class AssetsTransactionController extends Controller
                         'assets_transaction_total_cost' => $request->assets_transaction_total_cost,
                         'created_by' => $request->created_by,
                         'created_at' => $request->created_at,
-                        'attachment' => $attachmentPath, // Save the stored path
+                        'attachment' => $attachmentPath,
                     ]);
+
 
                     foreach ($request->assets_transaction_item_list as $item) {
                         AssetsTransactionItemList::create([

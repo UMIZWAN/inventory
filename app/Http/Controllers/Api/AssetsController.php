@@ -544,7 +544,15 @@ class AssetsController extends Controller
                                 'asset_location_id' => null,
                                 'asset_current_unit' => $row['asset_current_unit'],
                             ]);
+                        } else {
+                            AssetsBranchValues::where('asset_id', $existingAsset->id)
+                                ->where('asset_branch_id', $branchId)
+                                ->update([
+                                    'asset_current_unit' => $row['asset_current_unit'],
+                                    'asset_location_id' => null,
+                                ]);
                         }
+
 
                         $results[] = [
                             'row' => $row,
@@ -556,6 +564,7 @@ class AssetsController extends Controller
                             'name' => $row['name'],
                             'asset_running_number' => $row['asset_running_number'],
                             'asset_category_id' => $categoryId,
+                            'asset_type' => $row['asset_type'] ?? null,
                             'asset_stable_unit' => $row['asset_stable_unit'],
                             'asset_purchase_cost' => is_numeric($row['asset_purchase_cost']) ? $row['asset_purchase_cost'] : null,
                             'asset_sales_cost' => is_numeric($row['asset_sales_cost']) ? $row['asset_sales_cost'] : null,

@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users-list', [AuthController::class, 'getAllUsers']);
     Route::post('/users', [AuthController::class, 'addUser']);
     Route::put('/users/{id}', [AuthController::class, 'updateUser']);
+    Route::patch('/users/{id}/deactivate', [AuthController::class, 'deleteUser']); // ✅ Deactivate (soft delete via is_active)
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/logout', [AuthController::class, 'logout']);
     // Access Level Routes

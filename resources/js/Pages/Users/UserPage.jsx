@@ -75,6 +75,32 @@ const UserPage = () => {
         setUserToEdit(user);
         setIsEditModalOpen(true);
     };
+    // Handle delete button click
+    const handleDeleteClick = async (user, e) => {
+        e.stopPropagation();
+        const confirmDelete = window.confirm(`Are you sure you want to delete ${user.name}?`);
+
+        if (!confirmDelete) return;
+
+        try {
+            setLoading(true);
+            const response = await api.patch(`/api/users/${user.id}/deactivate`);
+
+            if (response.data.success) {
+                // Remove user from list
+                setUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
+                alert('User deleted successfully');
+            } else {
+                alert(response.data.message || 'Failed to delete user');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            alert('An error occurred while deleting the user');
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const handleUserUpdated = (updatedUser) => {
         setUsers(prevUsers =>
@@ -215,6 +241,12 @@ const UserPage = () => {
                                                                         className="text-indigo-600 hover:text-indigo-900 mr-3"
                                                                     >
                                                                         Edit
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => handleDeleteClick(u, e)}
+                                                                        className="text-red-600 hover:text-red-900"
+                                                                    >
+                                                                        Delete
                                                                     </button>
                                                                 </td>
                                                             )}

@@ -30,6 +30,13 @@ class AuthController extends Controller
 
         $user = User::where('email', $request['email'])->firstOrFail();
 
+        // ✅ Block inactive users
+        if (!$user->is_active) {
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact the administrator.'
+            ], 403);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
         $user = $request->user()->load('accessLevel', 'userBranch');
 
@@ -186,7 +193,8 @@ class AuthController extends Controller
     public function getAllUsers(Request $request)
     {
         try {
-            $query = User::with('accessLevel', 'userBranch');
+            $query = User::with('accessLevel', 'userBranch')
+                ->where('is_active', true); // ✅ Only include active users
 
             // Filter by name
             if ($request->has('name')) {
@@ -221,6 +229,36 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve users',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteUser($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            // Prevent user from deleting their own account
+            if (Auth::id() === $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot deactivate your own account.'
+                ], 403);
+            }
+
+            // Mark as inactive instead of deleting
+            $user->is_active = false;
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User deactivated successfully.'
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to deactivate user.',
                 'error' => $e->getMessage()
             ], 500);
         }

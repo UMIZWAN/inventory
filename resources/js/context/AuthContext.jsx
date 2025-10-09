@@ -84,7 +84,12 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("selected_branch");
+    // Optional: clear sessionStorage too
+    sessionStorage.clear();
+
+    // Reset state
     setUser(null);
+    setSelectedBranch(null);
   };
 
   // Auto-fetch user on mount if token exists
