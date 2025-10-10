@@ -95,15 +95,15 @@ export default function TransferList({ status, mode }) {
   //   }
   // };
 
-  const handleAction = async (txn, newStatus, shippingId = null) => {
+  const handleAction = async (txn, newStatus, shippingId = null, selectedItems = []) => {
     const statusLabelMap = {
-      RECEIVED: 'Receive',
-      APPROVED: 'Approve',
-      REJECTED: 'Reject',
-      'IN-TRANSIT': 'Send',
+      RECEIVED: "Receive",
+      APPROVED: "Approve",
+      REJECTED: "Reject",
+      "IN-TRANSIT": "Send",
     };
 
-    const actionLabel = statusLabelMap[newStatus] || 'Perform';
+    const actionLabel = statusLabelMap[newStatus] || "Perform";
 
     const confirm = await confirmAction({
       title: `Confirm ${actionLabel}?`,
@@ -117,6 +117,7 @@ export default function TransferList({ status, mode }) {
       const payload = {
         assets_transaction_status: newStatus,
         assets_transaction_remark: txn.assets_transaction_remark || "",
+        selected_items: selectedItems, // ✅ Send selected item IDs
       };
 
       if (newStatus === "IN-TRANSIT" && shippingId) {
@@ -126,7 +127,7 @@ export default function TransferList({ status, mode }) {
       const res = await api.put(`/api/assets-transaction/${txn.id}`, payload);
 
       Swal.fire({
-        icon: 'success',
+        icon: "success",
         title: `${actionLabel}d!`,
         text: `Transaction successfully ${actionLabel.toLowerCase()}d.`,
         timer: 1500,
@@ -142,9 +143,9 @@ export default function TransferList({ status, mode }) {
     } catch (err) {
       console.error(err);
       Swal.fire({
-        icon: 'error',
-        title: 'Action Failed',
-        text: err.response?.data?.error || 'Something went wrong.',
+        icon: "error",
+        title: "Action Failed",
+        text: err.response?.data?.error || "Something went wrong.",
       });
     }
   };
@@ -245,13 +246,15 @@ export default function TransferList({ status, mode }) {
     return {
       primary: primary && {
         label: primary.label,
-        action: (shippingId) =>
-          handleAction(selected, primary.status, shippingId),
+        // ✅ Keep this order (shippingId, selectedItems)
+        action: (selectedItems, shippingId = null) =>
+          handleAction(selected, primary.status, shippingId, selectedItems),
         color: primary.color,
       },
       secondary: secondary && {
         label: secondary.label,
-        action: () => handleAction(selected, secondary.status),
+        action: (selectedItems) =>
+          handleAction(selected, secondary.status, null, selectedItems),
         color: secondary.color,
       },
     };

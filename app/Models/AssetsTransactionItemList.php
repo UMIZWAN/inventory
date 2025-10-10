@@ -10,12 +10,11 @@ class AssetsTransactionItemList extends Model
     use HasFactory;
 
     public const STATUSES = [
-        'ON HOLD',
-        'DELIVERED',
-        'FROZEN',
         'RECEIVED',
-        'RETURNED',
-        'DISPOSED',
+        'APPROVED',
+        'IN-TRANSIT',
+        'RQUESTED',
+        'REJECTED'
     ];
 
     protected $table = 'assets_transaction_item_list';
