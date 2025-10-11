@@ -62,10 +62,22 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons }) 
   };
 
   const canSelectItem = (item) => {
-    // ✅ Restrict selectable items logically
-    const status = data?.assets_transaction_status;
-    if (status === "APPROVED") return item.status === "APPROVED";
-    if (status === "IN-TRANSIT") return item.status === "IN-TRANSIT";
+    const txnStatus = data?.assets_transaction_status;
+
+    // ✅ Normalize old data (null, undefined, or empty string)
+    const itemStatus = item.status || "REQUESTED";
+
+    // ✅ During approval — all items can be selected (including null/empty)
+    if (txnStatus === "REQUESTED") return true;
+
+    // ✅ When sending — only APPROVED, REQUESTED, or null/empty
+    if (txnStatus === "APPROVED")
+      return ["APPROVED", "REQUESTED"].includes(itemStatus);
+
+    // ✅ When receiving — only IN-TRANSIT or legacy null/empty
+    if (txnStatus === "IN-TRANSIT")
+      return ["IN-TRANSIT", "REQUESTED"].includes(itemStatus);
+
     return true;
   };
 
@@ -264,9 +276,8 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons }) 
                             return (
                               <tr
                                 key={i}
-                                className={`${
-                                  !isSelectable ? "opacity-50 bg-gray-100" : ""
-                                } hover:bg-gray-50`}
+                                className={`${!isSelectable ? "opacity-50 bg-gray-100" : ""
+                                  } hover:bg-gray-50`}
                               >
                                 <td className="px-2 py-2 border text-center">
                                   <input
@@ -278,8 +289,8 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons }) 
                                       item.status === "APPROVED"
                                         ? "accent-green-500"
                                         : item.status === "REJECTED"
-                                        ? "accent-red-500"
-                                        : "accent-gray-400"
+                                          ? "accent-red-500"
+                                          : "accent-gray-400"
                                     }
                                   />
                                 </td>

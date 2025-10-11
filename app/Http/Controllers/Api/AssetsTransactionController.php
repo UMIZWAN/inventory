@@ -423,13 +423,16 @@ class AssetsTransactionController extends Controller
                     DB::beginTransaction();
 
                     try {
-                        // ✅ Reject selected, approve unselected
+                        // ✅ Reject selected, approve unselected (include null items)
                         AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->whereIn('id', $selectedItems)
                             ->update(['status' => 'REJECTED']);
 
                         AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
-                            ->whereNotIn('id', $selectedItems)
+                            ->where(function ($q) use ($selectedItems) {
+                                $q->whereNotIn('id', $selectedItems)
+                                    ->orWhereNull('status');
+                            })
                             ->update(['status' => 'APPROVED']);
 
                         $transaction->update([
@@ -458,14 +461,17 @@ class AssetsTransactionController extends Controller
                     DB::beginTransaction();
 
                     try {
-                        // ✅ Approve selected items
+                        // ✅ Approve selected (including nulls)
                         AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->whereIn('id', $selectedItems)
                             ->update(['status' => 'APPROVED']);
 
-                        // ✅ Unselected become REJECTED
+                        // ✅ Unselected (and null) items become REJECTED
                         AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
-                            ->whereNotIn('id', $selectedItems)
+                            ->where(function ($q) use ($selectedItems) {
+                                $q->whereNotIn('id', $selectedItems)
+                                    ->orWhereNull('status');
+                            })
                             ->update(['status' => 'REJECTED']);
 
                         $transaction->update([
@@ -498,11 +504,16 @@ class AssetsTransactionController extends Controller
                             throw new Exception("Shipping option ID cannot be empty.");
                         }
 
-                        $shippingId = (int)$request->assets_shipping_option_id;
+                        $shippingId = (int) $request->assets_shipping_option_id;
 
-                        // ✅ Process selected items
+                        // ✅ Include APPROVED, NULL, and empty-string items
                         $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->whereIn('id', $selectedItems)
+                            ->where(function ($q) {
+                                $q->where('status', 'APPROVED')
+                                    ->orWhereNull('status')
+                                    ->orWhere('status', ''); // for legacy rows
+                            })
                             ->get();
 
                         if ($transactionItems->isEmpty()) {
@@ -510,10 +521,6 @@ class AssetsTransactionController extends Controller
                         }
 
                         foreach ($transactionItems as $item) {
-                            if ($item->status !== 'APPROVED') {
-                                throw new Exception("Only approved items can be sent. Asset ID {$item->asset_id} is not approved yet.");
-                            }
-
                             $assetBranchFromValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
                                 ->where('asset_id', $item->asset_id)
                                 ->first();
@@ -529,7 +536,7 @@ class AssetsTransactionController extends Controller
                             $item->update(['status' => 'IN-TRANSIT']);
                         }
 
-                        // ✅ Update transaction
+                        // ✅ Update transaction status
                         $transaction->update([
                             'assets_transaction_status' => 'IN-TRANSIT',
                             'assets_shipping_option_id' => $shippingId,
@@ -546,7 +553,10 @@ class AssetsTransactionController extends Controller
                         ]);
                     } catch (Exception $e) {
                         DB::rollBack();
-                        return response()->json(['message' => 'Failed to send assets.', 'error' => $e->getMessage()], 500);
+                        return response()->json([
+                            'message' => 'Failed to send assets.',
+                            'error' => $e->getMessage(),
+                        ], 500);
                     }
                 }
 
@@ -562,20 +572,38 @@ class AssetsTransactionController extends Controller
                             $selectedItems = [];
                         }
 
-                        // Fetch items selected to be received
+                        /**
+                         * ✅ Fetch items selected for receiving:
+                         *    - Include items that are IN-TRANSIT
+                         *    - Include items with NULL status (old transactions)
+                         */
                         $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->whereIn('id', $selectedItems)
+                            ->where(function ($q) {
+                                $q->where('status', 'IN-TRANSIT')
+                                    ->orWhereNull('status');
+                            })
                             ->get();
 
+                        // ✅ If no specific items were selected, fallback to all IN-TRANSIT or NULL items
+                        if ($transactionItems->isEmpty() && empty($selectedItems)) {
+                            $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
+                                ->where(function ($q) {
+                                    $q->where('status', 'IN-TRANSIT')
+                                        ->orWhereNull('status');
+                                })
+                                ->get();
+                        }
+
                         if ($transactionItems->isEmpty()) {
-                            throw new Exception('No valid items selected for receiving.');
+                            throw new Exception('No valid items available for receiving.');
                         }
 
                         foreach ($transactionItems as $item) {
-                            // ✅ Update item status
+                            // ✅ Mark item as received (even if old/null)
                             $item->update(['status' => 'RECEIVED']);
 
-                            // ✅ Add to receiving branch
+                            // ✅ Add to receiving branch stock
                             $assetBranchToValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_to_branch_id)
                                 ->where('asset_id', $item->asset_id)
                                 ->first();
@@ -595,17 +623,13 @@ class AssetsTransactionController extends Controller
                             }
                         }
 
-                        // ✅ Non-selected items remain in-transit
+                        // ✅ Keep unselected items as IN-TRANSIT
                         AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->whereNotIn('id', $selectedItems)
                             ->where('status', 'IN-TRANSIT')
                             ->update(['status' => 'IN-TRANSIT']);
 
-                        /**
-                         * ✅ Check if there are ANY items still "IN-TRANSIT"
-                         * If none remain, mark the overall transaction as RECEIVED
-                         * (even if some items were previously REJECTED)
-                         */
+                        // ✅ If all items are done (no IN-TRANSIT left), mark transaction RECEIVED
                         $stillInTransit = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->where('status', 'IN-TRANSIT')
                             ->exists();
@@ -634,6 +658,7 @@ class AssetsTransactionController extends Controller
                     }
                 }
             }
+
 
             if ($transaction->assets_transaction_type == 'ASSET OUT' && $transaction->assets_transaction_status == 'IN PROGRESS') {
 
