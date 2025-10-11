@@ -7,26 +7,43 @@ import TransferDeliveryOrderPDF from "./TransferDeliveryOrderPDF";
 import { useOptions } from "../context/OptionContext";
 import { FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
 
-export default function TransferDetailModal({ isOpen, onClose, data, buttons, mode }) {
+export default function TransferDetailModal({ isOpen, onClose, data, buttons }) {
   const { getCategoryById, assets } = useAssetMeta();
   const { user } = useAuth();
   const { shipping, fetchShipping } = useOptions();
-  const [selectedShippingId, setSelectedShippingId] = useState(data?.assets_shipping_option_id || "");
+  const [selectedShippingId, setSelectedShippingId] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
-  const [localItems, setLocalItems] = useState([]); // ✅ local copy to show real-time updates
+  const [localItems, setLocalItems] = useState([]);
+  const [showStatus, setShowStatus] = useState(false); // ✅ hide status column initially
 
-  // Initialize data
+  // Initialize modal data
   useEffect(() => {
     setSelectedShippingId(data?.assets_shipping_option_id || "");
-    setSelectedItems([]);
     setLocalItems(data?.assets_transaction_item_list || []);
+    setShowStatus(false); // reset
+    preselectItems(data);
   }, [data]);
 
   useEffect(() => {
     fetchShipping();
   }, []);
 
-  // ✅ Toggle checkbox selection
+  // ✅ Automatically preselect items based on transaction status
+  const preselectItems = (transaction) => {
+    if (!transaction) return;
+
+    const items = transaction.assets_transaction_item_list || [];
+    let preselected = [];
+
+    if (transaction.assets_transaction_status === "APPROVED") {
+      preselected = items.filter((i) => i.status === "APPROVED").map((i) => i.id);
+    } else if (transaction.assets_transaction_status === "IN-TRANSIT") {
+      preselected = items.filter((i) => i.status === "IN-TRANSIT").map((i) => i.id);
+    }
+
+    setSelectedItems(preselected);
+  };
+
   const toggleItemSelection = (itemId) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
@@ -35,7 +52,6 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
     );
   };
 
-  // ✅ Select All toggle
   const toggleSelectAll = (checked) => {
     if (!localItems.length) return;
     if (checked) {
@@ -46,23 +62,22 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
   };
 
   const canSelectItem = (item) => {
-    // ✅ Only APPROVED items selectable when sending, IN-TRANSIT when receiving
-    if (["APPROVED", "IN-TRANSIT", "RECEIVED"].includes(data?.assets_transaction_status)) {
-      return item.status === "APPROVED" || item.status === "IN-TRANSIT" || item.status === "RECEIVED";
-    }
+    // ✅ Restrict selectable items logically
+    const status = data?.assets_transaction_status;
+    if (status === "APPROVED") return item.status === "APPROVED";
+    if (status === "IN-TRANSIT") return item.status === "IN-TRANSIT";
     return true;
   };
 
-  // ✅ Apply visual status updates locally (for instant feedback)
+  // ✅ Update local UI statuses for instant feedback
   const updateLocalStatuses = (newStatus) => {
+    setShowStatus(true); // show status column after action
     const updated = localItems.map((item) => {
       const isSelected = selectedItems.includes(item.id);
       if (newStatus === "APPROVED") {
-        // Approve selected, reject unselected
         return { ...item, status: isSelected ? "APPROVED" : "REJECTED" };
       }
       if (newStatus === "REJECTED") {
-        // Reject selected, approve unselected (your request)
         return { ...item, status: isSelected ? "REJECTED" : "APPROVED" };
       }
       return item;
@@ -84,7 +99,6 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
       }
       buttons.primary.action(selectedItems, selectedShippingId);
     } else if (["APPROVE", "REJECT"].includes(actionLabel)) {
-      // ✅ Update local statuses instantly
       updateLocalStatuses(actionLabel);
       buttons.primary.action(selectedItems);
     } else {
@@ -92,7 +106,6 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
     }
   };
 
-  // ✅ Get color + icon for item status
   const getStatusDisplay = (status) => {
     switch (status) {
       case "APPROVED":
@@ -113,6 +126,12 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
             <FaClock /> {status}
           </span>
         );
+      case "RECEIVED":
+        return (
+          <span className="flex items-center text-lime-600 font-medium gap-1">
+            <FaCheckCircle /> {status}
+          </span>
+        );
       default:
         return <span className="text-gray-600">{status}</span>;
     }
@@ -121,21 +140,30 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={onClose}>
-        <Transition.Child as={Fragment}
-          enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
-          leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
           <div className="fixed inset-0 bg-black/50" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child as={Fragment}
-              enter="ease-out duration-300" enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100" leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
               <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all relative">
-                {/* Close */}
                 <button
                   type="button"
                   className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"
@@ -169,7 +197,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   </div>
                 </div>
 
-                {/* Info */}
+                {/* Transfer Info */}
                 <div className="mt-4 space-y-2">
                   <div className="flex justify-between">
                     <div>
@@ -180,7 +208,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                     </div>
                     <div className="text-left mr-20">
                       <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
-                      <p><span className="font-semibold">Reference Number:</span> {data?.assets_transaction_running_number}</p>
+                      <p><span className="font-semibold">Reference:</span> {data?.assets_transaction_running_number}</p>
                       <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                       <div>
                         <span className="font-semibold">Shipping Option:</span>{" "}
@@ -204,7 +232,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                     </div>
                   </div>
 
-                  {/* ✅ Items */}
+                  {/* ✅ Items Table */}
                   <div className="mt-4">
                     <h4 className="font-semibold mb-2">Items:</h4>
                     <div className="overflow-x-auto">
@@ -215,9 +243,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                               <input
                                 type="checkbox"
                                 onChange={(e) => toggleSelectAll(e.target.checked)}
-                                checked={
-                                  selectedItems.length === localItems.length
-                                }
+                                checked={selectedItems.length === localItems.length}
                               />
                             </th>
                             <th className="px-4 py-2 border">Code</th>
@@ -226,7 +252,9 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                             <th className="px-4 py-2 border text-center">Price</th>
                             <th className="px-4 py-2 border text-center">Qty</th>
                             <th className="px-4 py-2 border text-center">Total</th>
-                            <th className="px-4 py-2 border text-center">Status</th>
+                            {showStatus && (
+                              <th className="px-4 py-2 border text-center">Status</th>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -258,14 +286,18 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                                 <td className="px-4 py-2 border">{item.assets.asset_running_number}</td>
                                 <td className="px-4 py-2 border">{item.asset_name}</td>
                                 <td className="px-4 py-2 border">{item.assets.asset_category_name}</td>
-                                <td className="px-4 py-2 border text-center">{Number(item.assets.asset_sales_cost).toFixed(2)}</td>
+                                <td className="px-4 py-2 border text-center">
+                                  {Number(item.assets.asset_sales_cost).toFixed(2)}
+                                </td>
                                 <td className="px-4 py-2 border text-center">{item.asset_unit}</td>
                                 <td className="px-4 py-2 border text-center">
                                   {Number(item.assets.asset_sales_cost * item.asset_unit).toFixed(2)}
                                 </td>
-                                <td className="px-4 py-2 border text-center">
-                                  {getStatusDisplay(item.status)}
-                                </td>
+                                {showStatus && (
+                                  <td className="px-4 py-2 border text-center">
+                                    {getStatusDisplay(item.status)}
+                                  </td>
+                                )}
                               </tr>
                             );
                           })}
@@ -284,7 +316,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   {buttons?.secondary && (
                     <button
                       type="button"
-                      className={`inline-flex justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium ${buttons.secondary.color}`}
+                      className={`inline-flex justify-center rounded-md px-3 py-2 text-sm font-medium ${buttons.secondary.color}`}
                       onClick={buttons.secondary.action}
                     >
                       {buttons.secondary.label}
@@ -293,7 +325,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons, mo
                   {buttons?.primary && (
                     <button
                       type="button"
-                      className={`inline-flex justify-center rounded-md border border-transparent px-3 py-2 text-sm font-medium ${buttons.primary.color}`}
+                      className={`inline-flex justify-center rounded-md px-3 py-2 text-sm font-medium ${buttons.primary.color}`}
                       onClick={handlePrimaryAction}
                     >
                       {buttons.primary.label}

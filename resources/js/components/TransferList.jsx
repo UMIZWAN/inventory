@@ -105,19 +105,63 @@ export default function TransferList({ status, mode }) {
 
     const actionLabel = statusLabelMap[newStatus] || "Perform";
 
-    const confirm = await confirmAction({
-      title: `Confirm ${actionLabel}?`,
-      text: `Are you sure you want to ${actionLabel.toLowerCase()} this transaction?`,
-      confirmButtonText: `Yes, ${actionLabel.toLowerCase()}`,
-    });
-
-    if (!confirm.isConfirmed) return;
-
     try {
+      // ✅ If no selectedItems (clicked from table), auto-select based on status
+      let autoSelected = false;
+      if (!selectedItems || selectedItems.length === 0) {
+        autoSelected = true;
+        if (newStatus === "APPROVED") {
+          selectedItems = txn.assets_transaction_item_list.map(item => item.id);
+        } else if (newStatus === "REJECTED") {
+          selectedItems = txn.assets_transaction_item_list.map(item => item.id);
+        } else if (newStatus === "IN-TRANSIT") {
+          selectedItems = txn.assets_transaction_item_list
+            .filter(item => item.status === "APPROVED")
+            .map(item => item.id);
+        } else if (newStatus === "RECEIVED") {
+          selectedItems = txn.assets_transaction_item_list
+            .filter(item => item.status === "IN-TRANSIT")
+            .map(item => item.id);
+        } else {
+          selectedItems = txn.assets_transaction_item_list.map(item => item.id);
+        }
+      }
+
+      // ✅ Optional info alert before confirm (only when auto-applying)
+      if (autoSelected && ["IN-TRANSIT", "RECEIVED"].includes(newStatus)) {
+        const itemCount = selectedItems.length;
+        await Swal.fire({
+          icon: "info",
+          title:
+            newStatus === "IN-TRANSIT"
+              ? "Sending Approved Items"
+              : "Receiving In-Transit Items",
+          text:
+            itemCount > 0
+              ? `This action will automatically apply to ${itemCount} ${newStatus === "IN-TRANSIT" ? "approved" : "in-transit"
+              } item(s).`
+              : "No eligible items were found for this action.",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+
+        // Stop if no eligible items
+        if (itemCount === 0) return;
+      }
+
+      // ✅ Ask for user confirmation
+      const confirm = await confirmAction({
+        title: `Confirm ${actionLabel}?`,
+        text: `Are you sure you want to ${actionLabel.toLowerCase()} this transaction?`,
+        confirmButtonText: `Yes, ${actionLabel.toLowerCase()}`,
+      });
+
+      if (!confirm.isConfirmed) return;
+
       const payload = {
         assets_transaction_status: newStatus,
         assets_transaction_remark: txn.assets_transaction_remark || "",
-        selected_items: selectedItems, // ✅ Send selected item IDs
+        selected_items: selectedItems,
       };
 
       if (newStatus === "IN-TRANSIT" && shippingId) {
@@ -411,14 +455,22 @@ export default function TransferList({ status, mode }) {
                   <td className="px-4 py-2 border">
                     <div className="space-y-4 mt-2">
                       {txn.assets_transaction_item_list.map((item, index) => {
+                        const isRejected = item.status === "REJECTED";
                         return (
-                          <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
-                            <li>{item.asset_name} — {item.asset_unit}</li>
+                          <ul
+                            key={index}
+                            className={`list-disc list-inside text-sm mb-1 ${isRejected ? "text-gray-400 line-through flex items-center gap-1" : "text-gray-800"
+                              }`}
+                          >
+                            <li className="flex items-center gap-1">
+                              {item.asset_name} — {item.asset_unit}
+                            </li>
                           </ul>
                         );
                       })}
                     </div>
                   </td>
+
                   <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-2 border">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusStyle(txn.assets_transaction_status)}`}>
