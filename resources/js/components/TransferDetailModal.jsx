@@ -219,7 +219,7 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons }) 
                       <p><span className="font-semibold">By:</span> {data?.created_by_name}</p>
                     </div>
                     <div className="text-left mr-20">
-                      <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString()}</p>
+                      <p><span className="font-semibold">Date:</span> {new Date(data?.created_at).toLocaleDateString('en-GB')}</p>
                       <p><span className="font-semibold">Reference:</span> {data?.assets_transaction_running_number}</p>
                       <p><span className="font-semibold">Status:</span> {data?.assets_transaction_status}</p>
                       <div>

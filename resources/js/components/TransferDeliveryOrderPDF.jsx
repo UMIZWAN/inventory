@@ -63,7 +63,7 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
           </Text>
           <Text style={{ width: 180, textAlign: "left" }}>
             <Text style={styles.label}>Date:</Text>{" "}
-            {new Date(data?.created_at).toLocaleDateString()}
+            {new Date(data?.created_at).toLocaleDateString('en-GB')}
           </Text>
         </View>
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
