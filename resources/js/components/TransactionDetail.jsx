@@ -31,7 +31,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                         </Text>
                         <Text style={{ width: 180, textAlign: "left" }}>
                             <Text style={styles.label}>Date:</Text>{" "}
-                            {new Date(transaction?.created_at).toLocaleDateString()}
+                            {new Date(transaction?.created_at).toLocaleDateString('en-GB')}
                         </Text>
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
@@ -109,6 +109,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     <View style={styles.signatureBlock}>
                         <Text style={{ marginBottom: 30 }}>Receiver's Signature:</Text>
                         <Text>___________________________</Text>
+                        <Text>Name:</Text>
                     </View>
                 </View>
             </Page>
