@@ -227,13 +227,13 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                         JSON.parse(transaction.assets_transaction_purpose).includes("SELL") && (
                                             <p><strong>Recipient:</strong> {transaction.assets_recipient_name}</p>
                                         )}
-                                    <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString()}</p>
+                                    <p><strong>Date Issued:</strong> {new Date(transaction.created_at).toLocaleDateString('en-GB')}</p>
                                 </>
                             )}
 
                             {type === "receive" && (
                                 <>
-                                    <p><strong>Received Date:</strong> {new Date(transaction.received_at).toLocaleDateString()}</p>
+                                    <p><strong>Received Date:</strong> {new Date(transaction.received_at).toLocaleDateString('en-GB')}</p>
                                 </>
                             )}
 
