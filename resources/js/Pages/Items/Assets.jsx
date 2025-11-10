@@ -480,6 +480,7 @@ const Assets = () => {
                             onClose={() => {
                                 setSelectedAsset(null);
                             }}
+                            onUpdated={() => fetchBranchAssets({ branch_id: selectedBranch?.branch_id })}
                         />
                     )}
                 </div>

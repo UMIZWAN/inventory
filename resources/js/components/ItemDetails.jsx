@@ -6,7 +6,7 @@ import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
 import { Link } from '@inertiajs/react';
 
-const ItemDetails = ({ asset, onClose }) => {
+const ItemDetails = ({ asset, onClose, onUpdated }) => {
     const { user, selectedBranch } = useAuth();
     const { updateAsset, categories } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
@@ -76,6 +76,7 @@ const ItemDetails = ({ asset, onClose }) => {
             } else {
                 // Otherwise, send as regular JSON
                 await updateAsset(asset.id, payload);
+                if (onUpdated) onUpdated(); // Refresh parent list
             }
 
             setEditMode(false);

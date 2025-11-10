@@ -350,14 +350,29 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            {/* <div>
+              <label className="block font-medium mb-1">Date</label>
+              <input
+                type="date"
+                name="date"
+                value={form.date}
+                // onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
+              />
+            </div> */}
             <div>
               <label className="block font-medium mb-1">Date</label>
               <input
                 type="date"
                 name="date"
                 value={form.date}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                readOnly
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
+                style={{
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  MozAppearance: "textfield",
+                }}
               />
             </div>
 

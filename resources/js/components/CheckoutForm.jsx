@@ -228,13 +228,29 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                                     value={selectedBranch?.branch_name || ''}
                                 />
                             </div>
-                            <div>
+                            {/* <div>
                                 <label className="block mb-1 font-medium">Invoice Date</label>
                                 <input
                                     type="date"
                                     className="w-full border border-gray-300 rounded px-3 py-2"
                                     value={date}
                                     onChange={(e) => setDate(e.target.value)}
+                                    
+                                />
+                            </div> */}
+                            <div>
+                                <label className="block mb-1 font-medium">Invoice Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
+                                    value={date}
+                                    // onChange={(e) => setDate(e.target.value)}
+                                    readOnly
+                                    style={{
+                                        appearance: "none",
+                                        WebkitAppearance: "none",
+                                        MozAppearance: "textfield",
+                                    }}
                                 />
                             </div>
                         </div>

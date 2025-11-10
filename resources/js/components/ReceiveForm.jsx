@@ -55,7 +55,7 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
           name: asset?.name || "",
           recvQty: 1,
           unitMeasure: asset?.asset_unit_measure || "",
-          unitCost: parseFloat(asset?.asset_sales_cost || 0),
+          unitCost: parseFloat(asset?.asset_purchase_cost || 0),
           price: parseFloat(asset?.asset_sales_cost || 0),
         };
       });
@@ -204,13 +204,28 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
             </div>
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium">Receive Date</label>
             <input
               type="date"
               className="border rounded p-2 mt-1"
               value={receiveDate}
               onChange={(e) => setReceiveDate(e.target.value)}
+            />
+          </div> */}
+          <div>
+            <label className="block text-sm font-medium">Receive Date</label>
+            <input
+              type="date"
+              name="receive_date"
+              value={receiveDate}
+              readOnly
+              className="border rounded p-2 mt-1 bg-gray-100 cursor-not-allowed"
+              style={{
+                appearance: "none",
+                WebkitAppearance: "none",
+                MozAppearance: "textfield",
+              }}
             />
           </div>
 
