@@ -168,7 +168,8 @@ export default function ReceiveList() {
                                         </div>
                                     </td>
                                     <td className="px-4 py-2 border">{txn.assets_transaction_total_cost}</td>
-                                    <td className="px-4 py-2 border">{new Date(txn.received_at).toLocaleDateString()}</td>
+                                    {/* new Date(txn.created_at).toLocaleDateString('en-GB') */}
+                                    <td className="px-4 py-2 border">{new Date(txn.received_at).toLocaleDateString('en-GB')}</td>
                                     <td className="px-4 py-2 border">
                                         <button
                                             onClick={() => openModal(txn)}

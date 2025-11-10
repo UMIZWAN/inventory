@@ -471,7 +471,11 @@ export default function TransferList({ status, mode }) {
                     </div>
                   </td>
 
-                  <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
+                  {/* <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td> */}
+                  <td className="px-4 py-2 border">
+                    {new Date(txn.created_at).toLocaleDateString('en-GB')}
+                  </td>
+
                   <td className="px-4 py-2 border">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusStyle(txn.assets_transaction_status)}`}>
                       {txn.assets_transaction_status}
