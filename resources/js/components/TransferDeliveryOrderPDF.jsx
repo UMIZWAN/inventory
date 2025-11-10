@@ -114,16 +114,36 @@ const TransferDeliveryOrderPDF = ({ data, items }) => (
 
       <View style={styles.signatureRow}>
         <View style={styles.issuedBlock}>
-          <Text style={{ marginBottom: 10, textTransform: "capitalize" }}>
-            <Text>Issued by</Text> {data?.created_by_name}
-          </Text>
-          <Text>
-            <Text>{data?.assets_from_branch_name}</Text>
-          </Text>
+          {(data?.approved_by_name || data?.rejected_by_name) ? (
+            <>
+              <Text style={{ marginBottom: 5, textTransform: "capitalize" }}>
+                <Text>Requested by </Text>{data?.created_by_name}
+              </Text>
+              <Text style={{ marginBottom: 10 }}>
+                <Text>{data?.assets_to_branch_name}</Text>
+              </Text>
+              <Text style={{ marginBottom: 5, textTransform: "capitalize" }}>
+                <Text>Issued by </Text>{data?.approved_by_name || data?.rejected_by_name}
+              </Text>
+              <Text style={{ marginBottom: 10 }}>
+                <Text>{data?.assets_from_branch_name}</Text>
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={{ marginBottom: 5, textTransform: "capitalize" }}>
+                <Text>Issued by </Text>{data?.created_by_name}
+              </Text>
+              <Text style={{ marginBottom: 10 }}>
+                <Text>{data?.assets_from_branch_name}</Text>
+              </Text>
+            </>
+          )}
         </View>
         <View style={styles.signatureBlock}>
           <Text style={{ marginBottom: 30 }}>Receiver's Signature:</Text>
           <Text>___________________________</Text>
+          <Text>Name:</Text>
         </View>
       </View>
     </Page>

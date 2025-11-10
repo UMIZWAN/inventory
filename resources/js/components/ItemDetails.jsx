@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link } from '@inertiajs/react';
 
 const ItemDetails = ({ asset, onClose }) => {
-    const { user } = useAuth();
+    const { user, selectedBranch } = useAuth();
     const { updateAsset, categories } = useAssetMeta();
     const [editMode, setEditMode] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -277,7 +277,7 @@ const ItemDetails = ({ asset, onClose }) => {
                 {!editMode && (
                     <div className="mt-6">
                         <Link
-                            href={`/report/item/${asset.id}/${user.branch_id}`}
+                            href={`/report/item/${asset.id}/${selectedBranch?.branch_id}`}
                             className="text-sm font-semibold text-blue-600 hover:underline"
                         >
                             Transaction History

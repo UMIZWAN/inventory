@@ -184,7 +184,7 @@ export default function CheckoutList() {
                                         </div>
                                     </td>
                                     <td className="px-4 py-2 border">{txn.asset_transaction_purpose_name}</td>
-                                    <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 border">{new Date(txn.created_at).toLocaleDateString('en-GB')}</td>
                                     <td className="px-4 py-2 border">
                                         <button
                                             onClick={() => openModal(txn)}
