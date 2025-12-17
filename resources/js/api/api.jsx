@@ -1,8 +1,9 @@
 import axios from "axios";
 import { router } from "@inertiajs/react";
+import { LINKS } from "../constants/links";
 
 const api = axios.create({
-    baseURL: "http://127.0.0.1:8000",
+    baseURL: LINKS.API_BASE,
     headers: {
         "Content-Type": "application/json",
     },
@@ -27,7 +28,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             localStorage.removeItem("access_token");
-            router.visit('/');
+            router.visit("/");
         }
         return Promise.reject(error);
     }

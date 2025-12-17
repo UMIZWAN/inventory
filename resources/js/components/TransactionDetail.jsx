@@ -3,6 +3,7 @@ import logo from '../assets/image/universal group - black logo.jpg';
 import api from "../api/api";
 import { useAssetMeta } from "../context/AssetsContext";
 import { PDFDownloadLink, Document, Page, View, Text, StyleSheet, Font, Image } from "@react-pdf/renderer";
+import { LINKS } from '../constants/links';
 
 // Register fonts (optional)
 Font.register({
@@ -302,7 +303,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 <strong>Attachment:</strong>{" "}
                                 {transaction.attachment ? (
                                     <a
-                                        href={`http://127.0.0.1:8000/${transaction.attachment}`}
+                                        href={`${LINKS.API_BASE}/${transaction.attachment}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-blue-600 underline hover:text-blue-800"
@@ -345,7 +346,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 // Define styles for the PDF
 const styles = StyleSheet.create({
     page: { padding: 40, fontSize: 11, fontFamily: "Helvetica" },
-    logo: { width: 250, height: 26, marginBottom: 25, alignSelf: "center" },
+    logo: { width: 150, marginBottom: 25, alignSelf: "center" },
     header: { fontSize: 16, marginBottom: 20, textAlign: "center", textTransform: "uppercase", fontWeight: "bold" },
     section: { marginBottom: 10 },
     label: { fontWeight: "bold" },

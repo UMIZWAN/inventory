@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import placeholder from '../../assets/image/placeholder.png'; // Import a placeholder image
 import Zoom from 'react-medium-image-zoom';
 import 'react-medium-image-zoom/dist/styles.css';
+import { LINKS } from "../../constants/links";
 
 const MasterListPage = () => {
     const { user } = useAuth();
@@ -296,7 +297,7 @@ const MasterListPage = () => {
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         <Zoom>
                                                             <img className="h-10 w-10 rounded"
-                                                                src={item.asset_image ? `http://127.0.0.1:8000/${item.asset_image}` : placeholder}
+                                                                src={item.asset_image ? `${LINKS.API_BASE}/${item.asset_image}` : placeholder}
                                                                 alt={item.name}
                                                                 onError={(e) => {
                                                                     e.target.onerror = null;

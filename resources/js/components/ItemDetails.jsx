@@ -5,6 +5,7 @@ import { useAssetMeta } from '../context/AssetsContext';
 import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
 import { Link } from '@inertiajs/react';
+import { LINKS } from '../constants/links';
 
 const ItemDetails = ({ asset, onClose, onUpdated }) => {
     const { user, selectedBranch } = useAuth();
@@ -175,7 +176,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                 <div className="flex flex-col sm:flex-row gap-6">
                     <div className="flex-shrink-0 relative">
                         <img
-                            src={imagePreview || `http://127.0.0.1:8000/${form.asset_image}` || placeholder}
+                            src={imagePreview || `${LINKS.API_BASE}/${form.asset_image}` || placeholder}
                             alt={form.name}
                             className="w-40 h-40 object-cover rounded-xl border border-gray-200"
                         />

@@ -17,6 +17,7 @@ import TransferForm from './TransferForm';
 import { FiPackage, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
 import confirmAction from '../../components/ConfirmModal';
 import Swal from 'sweetalert2';
+import { LINKS } from '../../constants/links';
 
 const Assets = () => {
     const { user, selectedBranch } = useAuth();
@@ -402,7 +403,7 @@ const Assets = () => {
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-10 w-10">
                                                         <img className="h-10 w-10 rounded"
-                                                            src={asset.asset_image ? `http://127.0.0.1:8000/${asset.asset_image}` : placeholder}
+                                                            src={asset.asset_image ? `${LINKS.API_BASE}/${asset.asset_image}` : placeholder}
                                                             // src={asset.asset_image || placeholder}
                                                             alt={asset.name}
                                                             onError={(e) => {

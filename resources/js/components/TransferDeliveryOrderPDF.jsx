@@ -11,7 +11,7 @@ import {
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 11, fontFamily: "Helvetica" },
-  logo: { width: 250, height: 26, marginBottom: 25, alignSelf: "center" },
+  logo: { width: 150, marginBottom: 25, alignSelf: "center" },
   header: { fontSize: 16, marginBottom: 20, textAlign: "center", textTransform: "uppercase", fontWeight: "bold" },
   section: { marginBottom: 20 },
   label: { fontWeight: "bold" },
