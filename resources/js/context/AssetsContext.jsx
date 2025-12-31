@@ -319,6 +319,7 @@ export const AssetMetaProvider = ({ children }) => {
           asset_id: parseInt(item.item),
           asset_unit: parseFloat(item.quantity),
           status: "",
+          asset_discount: parseFloat(item.discount || 0),
         })),
       };
 

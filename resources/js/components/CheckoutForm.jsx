@@ -39,7 +39,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     }, [purposeLabel]);
 
     const [items, setItems] = useState([
-        { assetId: "", name: "", quantity: 1, unit: "", price: 0, amount: 0, remark: "" },
+        { assetId: "", name: "", quantity: 1, unit: "", price: 0, discount: 0, amount: 0, remark: "" },
     ]);
 
 
@@ -56,14 +56,20 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             }
         } else {
             updated[index][field] =
-                field === 'quantity' || field === 'price' || field === 'unit'
+                field === 'quantity' || field === 'price' || field === 'unit' || field === 'discount'
                     ? parseFloat(value)
                     : value;
         }
 
         const quantity = parseFloat(updated[index].quantity) || 0;
         const price = parseFloat(updated[index].price) || 0;
-        updated[index].amount = quantity * price;
+        const discount = updated[index].discount;
+        // updated[index].amount = quantity * price;
+
+        const discountAmount = price * (discount / 100);
+        const finalPrice = price - discountAmount;
+
+        updated[index].amount = quantity * finalPrice;
 
         setItems(updated);
     };
@@ -71,7 +77,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     const addItem = () => {
         setItems([
             ...items,
-            { name: "", quantity: 1, unit: "", price: 0, amount: 0 },
+            { name: "", quantity: 1, unit: "", price: 0, discount: 0, amount: 0 },
         ]);
     };
 
@@ -97,6 +103,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
         { key: "quantity", label: "Qty", type: "number", placeholder: "1" },
         { key: "unit", label: "Unit", type: "readonly" },
         { key: "price", label: "Price", type: "readonly" },
+        { key: "discount", label: "Discount (%)", type: "number" },
         { key: "amount", label: "Total Price", type: "readonly" },
     ];
 
@@ -110,6 +117,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                     quantity: 1,
                     unit: asset?.asset_unit_measure || "",
                     price: parseFloat(asset?.asset_sales_cost || 0),
+                    discount: 0,
                     amount: parseFloat(asset?.asset_sales_cost || 0),
                 };
             });

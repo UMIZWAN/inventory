@@ -124,6 +124,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
                     'assets_transaction_item_list.*.asset_unit' => 'required|integer',
+                    'assets_transaction_item_list.*.asset_discount' => 'nullable|numeric|min:0|max:100',
                     'attachment' => 'nullable|file|mimes:pdf,xls,xlsx,doc,docx|max:10240', // Added attachment validation (max 10MB)
                 ]);
 
@@ -162,13 +163,14 @@ class AssetsTransactionController extends Controller
                         'attachment' => $attachmentPath,
                     ]);
 
-
+Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                     foreach ($request->assets_transaction_item_list as $item) {
                         AssetsTransactionItemList::create([
                             'asset_transaction_id' => $transaction->id,
                             'asset_id' => $item['asset_id'],
                             'status' => $item['status'],
-                            'asset_unit' => $item['asset_unit']
+                            'asset_unit' => $item['asset_unit'],
+                            'asset_discount' => $item['asset_discount'] ?? 0
                         ]);
                     }
 

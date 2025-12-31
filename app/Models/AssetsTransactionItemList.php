@@ -25,6 +25,7 @@ class AssetsTransactionItemList extends Model
         'asset_id',
         'status',
         'asset_unit',
+        'asset_discount'
     ];
 
     protected $casts = [

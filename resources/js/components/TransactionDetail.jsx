@@ -255,6 +255,8 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                     <th className="px-4 py-2 border">Balance Unit</th>
                                 )}
                                 <th className="px-4 py-2 border">Price</th>
+                                <th className="px-4 py-2 border">Discount (%)</th>
+                                <th className="px-4 py-2 border">Price (After Disc)</th>
                                 <th className="px-4 py-2 border">Total Price</th>
                             </tr>
                         </thead>
@@ -263,7 +265,10 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 // const id = item.asset_id;
                                 const price = item?.assets.asset_sales_cost || transaction?.asset_sales_cost || 0;
                                 const quantity = item?.asset_unit
-                                const total = price * quantity;
+                                // const total = price * quantity;
+                                const discount = parseFloat(item?.asset_discount || 0); // null-safe
+                                const discountedPrice = price * (1 - discount / 100);
+                                const total = discountedPrice * quantity;
                                 totalAmount += total;
 
                                 return (
@@ -281,7 +286,10 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                                 />
                                             </td>
                                         )}
-                                        <td className="px-4 py-2 border text-center">RM {Number(price).toFixed(2)}</td>
+                                        <td className="px-4 py-2 border text-center">RM {Number(total).toFixed(2)}</td>
+                                        <td className="px-4 py-2 border text-center">{discount || 0}%</td>
+                                        <td className="px-4 py-2 border text-center">RM {Number(discountedPrice).toFixed(2)}</td>
+
                                         <td className="px-4 py-2 border text-center">RM {Number(total).toFixed(2)}</td>
                                     </tr>
                                 );
