@@ -22,6 +22,7 @@ class AssetsTransactionItemListResource extends JsonResource
             'asset_name' => $this->assets->name,
             'asset_unit' => $this->asset_unit,
             'status' => $this->status,
+            'asset_discount' => $this->asset_discount,
             'assets' => new AssetsResource($this->whenLoaded('assets')),
         ];
     }

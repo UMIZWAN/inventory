@@ -15,6 +15,7 @@ Font.register({
 });
 
 // PDF Document Component
+// PDF Document Component with Discount Support
 const InvoicePDF = ({ transaction, getAssetDetails }) => {
     const items = transaction?.transaction_items || transaction?.assets_transaction_item_list || [];
     let totalAmount = 0;
@@ -58,28 +59,32 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     <View style={styles.table}>
                         {/* Table Header */}
                         <View style={{ ...styles.tableRow, ...styles.tableHeader }}>
-                            {/* <Text style={styles.tableCell}>#</Text> */}
                             <Text style={styles.tableCell}>Code</Text>
                             <Text style={styles.tableCell}>Asset Name</Text>
                             <Text style={styles.tableCell}>Quantity</Text>
                             <Text style={styles.tableCell}>Price (Each)</Text>
+                            <Text style={styles.tableCell}>Discount (%)</Text>
+                            <Text style={styles.tableCell}>Price (After Disc)</Text>
                             <Text style={styles.tableCell}>Total Price</Text>
                         </View>
 
                         {/* Table Rows */}
                         {items.map((item, index) => {
-                            const price = item?.assets.asset_sales_cost;
-                            const quantity = item?.asset_unit;
-                            const total = price * quantity;
+                            const price = item?.assets.asset_sales_cost || 0;
+                            const quantity = item?.asset_unit || 1;
+                            const discount = parseFloat(item?.asset_discount || 0);
+                            const discountedPrice = price * (1 - discount / 100);
+                            const total = discountedPrice * quantity;
                             totalAmount += total;
 
                             return (
                                 <View key={index} style={styles.tableRow}>
-                                    {/* <Text style={styles.tableCell}>{index + 1}</Text> */}
                                     <Text style={styles.tableCell}>{item?.assets.asset_running_number}</Text>
                                     <Text style={styles.tableCell}>{item?.asset_name}</Text>
                                     <Text style={styles.tableCell}>{quantity}</Text>
                                     <Text style={styles.tableCell}>RM {Number(price).toFixed(2)}</Text>
+                                    <Text style={styles.tableCell}>{discount.toFixed(0)}%</Text>
+                                    <Text style={styles.tableCell}>RM {Number(discountedPrice).toFixed(2)}</Text>
                                     <Text style={styles.tableCell}>RM {Number(total).toFixed(2)}</Text>
                                 </View>
                             );
