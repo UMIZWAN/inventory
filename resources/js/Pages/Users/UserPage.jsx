@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import { MdAlternateEmail } from "react-icons/md";
-import { FiMapPin } from 'react-icons/fi';
+import { FiMapPin, FiUser } from 'react-icons/fi';
 import { FaUserShield } from "react-icons/fa6";
 import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
@@ -20,6 +20,7 @@ const UserPage = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [successMessage, setSuccessMessage] = useState(null);
     const [pagination, setPagination] = useState({
         currentPage: 1,
         perPage: 10,
@@ -68,6 +69,8 @@ const UserPage = () => {
 
     const handleUserAdded = (newUser) => {
         setUsers(prevUsers => [...prevUsers, newUser]);
+        setSuccessMessage('User added successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
     };
 
     const handleEditClick = (user, e) => {
@@ -113,6 +116,9 @@ const UserPage = () => {
         if (selectedUser && selectedUser.id === updatedUser.id) {
             setSelectedUser(updatedUser);
         }
+
+        setSuccessMessage('User updated successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
     };
 
     const renderPermissionStatus = (value) => {
@@ -145,6 +151,17 @@ const UserPage = () => {
                     </div>
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
+                            {successMessage && (
+                                <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                                    <span className="block sm:inline">{successMessage}</span>
+                                    <button
+                                        onClick={() => setSuccessMessage(null)}
+                                        className="absolute top-0 right-0 px-4 py-3"
+                                    >
+                                        <span className="text-green-700 text-xl">&times;</span>
+                                    </button>
+                                </div>
+                            )}
 
                             {loading ? (
                                 <p className="text-center py-4">Loading users...</p>
@@ -212,6 +229,10 @@ const UserPage = () => {
                                                                     <div className="flex items-stretch gap-2 text-sm text-gray-700">
                                                                         <MdAlternateEmail className="self-center" />
                                                                         {u.email}
+                                                                    </div>
+                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
+                                                                        <FiUser className="self-center" />
+                                                                        {u.username ? `${u.username}` : <span className="text-gray-400 italic">Not provided</span>}
                                                                     </div>
                                                                     <div className="flex items-start gap-2 text-sm text-gray-700">
                                                                         <FiMapPin className="mt-1" />

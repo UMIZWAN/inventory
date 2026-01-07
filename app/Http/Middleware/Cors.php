@@ -16,7 +16,7 @@ class Cors
         $response = $next($request);
 
         if (!$request->isMethod('OPTIONS')) {
-            $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
+            // $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
             // $response->headers->set('Access-Control-Allow-Origin', 'https://inventory.umgroup.com.my');
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
             $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN');
@@ -24,8 +24,8 @@ class Cors
         } else {
             // Handle preflight OPTIONS request
             $response = response('', 200);
-            $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
-            // $response->headers->set('Access-Control-Allow-Origin', 'https://inventory.umgroup.com.my');
+            // $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
+            $response->headers->set('Access-Control-Allow-Origin', 'https://inventory.umgroup.com.my');
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
             $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN');
             $response->headers->set('Access-Control-Allow-Credentials', 'true');

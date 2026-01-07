@@ -53,7 +53,7 @@ const Login = () => {
           <div className="text-center mb-6">
             <h4 className="text-xl font-bold text-gray-800">Sign In</h4>
             <p className="text-gray-500 text-sm">
-              Enter your email address and password
+              Enter your email or username and password
             </p>
           </div>
 
@@ -62,15 +62,15 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Email or Username
               </label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="Enter your email or username"
                 className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

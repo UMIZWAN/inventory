@@ -4,6 +4,7 @@ import api from '../../api/api';
 const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
     const [formData, setFormData] = useState({
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -91,6 +92,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
             if (response.data.data) {
                 setFormData({
                     name: '',
+                    username: '',
                     email: '',
                     password: '',
                     password_confirmation: '',
@@ -145,6 +147,19 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                             placeholder="Enter name"
                         />
                         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold mb-1">Username</label>
+                        <input
+                            type="text"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className={`w-full border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
+                            placeholder="Enter username (optional)"
+                        />
+                        {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
                     </div>
 
                     <div className="mb-4">
