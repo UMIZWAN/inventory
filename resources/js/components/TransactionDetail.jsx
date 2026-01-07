@@ -14,10 +14,11 @@ Font.register({
     ],
 });
 
-// PDF Document Component
-// PDF Document Component with Discount Support
+// PDF Document Component with Conditional Discount
 const InvoicePDF = ({ transaction, getAssetDetails }) => {
     const items = transaction?.transaction_items || transaction?.assets_transaction_item_list || [];
+    const purposeName = transaction?.asset_transaction_purpose_name || transaction?.purpose?.asset_transaction_purpose_name;
+    const showDiscount = purposeName === "Cash";
     let totalAmount = 0;
 
     return (
@@ -39,7 +40,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                         <Text style={{ marginRight: 40 }}>
                             <Text style={styles.label}>Purpose:</Text>{" "}
-                            {transaction?.asset_transaction_purpose_name || transaction?.purpose.asset_transaction_purpose_name}
+                            {purposeName}
                         </Text>
                         <Text style={{ width: 180, textAlign: "left" }}>
                             <Text style={styles.label}>Ref. No.:</Text>{" "}
@@ -47,7 +48,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                         </Text>
                     </View>
 
-                    {["New SA", "Insurance", "CSI", "Cash"].includes(transaction?.asset_transaction_purpose_name) && (
+                    {["New SA", "Insurance", "CSI", "Cash"].includes(purposeName) && (
                         <View style={{ marginTop: 20 }}>
                             <Text style={styles.label}>Customer Name:</Text>
                             <Text style={{ marginTop: 8 }}>{transaction.assets_recipient_name}</Text>
@@ -63,8 +64,8 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                             <Text style={styles.tableCell}>Asset Name</Text>
                             <Text style={styles.tableCell}>Quantity</Text>
                             <Text style={styles.tableCell}>Price (Each)</Text>
-                            <Text style={styles.tableCell}>Discount (%)</Text>
-                            <Text style={styles.tableCell}>Price (After Disc)</Text>
+                            {showDiscount && <Text style={styles.tableCell}>Discount (%)</Text>}
+                            {showDiscount && <Text style={styles.tableCell}>Price (After Disc)</Text>}
                             <Text style={styles.tableCell}>Total Price</Text>
                         </View>
 
@@ -74,7 +75,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                             const quantity = item?.asset_unit || 1;
                             const discount = parseFloat(item?.asset_discount || 0);
                             const discountedPrice = price * (1 - discount / 100);
-                            const total = discountedPrice * quantity;
+                            const total = showDiscount ? discountedPrice * quantity : price * quantity;
                             totalAmount += total;
 
                             return (
@@ -83,8 +84,8 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
                                     <Text style={styles.tableCell}>{item?.asset_name}</Text>
                                     <Text style={styles.tableCell}>{quantity}</Text>
                                     <Text style={styles.tableCell}>RM {Number(price).toFixed(2)}</Text>
-                                    <Text style={styles.tableCell}>{discount.toFixed(0)}%</Text>
-                                    <Text style={styles.tableCell}>RM {Number(discountedPrice).toFixed(2)}</Text>
+                                    {showDiscount && <Text style={styles.tableCell}>{discount.toFixed(0)}%</Text>}
+                                    {showDiscount && <Text style={styles.tableCell}>RM {Number(discountedPrice).toFixed(2)}</Text>}
                                     <Text style={styles.tableCell}>RM {Number(total).toFixed(2)}</Text>
                                 </View>
                             );
@@ -129,11 +130,11 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
     const { fetchAssetTransaction } = useAssetMeta();
     const [balanceUnits, setBalanceUnits] = useState({});
 
+    const purposeName = transaction?.asset_transaction_purpose_name || transaction?.purpose?.asset_transaction_purpose_name;
+    const showDiscount = purposeName === "Cash";
+
     useEffect(() => {
         const initialBalances = 0;
-        // getItemList.forEach((item, idx) => {
-        //     initialBalances[idx] = item.balance_unit || item.asset_unit; // fallback
-        // });
         setBalanceUnits(initialBalances);
     }, [transaction]);
 
@@ -144,13 +145,6 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
     const getItemList = transaction.assets_transaction_item_list || transaction.transaction_items || [];
     let totalAmount = 0;
-
-    // const totalAmount = (transaction.assets_transaction_item_list).reduce((sum, item) => {
-    //     console.log(item, sum)
-    //     const price = item?.assets.asset_sales_cost || 0
-    //     const quantity = (item.asset_unit || 1);
-    //     return sum + price * quantity;
-    // }, 0);
 
     const completeTransaction = async (txnId = transaction.id, balanceUnits, remark = '', status = 'COMPLETED') => {
         try {
@@ -187,7 +181,6 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                             document={
                                 <InvoicePDF
                                     transaction={transaction}
-
                                     type={type}
                                 />
                             }
@@ -206,7 +199,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
                             {type === "transfer" && (
                                 <>
-                                    <p><strong>Purpose:</strong> {transaction.asset_transaction_purpose_name || transaction.purpose.asset_transaction_purpose_name}</p>
+                                    <p><strong>Purpose:</strong> {purposeName}</p>
                                 </>
                             )}
 
@@ -216,7 +209,7 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 </>
                             )}
 
-                            {["New SA", "Insurance", "CSI", "Cash", "CASH"].includes(transaction.asset_transaction_purpose_name) && (
+                            {["New SA", "Insurance", "CSI", "Cash", "CASH"].includes(purposeName) && (
                                 <div className="mb-2">
                                     <p>
                                         <strong>Customer Name:</strong> {transaction.assets_recipient_name}
@@ -260,20 +253,18 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                     <th className="px-4 py-2 border">Balance Unit</th>
                                 )}
                                 <th className="px-4 py-2 border">Price</th>
-                                <th className="px-4 py-2 border">Discount (%)</th>
-                                <th className="px-4 py-2 border">Price (After Disc)</th>
+                                {showDiscount && <th className="px-4 py-2 border">Discount (%)</th>}
+                                {showDiscount && <th className="px-4 py-2 border">Price (After Disc)</th>}
                                 <th className="px-4 py-2 border">Total Price</th>
                             </tr>
                         </thead>
                         <tbody>
                             {getItemList.map((item, index) => {
-                                // const id = item.asset_id;
                                 const price = item?.assets.asset_sales_cost || transaction?.asset_sales_cost || 0;
-                                const quantity = item?.asset_unit
-                                // const total = price * quantity;
-                                const discount = parseFloat(item?.asset_discount || 0); // null-safe
+                                const quantity = item?.asset_unit;
+                                const discount = parseFloat(item?.asset_discount || 0);
                                 const discountedPrice = price * (1 - discount / 100);
-                                const total = discountedPrice * quantity;
+                                const total = showDiscount ? discountedPrice * quantity : price * quantity;
                                 totalAmount += total;
 
                                 return (
@@ -291,10 +282,9 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                                 />
                                             </td>
                                         )}
-                                        <td className="px-4 py-2 border text-center">RM {Number(total).toFixed(2)}</td>
-                                        <td className="px-4 py-2 border text-center">{discount || 0}%</td>
-                                        <td className="px-4 py-2 border text-center">RM {Number(discountedPrice).toFixed(2)}</td>
-
+                                        <td className="px-4 py-2 border text-center">RM {Number(price).toFixed(2)}</td>
+                                        {showDiscount && <td className="px-4 py-2 border text-center">{discount || 0}%</td>}
+                                        {showDiscount && <td className="px-4 py-2 border text-center">RM {Number(discountedPrice).toFixed(2)}</td>}
                                         <td className="px-4 py-2 border text-center">RM {Number(total).toFixed(2)}</td>
                                     </tr>
                                 );
@@ -336,8 +326,8 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 onClick={async () => {
                                     try {
                                         await completeTransaction(transaction.id, balanceUnits);
-                                        alert("Transaction completed successfully."); // or trigger a refresh / close
-                                        onClose(); // optionally close modal
+                                        alert("Transaction completed successfully.");
+                                        onClose();
                                     } catch (err) {
                                         alert("Failed to complete transaction: " + err.message);
                                     }

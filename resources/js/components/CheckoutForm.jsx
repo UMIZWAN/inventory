@@ -24,6 +24,9 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [createdStockOut, setCreatedStockOut] = useState(null);
 
+    // Check if discount should be shown
+    const showDiscount = purposeLabel === "Cash";
+
     useEffect(() => {
         fetchInvType();
     }, [])
@@ -47,7 +50,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
         const updated = [...items];
 
         if (field === 'item') {
-            const selectedAsset = branchItem.find(a => a.id === Number(value)); // Fix here
+            const selectedAsset = branchItem.find(a => a.id === Number(value));
             updated[index].item = value;
 
             if (selectedAsset) {
@@ -63,13 +66,17 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
 
         const quantity = parseFloat(updated[index].quantity) || 0;
         const price = parseFloat(updated[index].price) || 0;
-        const discount = updated[index].discount;
-        // updated[index].amount = quantity * price;
+        const discount = showDiscount ? (updated[index].discount || 0) : 0;
 
-        const discountAmount = price * (discount / 100);
-        const finalPrice = price - discountAmount;
-
-        updated[index].amount = quantity * finalPrice;
+        // Only apply discount if showDiscount is true
+        if (showDiscount) {
+            const discountAmount = price * (discount / 100);
+            const finalPrice = price - discountAmount;
+            updated[index].amount = quantity * finalPrice;
+        } else {
+            updated[index].amount = quantity * price;
+            updated[index].discount = 0; // Reset discount if not showing
+        }
 
         setItems(updated);
     };
@@ -89,6 +96,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
         }
     };
 
+    // Conditionally include discount column based on purposeLabel
     const columns = [
         {
             key: "item",
@@ -103,7 +111,7 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
         { key: "quantity", label: "Qty", type: "number", placeholder: "1" },
         { key: "unit", label: "Unit", type: "readonly" },
         { key: "price", label: "Price", type: "readonly" },
-        { key: "discount", label: "Discount (%)", type: "number" },
+        ...(showDiscount ? [{ key: "discount", label: "Discount (%)", type: "number" }] : []),
         { key: "amount", label: "Total Price", type: "readonly" },
     ];
 
@@ -124,6 +132,23 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             setItems(mapped);
         }
     }, [selectedItems, branchItem]);
+
+    // Reset discount values when purposeLabel changes and showDiscount becomes false
+    useEffect(() => {
+        if (!showDiscount) {
+            setItems(prevItems => 
+                prevItems.map(item => {
+                    const quantity = parseFloat(item.quantity) || 0;
+                    const price = parseFloat(item.price) || 0;
+                    return {
+                        ...item,
+                        discount: 0,
+                        amount: quantity * price
+                    };
+                })
+            );
+        }
+    }, [showDiscount]);
 
     const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
 
@@ -195,7 +220,6 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             setRemarks("");
             setPurposes("");
             setAttachment(null);
-            // setShowCheckoutForm(false);
 
         } catch (error) {
             console.error(error);
@@ -210,15 +234,6 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
     return (
 
         <>
-            {/* <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-                <button
-                    onClick={() => setShowCheckoutForm(false)}
-                    className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                    aria-label="Close"
-                >
-                    &times;
-                </button> */}
             <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4">
                 <h1 className="text-2xl font-bold mb-6 text-center">Invoice</h1>
                 <div className="flex justify-center items-center">
@@ -236,23 +251,12 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                                     value={selectedBranch?.branch_name || ''}
                                 />
                             </div>
-                            {/* <div>
-                                <label className="block mb-1 font-medium">Invoice Date</label>
-                                <input
-                                    type="date"
-                                    className="w-full border border-gray-300 rounded px-3 py-2"
-                                    value={date}
-                                    onChange={(e) => setDate(e.target.value)}
-                                    
-                                />
-                            </div> */}
                             <div>
                                 <label className="block mb-1 font-medium">Invoice Date</label>
                                 <input
                                     type="date"
                                     className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                                     value={date}
-                                    // onChange={(e) => setDate(e.target.value)}
                                     readOnly
                                     style={{
                                         appearance: "none",
@@ -355,17 +359,9 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                             <button
                                 type="submit"
                                 className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-2"
-                            // onClick={handleSubmit}
                             >
                                 Submit
                             </button>
-                            {/* <button
-                        type="button"
-                        onClick={() => setShowCheckoutForm(false)}
-                        className="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded"
-                    >
-                        Cancel
-                    </button> */}
                         </div>
 
                     </form>
@@ -378,7 +374,6 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                     onClose={() => setShowDetailModal(false)}
                     transaction={createdStockOut.data}
                     type="transfer"
-
                 />
             )}
 
