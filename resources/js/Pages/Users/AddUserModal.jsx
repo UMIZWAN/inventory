@@ -86,8 +86,11 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         setLoading(true);
         setErrors({});
 
+        console.log('Submitting user data:', formData);
+
         try {
             const response = await api.post('/api/users', formData);
+            console.log('User created successfully:', response.data);
 
             if (response.data.data) {
                 setFormData({
@@ -104,11 +107,12 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                 onClose();
             }
         } catch (error) {
+            console.error('Error adding user:', error);
+            console.error('Error response:', error.response?.data);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                console.error('Error adding user:', error);
-                setErrors({ general: 'An error occurred while adding the user.' });
+                setErrors({ general: error.response?.data?.message || 'An error occurred while adding the user.' });
             }
         } finally {
             setLoading(false);
@@ -264,7 +268,11 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                             </div>
                         )}
 
-                        {errors.branch_id && <p className="text-red-500 text-xs italic mt-1">{errors.branch_id}</p>}
+                        {errors.branch_id && (
+                            <p className="text-red-500 text-xs italic mt-1">
+                                {Array.isArray(errors.branch_id) ? errors.branch_id.join(', ') : errors.branch_id}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex justify-end">

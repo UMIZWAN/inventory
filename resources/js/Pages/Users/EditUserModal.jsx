@@ -4,6 +4,7 @@ import api from '../../api/api';
 const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
     const [formData, setFormData] = useState({
         name: '',
+        username: '',
         email: '',
         access_level_id: '',
         branch_id: [],
@@ -21,6 +22,7 @@ const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
         if (isOpen && user) {
             setFormData({
                 name: user.name || '',
+                username: user.username || '',
                 email: user.email || '',
                 access_level_id: user.access_level_id || '',
                 branch_id: Array.isArray(user.branch_id) ? user.branch_id : [user.branch_id].filter(Boolean),
@@ -144,6 +146,20 @@ const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
                             placeholder="Enter name"
                         />
                         {errors.name && <p className="text-red-500 text-xs italic mt-1">{errors.name}</p>}
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold mb-2" htmlFor="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className={`shadow appearance-none border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 focus:outline-none`}
+                            placeholder="Enter username (optional)"
+                        />
+                        {errors.username && <p className="text-red-500 text-xs italic mt-1">{errors.username}</p>}
                     </div>
 
                     <div className="mb-4">

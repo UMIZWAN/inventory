@@ -117,6 +117,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Failed assigning branches', 'error' => $e->getMessage()], 500);
         }
 
+        // Load the relationships before returning
+        $user->load('accessLevel', 'userBranch');
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -137,6 +139,13 @@ class AuthController extends Controller
         // }
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
+            'username' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('users')->ignore($user->id),
+            ],
             'email' => [
                 'sometimes',
                 'required',
@@ -159,6 +168,10 @@ class AuthController extends Controller
         // Update user attributes if they're present in the request
         if ($request->has('name')) {
             $user->name = $request->name;
+        }
+
+        if ($request->has('username')) {
+            $user->username = $request->username;
         }
 
         if ($request->has('email')) {
