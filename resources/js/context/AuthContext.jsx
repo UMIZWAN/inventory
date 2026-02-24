@@ -59,10 +59,13 @@ export const AuthProvider = ({ children }) => {
       const response = await api.get("/api/profile");
       setUser(response.data.data);
 
-      // Only set branch if not already set (e.g., from localStorage)
+      // Validate that stored branch is still accessible to the user
+      const userBranches = response.data.data.users_branch || [];
       setSelectedBranch((prev) => {
-        if (prev) return prev;
-        return response.data.data.users_branch?.[0] || null;
+        if (prev && userBranches.some(b => b.branch_id === prev.branch_id)) {
+          return prev;
+        }
+        return userBranches[0] || null;
       });
     } catch (err) {
       console.error("Fetch user error:", err.response?.data || err.message);

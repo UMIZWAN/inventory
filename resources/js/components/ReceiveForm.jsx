@@ -37,7 +37,14 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
       key: "item",
       label: "Item",
       type: "select",
-      options: itemList.map((a) => ({ value: a.id, label: a.name })),
+      options: itemList.map((a) => {
+        const branchQty = a.branch_values?.find(bv => bv.asset_branch_id === selectedBranch?.branch_id);
+        return {
+          value: a.id,
+          label: `${a.asset_running_number} - ${a.name}`,
+          qty: branchQty ? String(branchQty.asset_current_unit) : '0',
+        };
+      }),
       width: "w-80"
     },
     { key: "unitMeasure", label: "Unit of Measure", align: "text-center" },

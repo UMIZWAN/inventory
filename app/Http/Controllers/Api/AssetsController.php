@@ -644,6 +644,12 @@ class AssetsController extends Controller
                 'asset_purchase_cost' => $asset->asset_purchase_cost,
                 'asset_sales_cost' => $asset->asset_sales_cost,
                 'asset_unit_measure' => $asset->asset_unit_measure,
+                'branch_values' => $asset->branchValues->map(function ($bv) {
+                    return [
+                        'asset_branch_id' => $bv->asset_branch_id,
+                        'asset_current_unit' => $bv->asset_current_unit,
+                    ];
+                }),
             ];
         });
 

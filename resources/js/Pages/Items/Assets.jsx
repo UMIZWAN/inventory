@@ -35,6 +35,11 @@ const Assets = () => {
 
     const [toast, setToast] = useState(null);
 
+    // Reset pagination when branch changes
+    useEffect(() => {
+        setPagination(prev => ({ ...prev, currentPage: 1 }));
+    }, [selectedBranch]);
+
     useEffect(() => {
         const params = {
             page: pagination.currentPage,
