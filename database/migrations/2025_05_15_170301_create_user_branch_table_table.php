@@ -11,21 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users_branch', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('branch_id')->constrained('assets_branch')->cascadeOnDelete();
-            $table->unique(['user_id', 'branch_id']);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('users_branch')) {
+            Schema::create('users_branch', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->foreignId('branch_id')->constrained('assets_branch')->cascadeOnDelete();
+                $table->unique(['user_id', 'branch_id']);
+                $table->timestamps();
+            });
+        }
 
-        Schema::table('users', function (Blueprint $table) {
-            // Drop the foreign key first
-            $table->dropForeign(['branch_id']);
+        if (Schema::hasColumn('users', 'branch_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                // Drop the foreign key first
+                $table->dropForeign(['branch_id']);
 
-            // Then drop the column
-            $table->dropColumn('branch_id');
-        });
+                // Then drop the column
+                $table->dropColumn('branch_id');
+            });
+        }
     }
 
     /**

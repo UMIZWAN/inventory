@@ -8,6 +8,7 @@ export default function Profile() {
   const [toast, setToast] = useState(null);
   const [editing, setEditing] = useState(false);
   const [errors, setErrors] = useState({});
+  const [migrationLog, setMigrationLog] = useState(null);
   const [formData, setFormData] = useState({
     password: '',
     password_confirmation: '',
@@ -61,6 +62,46 @@ export default function Profile() {
           <p className="text-gray-600 font-medium">Email</p>
           <p>{user.email}</p>
         </div>
+
+        {user.email === 'kamal@gmail.com' && (
+          <div className="mb-6">
+            <button
+              className="text-sm text-red-600 underline hover:text-red-800"
+              onClick={async () => {
+                if (!window.confirm('Run pending database migrations?')) return;
+                try {
+                  const res = await api.post('/api/run-migrations');
+                  setMigrationLog({ success: true, text: res.data.output || res.data.message });
+                } catch (e) {
+                  const data = e.response?.data;
+                  const text = data?.output || data?.error || 'An unknown error occurred.';
+                  setMigrationLog({ success: false, text });
+                }
+              }}
+            >
+              Run Migrations
+            </button>
+          </div>
+        )}
+
+        {migrationLog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full">
+              <h2 className={`text-lg font-bold mb-3 ${migrationLog.success ? 'text-green-700' : 'text-red-700'}`}>
+                {migrationLog.success ? 'Migration Successful' : 'Migration Failed'}
+              </h2>
+              <pre className="bg-gray-100 rounded p-3 text-xs text-gray-800 overflow-auto max-h-64 whitespace-pre-wrap">
+                {migrationLog.text || '(no output)'}
+              </pre>
+              <button
+                className="mt-4 bg-gray-700 hover:bg-gray-800 text-white text-sm px-4 py-2 rounded"
+                onClick={() => setMigrationLog(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
 
         {!editing ? (
           <button
