@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('access_level', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            // Role 
+            // Role
             $table->boolean('add_edit_role')->default(false);
             $table->boolean('view_role')->default(false);
             // User
@@ -57,6 +57,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('username')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->foreignId('access_level_id')->constrained('access_level');

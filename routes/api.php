@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ShippingOptionController;
 use App\Http\Controllers\Api\UsersBranchController;
+use App\Http\Controllers\Api\SsoController;
 use Illuminate\Support\Facades\Cache;
 
 Route::get('/user', function (Request $request) {
@@ -33,6 +34,8 @@ Route::get('/user', function (Request $request) {
 |
 */
 
+// SSO token deposit — called by infonet-super, no user auth required
+Route::post('/sso/store-token', [SsoController::class, 'storeToken']);
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -91,6 +94,23 @@ Route::middleware('auth:sanctum')->group(function () {
             Cache::forget('shipping_option_cache');
             Cache::forget('suppliers_cache');
             return response()->json(['message' => 'Cache cleared successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    });
+
+    // Run pending migrations — restricted to kamal@gmail.com
+    Route::post('/run-migrations', function () {
+        if (auth()->user()?->email !== 'kamal@gmail.com') {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+        try {
+            $exitCode = \Artisan::call('migrate', ['--force' => true]);
+            $output   = \Artisan::output();
+            if ($exitCode !== 0) {
+                return response()->json(['error' => 'Migration failed', 'output' => $output], 500);
+            }
+            return response()->json(['message' => 'Migrations ran successfully', 'output' => $output]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
