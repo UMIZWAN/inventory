@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import DataTable from 'react-data-table-component';
+import { FiMapPin } from 'react-icons/fi';
 import { useAssetMeta } from '../context/AssetsContext';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/layout/Layout';
@@ -11,16 +13,41 @@ const BranchPage = () => {
     fetchBranches,
     addBranch,
     updateBranch,
-    deleteBranch,
     loading
   } = useAssetMeta();
 
   const [form, setForm] = useState({ name: '', id: null });
   const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+
+  const debounceTimer = useRef(null);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     fetchBranches();
   }, []);
+
+  useEffect(() => {
+    setFilteredData(branches);
+  }, [branches]);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    debounceTimer.current = setTimeout(() => {
+      const filtered = branches.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }, 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [searchTerm, branches]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,104 +60,114 @@ const BranchPage = () => {
       setForm({ name: '', id: null });
       setIsEditing(false);
     } catch (err) {
-      console.error('Error saving category:', err);
+      console.error('Error saving branch:', err);
     }
   };
 
-  const handleEdit = (cat) => {
-    setForm({ name: cat.name, id: cat.id });
+  const handleEdit = (branch) => {
+    setForm({ name: branch.name, id: branch.id });
     setIsEditing(true);
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this category?')) {
-      await deleteBranch(id);
-    }
-  };
+  const columns = [
+    {
+      name: 'Name',
+      selector: row => row.name,
+      sortable: true,
+    },
+    ...(user?.add_edit_branch ? [{
+      name: 'Actions',
+      center: true,
+      cell: (row) => (
+        <button
+          onClick={() => handleEdit(row)}
+          className="text-indigo-600 hover:text-indigo-900"
+        >
+          Edit
+        </button>
+      ),
+    }] : []),
+  ];
+
+  const LoadingComponent = () => (
+    <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+      <FiMapPin className="text-4xl text-gray-300" />
+      <p className="text-lg font-medium">Loading branches...</p>
+    </div>
+  );
+
+  const NoDataComponent = () => (
+    <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+      <FiMapPin className="text-4xl text-gray-300" />
+      <p className="text-lg font-medium">No branches found</p>
+      <p className="text-sm">Try adjusting your search criteria.</p>
+    </div>
+  );
 
   return (
     <Layout>
       <Head title="Branches" />
-      <div className="max-w-3xl mx-auto p-4">
+      <div className="max-w-7xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Branches</h1>
 
-        <div className="overflow-x-auto bg-white shadow-md rounded-lg p-4 space-y-4">
+        <div className={`flex flex-col ${user?.add_edit_branch ? 'lg:flex-row' : ''} gap-4`}>
           {user?.add_edit_branch && (
-            <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
-              <input
-                type="text"
-                placeholder="Branch name"
-                className="border border-gray-300 rounded px-3 py-2 w-full"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                {isEditing ? 'Update' : 'Add'}
-              </button>
-              {isEditing && (
-                <button
-                  type="button"
-                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                  onClick={() => {
-                    setForm({ name: '', id: null });
-                    setIsEditing(false);
-                  }}
-                >
-                  Cancel
-                </button>
-              )}
-            </form>
+            <div className="bg-white shadow-md rounded-lg p-4 lg:w-1/3 h-fit">
+              <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit Branch' : 'Add Branch'}</h2>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Branch name"
+                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    {isEditing ? 'Update' : 'Add'}
+                  </button>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                      onClick={() => {
+                        setForm({ name: '', id: null });
+                        setIsEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
           )}
 
-          <div className="overflow-x-auto">
-            {loading ? (
-              <p>Loading...</p>
-            ) : (
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Name</th>
-                    {user?.add_edit_branch && (
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {branches.map((cat) => (
-                    <tr key={cat.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cat.name}</td>
-                      {user?.add_edit_branch && (
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                          <button
-                            onClick={() => handleEdit(cat)}
-                            className="text-blue-600 hover:underline"
-                          >
-                            Edit
-                          </button>
-                          {/* <button
-                    onClick={() => handleDelete(cat.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button> */}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                  {branches.length === 0 && (
-                    <tr>
-                      <td colSpan="3" className="text-center py-4">
-                        No branches found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
+          <div className="bg-white shadow-md rounded-lg p-4 flex-1">
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-3 py-1.5 text-sm rounded-full border border-gray-300 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <DataTable
+              columns={columns}
+              data={filteredData}
+              progressPending={loading}
+              progressComponent={<LoadingComponent />}
+              pagination
+              highlightOnHover
+              striped
+              noDataComponent={<NoDataComponent />}
+            />
           </div>
         </div>
       </div>

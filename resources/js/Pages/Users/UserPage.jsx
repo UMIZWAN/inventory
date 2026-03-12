@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Head } from '@inertiajs/react';
+import DataTable from 'react-data-table-component';
 import { MdAlternateEmail } from "react-icons/md";
 import { FiMapPin, FiUser } from 'react-icons/fi';
 import { FaUserShield } from "react-icons/fa6";
@@ -8,29 +9,60 @@ import Layout from '../../components/layout/Layout';
 import AddUserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 import { useAuth } from '../../context/AuthContext';
-import Pagination from '../../components/Pagination';
+import ExportButton from '../../components/ExportButton';
 
 const UserPage = () => {
     const { user } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedUser, setSelectedUser] = useState(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [branchFilter, setBranchFilter] = useState('');
+    const [branches, setBranches] = useState([]);
     const [successMessage, setSuccessMessage] = useState(null);
-    const [pagination, setPagination] = useState({
-        currentPage: 1,
-        perPage: 10,
-        total: 0,
-        lastPage: 1
-    });
+    const [totalRows, setTotalRows] = useState(0);
+    const [perPage, setPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const debounceTimer = useRef(null);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        fetchBranches();
+    }, []);
 
     useEffect(() => {
         fetchUsers();
-    }, [pagination.currentPage]);
+    }, [currentPage, perPage]);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+        }
+        debounceTimer.current = setTimeout(() => {
+            setCurrentPage(1);
+            fetchUsers();
+        }, 400);
+        return () => clearTimeout(debounceTimer.current);
+    }, [searchTerm, branchFilter]);
+
+    const fetchBranches = async () => {
+        try {
+            const response = await api.get('/api/assets-branch');
+            if (response.data.success) {
+                setBranches(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching branches:', error);
+        }
+    };
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -39,19 +71,16 @@ const UserPage = () => {
         try {
             const response = await api.get('/api/users-list', {
                 params: {
-                    page: pagination.currentPage,
+                    page: currentPage,
+                    per_page: perPage,
                     name: searchTerm,
+                    ...(branchFilter && { branch_id: branchFilter }),
                 },
             });
 
             if (response.data.success) {
                 setUsers(response.data.data);
-                setPagination({
-                    currentPage: response.data.meta.current_page,
-                    perPage: response.data.meta.per_page,
-                    total: response.data.meta.total,
-                    lastPage: response.data.meta.last_page,
-                });
+                setTotalRows(response.data.meta.total);
             } else {
                 setError(response.data.message || 'Failed to fetch users');
             }
@@ -63,35 +92,27 @@ const UserPage = () => {
         }
     };
 
-    const handleUserClick = (user) => {
-        setSelectedUser(selectedUser?.id === user.id ? null : user);
-    };
-
     const handleUserAdded = (newUser) => {
-        setUsers(prevUsers => [...prevUsers, newUser]);
+        fetchUsers();
         setSuccessMessage('User added successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
     };
 
-    const handleEditClick = (user, e) => {
-        e.stopPropagation(); // Prevent row click event
-        setUserToEdit(user);
+    const handleEditClick = (u) => {
+        setUserToEdit(u);
         setIsEditModalOpen(true);
     };
-    // Handle delete button click
-    const handleDeleteClick = async (user, e) => {
-        e.stopPropagation();
-        const confirmDelete = window.confirm(`Are you sure you want to delete ${user.name}?`);
 
+    const handleDeleteClick = async (u) => {
+        const confirmDelete = window.confirm(`Are you sure you want to delete ${u.name}?`);
         if (!confirmDelete) return;
 
         try {
             setLoading(true);
-            const response = await api.patch(`/api/users/${user.id}/deactivate`);
+            const response = await api.patch(`/api/users/${u.id}/deactivate`);
 
             if (response.data.success) {
-                // Remove user from list
-                setUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
+                setUsers(prevUsers => prevUsers.filter(item => item.id !== u.id));
                 alert('User deleted successfully');
             } else {
                 alert(response.data.message || 'Failed to delete user');
@@ -104,21 +125,54 @@ const UserPage = () => {
         }
     };
 
-
     const handleUserUpdated = (updatedUser) => {
         setUsers(prevUsers =>
-            prevUsers.map(user =>
-                user.id === updatedUser.id ? updatedUser : user
-            )
+            prevUsers.map(u => u.id === updatedUser.id ? updatedUser : u)
         );
-
-        // If this user was selected, update the selected user as well
-        if (selectedUser && selectedUser.id === updatedUser.id) {
-            setSelectedUser(updatedUser);
-        }
-
         setSuccessMessage('User updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
+    const handlePerRowsChange = (newPerPage, page) => {
+        setPerPage(newPerPage);
+        setCurrentPage(page);
+    };
+
+    const handleExport = async (format) => {
+        try {
+            const response = await api.get('/api/users-list', {
+                params: {
+                    page: 1,
+                    per_page: 9999,
+                    name: searchTerm,
+                    ...(branchFilter && { branch_id: branchFilter }),
+                },
+            });
+
+            if (response.data.success) {
+                const exportData = response.data.data.map(u => ({
+                    Name: u.name,
+                    Email: u.email,
+                    Username: u.username || '',
+                    'Access Level': u.access_level_name || '',
+                    Branches: u.users_branch?.map(b => b.branch_name).join(', ') || '',
+                }));
+
+                const XLSX = await import('xlsx');
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+                const file = format === 'csv' ? 'Users.csv' : 'Users.xlsx';
+                XLSX.writeFile(workbook, file, { bookType: format });
+            }
+        } catch (error) {
+            console.error('Error exporting users:', error);
+            alert('Failed to export users');
+        }
     };
 
     const renderPermissionStatus = (value) => {
@@ -132,6 +186,158 @@ const UserPage = () => {
             </span>
         );
     };
+
+    const columns = [
+        {
+            name: 'Name',
+            selector: row => row.name,
+            sortable: true,
+        },
+        {
+            name: 'Detail',
+            cell: (row) => (
+                <div className="py-2">
+                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
+                        <MdAlternateEmail className="self-center" />
+                        {row.email}
+                    </div>
+                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
+                        <FiUser className="self-center" />
+                        {row.username ? row.username : <span className="text-gray-400 italic">Not provided</span>}
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-gray-700">
+                        <FiMapPin className="mt-1" />
+                        <div className="flex flex-wrap gap-1">
+                            {row.users_branch?.map((branch) => (
+                                <span
+                                    key={branch.id}
+                                    className="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-0.5 rounded-full"
+                                >
+                                    {branch.branch_name}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
+                        <FaUserShield className="self-center" />
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {row.access_level_name}
+                        </span>
+                    </div>
+                </div>
+            ),
+            grow: 2,
+        },
+        ...(user?.add_edit_user ? [{
+            name: 'Actions',
+            center: true,
+            cell: (row) => (
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => handleEditClick(row)}
+                        className="text-indigo-600 hover:text-indigo-900"
+                    >
+                        Edit
+                    </button>
+                    <button
+                        onClick={() => handleDeleteClick(row)}
+                        className="text-red-600 hover:text-red-900"
+                    >
+                        Delete
+                    </button>
+                </div>
+            ),
+        }] : []),
+    ];
+
+    const ExpandedComponent = ({ data }) => (
+        <div className="py-4 px-2 bg-gray-50">
+            <div className="border rounded-lg p-4 bg-white overflow-hidden">
+                <h3 className="font-bold text-lg mb-3">Access Level Details: {data.access_level_name}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Role:</span>
+                        {renderPermissionStatus(data.add_edit_role)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Role:</span>
+                        {renderPermissionStatus(data.view_role)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Settings:</span>
+                        {renderPermissionStatus(data.settings)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit User:</span>
+                        {renderPermissionStatus(data.add_edit_user)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View User:</span>
+                        {renderPermissionStatus(data.view_user)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Asset:</span>
+                        {renderPermissionStatus(data.add_edit_asset)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Asset:</span>
+                        {renderPermissionStatus(data.view_asset)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Asset Masterlist:</span>
+                        {renderPermissionStatus(data.view_asset_masterlist)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Branch:</span>
+                        {renderPermissionStatus(data.add_edit_branch)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Branch:</span>
+                        {renderPermissionStatus(data.view_branch)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Transaction:</span>
+                        {renderPermissionStatus(data.add_edit_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Transaction:</span>
+                        {renderPermissionStatus(data.view_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Approve/Reject Transaction:</span>
+                        {renderPermissionStatus(data.approve_reject_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Receive Transaction:</span>
+                        {renderPermissionStatus(data.receive_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Reports:</span>
+                        {renderPermissionStatus(data.view_reports)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Download Reports:</span>
+                        {renderPermissionStatus(data.download_reports)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const LoadingComponent = () => (
+        <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+            <FiUser className="text-4xl text-gray-300" />
+            <p className="text-lg font-medium">Loading users...</p>
+        </div>
+    );
+
+    const NoDataComponent = () => (
+        <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+            <FiUser className="text-4xl text-gray-300" />
+            <p className="text-lg font-medium">No users found</p>
+            <p className="text-sm">Try adjusting your search or filter criteria.</p>
+        </div>
+    );
 
     return (
         <Layout>
@@ -163,206 +369,60 @@ const UserPage = () => {
                                 </div>
                             )}
 
-                            {loading ? (
-                                <p className="text-center py-4">Loading users...</p>
-                            ) : error ? (
+                            {error ? (
                                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                                     {error}
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <div className="mb-4 flex flex-wrap gap-2 items-center">
-                                        <input
-                                            type="text"
-                                            placeholder="Search by name..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="px-3 py-1 rounded-full border border-gray-300 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                <>
+                                    <div className="mb-4 flex flex-wrap gap-2 items-center justify-between">
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                            <input
+                                                type="text"
+                                                placeholder="Search by name..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="px-3 py-1.5 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            />
+                                            <select
+                                                value={branchFilter}
+                                                onChange={(e) => setBranchFilter(e.target.value)}
+                                                className="px-3 py-1.5 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            >
+                                                <option value="">All Branches</option>
+                                                {branches.map(branch => (
+                                                    <option key={branch.id} value={branch.id}>
+                                                        {branch.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <ExportButton
+                                            onClick={handleExport}
+                                            excelClassName="px-4 py-1.5 text-sm rounded-lg text-white bg-green-600 hover:bg-green-700"
+                                            csvClassName="px-4 py-1.5 text-sm rounded-lg text-white bg-teal-600 hover:bg-teal-700"
                                         />
-                                        <button
-                                            onClick={() => {
-                                                setPagination(prev => ({ ...prev, currentPage: 1 }));
-                                                fetchUsers();
-                                            }}
-                                            className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                                        >
-                                            Search
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setSearchTerm('');
-                                                // setPagination(prev => ({ ...prev, currentPage: 1 }));
-                                                fetchUsers();
-                                            }}
-                                            className="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                                        >
-                                            Reset
-                                        </button>
                                     </div>
 
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
-                                                {user?.add_edit_user && (
-                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                                )}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {users.length > 0 ? (
-                                                users.map(u => (
-                                                    <React.Fragment key={u.id}>
-                                                        <tr
-                                                            className={`hover:bg-gray-50 ${selectedUser?.id === u.id ? 'bg-blue-50' : ''}`}
-                                                        >
-                                                            <td
-                                                                className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(u)}
-                                                            >{u.name}</td>
-                                                            <td
-                                                                className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleUserClick(u)}
-                                                            >
-                                                                <div>
-                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                                                                        <MdAlternateEmail className="self-center" />
-                                                                        {u.email}
-                                                                    </div>
-                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                                                                        <FiUser className="self-center" />
-                                                                        {u.username ? `${u.username}` : <span className="text-gray-400 italic">Not provided</span>}
-                                                                    </div>
-                                                                    <div className="flex items-start gap-2 text-sm text-gray-700">
-                                                                        <FiMapPin className="mt-1" />
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            {u.users_branch?.map((branch) => (
-                                                                                <span
-                                                                                    key={branch.id}
-                                                                                    className="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-0.5 rounded-full"
-                                                                                >
-                                                                                    {branch.branch_name}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                                                                        <FaUserShield className="self-center" />
-                                                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                                            {u.access_level_name}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            {user?.add_edit_user && (
-                                                                <td className="px-4 py-4 whitespace-nowrap text-center">
-                                                                    <button
-                                                                        onClick={(e) => handleEditClick(u, e)}
-                                                                        className="text-indigo-600 hover:text-indigo-900 mr-3"
-                                                                    >
-                                                                        Edit
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => handleDeleteClick(u, e)}
-                                                                        className="text-red-600 hover:text-red-900"
-                                                                    >
-                                                                        Delete
-                                                                    </button>
-                                                                </td>
-                                                            )}
-                                                        </tr>
-                                                        {selectedUser?.id === u.id && (
-                                                            <tr>
-                                                                <td colSpan="6" className="px-6 py-4 bg-gray-50">
-                                                                    <div className="border rounded-lg p-4 bg-white">
-                                                                        <h3 className="font-bold text-lg mb-3">Access Level Details: {u.access_level_name}</h3>
-                                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Role:</span>
-                                                                                {renderPermissionStatus(u.add_edit_role)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Role:</span>
-                                                                                {renderPermissionStatus(u.view_role)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Settings:</span>
-                                                                                {renderPermissionStatus(u.settings)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit User:</span>
-                                                                                {renderPermissionStatus(u.add_edit_user)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View User:</span>
-                                                                                {renderPermissionStatus(u.view_user)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Asset:</span>
-                                                                                {renderPermissionStatus(u.add_edit_asset)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Asset:</span>
-                                                                                {renderPermissionStatus(u.view_asset)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Asset Masterlist:</span>
-                                                                                {renderPermissionStatus(u.view_asset_masterlist)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Branch:</span>
-                                                                                {renderPermissionStatus(u.add_edit_branch)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Branch:</span>
-                                                                                {renderPermissionStatus(u.view_branch)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Transaction:</span>
-                                                                                {renderPermissionStatus(u.add_edit_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Transaction:</span>
-                                                                                {renderPermissionStatus(u.view_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Approve/Reject Transaction:</span>
-                                                                                {renderPermissionStatus(u.approve_reject_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Receive Transaction:</span>
-                                                                                {renderPermissionStatus(u.receive_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Reports:</span>
-                                                                                {renderPermissionStatus(u.view_reports)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Download Reports:</span>
-                                                                                {renderPermissionStatus(u.download_reports)}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </React.Fragment>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="6" className="px-6 py-4 text-center">No users found</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                    <Pagination
-                                        pagination={pagination}
-                                        onPageChange={(page) => {
-                                            setPagination(prev => ({ ...prev, currentPage: page }));
-                                        }}
+                                    <DataTable
+                                        columns={columns}
+                                        data={users}
+                                        progressPending={loading}
+                                        progressComponent={<LoadingComponent />}
+                                        pagination
+                                        paginationServer
+                                        paginationTotalRows={totalRows}
+                                        paginationPerPage={perPage}
+                                        paginationDefaultPage={currentPage}
+                                        onChangePage={handlePageChange}
+                                        onChangeRowsPerPage={handlePerRowsChange}
+                                        expandableRows
+                                        expandableRowsComponent={ExpandedComponent}
+                                        highlightOnHover
+                                        striped
+                                        noDataComponent={<NoDataComponent />}
                                     />
-                                </div>
+                                </>
                             )}
                         </div>
                     </div>

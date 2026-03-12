@@ -125,7 +125,7 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 };
 
 // Main Component
-function TransactionDetail({ transaction, onClose, type = "transfer" }) {
+function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }) {
 
     const { fetchAssetTransaction } = useAssetMeta();
     const [balanceUnits, setBalanceUnits] = useState({});
@@ -145,6 +145,17 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
 
     const getItemList = transaction.assets_transaction_item_list || transaction.transaction_items || [];
     let totalAmount = 0;
+
+    const revertTransaction = async (txnId = transaction.id) => {
+        try {
+            const response = await api.put(`/api/assets-transaction/${txnId}`, {
+                assets_transaction_status: 'REVERTED',
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: "Unknown error" };
+        }
+    };
 
     const completeTransaction = async (txnId = transaction.id, balanceUnits, remark = '', status = 'COMPLETED') => {
         try {
@@ -335,6 +346,27 @@ function TransactionDetail({ transaction, onClose, type = "transfer" }) {
                                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
                             >
                                 Complete Transaction
+                            </button>
+                        </div>
+                    )}
+
+                    {type === "receive" && transaction.assets_transaction_status !== "REVERTED" && (
+                        <div className="flex justify-end mt-6">
+                            <button
+                                onClick={async () => {
+                                    if (!confirm("Are you sure you want to revert this receive transaction? The received stock will be deducted.")) return;
+                                    try {
+                                        await revertTransaction(transaction.id);
+                                        if (onRevert) onRevert();
+                                        alert("Transaction reverted successfully. Stock has been deducted.");
+                                        onClose();
+                                    } catch (err) {
+                                        alert("Failed to revert transaction: " + (err.message || "Unknown error"));
+                                    }
+                                }}
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                            >
+                                Revert
                             </button>
                         </div>
                     )}

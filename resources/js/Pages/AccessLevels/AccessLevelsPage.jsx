@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Head } from '@inertiajs/react';
+import DataTable from 'react-data-table-component';
+import { FaUserShield } from "react-icons/fa6";
 import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
 import AddAccessLevelModal from './AddAccessLevelModal';
@@ -11,12 +13,15 @@ const AccessLevelsPage = ({ auth }) => {
     const [accessLevels, setAccessLevels] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedAccessLevel, setSelectedAccessLevel] = useState(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [accessLevelToEdit, setAccessLevelToEdit] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredData, setFilteredData] = useState([]);
 
-    // Fetch Access Levels (Memoized using useCallback)
+    const debounceTimer = useRef(null);
+    const isInitialMount = useRef(true);
+
     const fetchAccessLevels = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -24,6 +29,7 @@ const AccessLevelsPage = ({ auth }) => {
             const response = await api.get('/api/access-levels');
             if (response.data.success) {
                 setAccessLevels(response.data.data);
+                setFilteredData(response.data.data);
             } else {
                 setError(response.data.message || 'Failed to fetch access levels');
             }
@@ -33,40 +39,46 @@ const AccessLevelsPage = ({ auth }) => {
         } finally {
             setLoading(false);
         }
-    }, []); // Dependency array is empty since it doesn't depend on any props or state
-
-    // Handle Access Level Click (Memoized)
-    const handleAccessLevelClick = useCallback((accessLevel) => {
-        setSelectedAccessLevel(prev => prev?.id === accessLevel.id ? null : accessLevel);
     }, []);
 
-    // Handle Add Access Level (Memoized)
+    useEffect(() => {
+        fetchAccessLevels();
+    }, [fetchAccessLevels]);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+        }
+        debounceTimer.current = setTimeout(() => {
+            const filtered = accessLevels.filter(item =>
+                item.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredData(filtered);
+        }, 300);
+        return () => clearTimeout(debounceTimer.current);
+    }, [searchTerm, accessLevels]);
+
     const handleAccessLevelAdded = useCallback((newAccessLevel) => {
-        setAccessLevels(prevAccessLevels => [...prevAccessLevels, newAccessLevel]);
+        setAccessLevels(prev => [...prev, newAccessLevel]);
     }, []);
 
-    // Handle Edit Access Level Click (Memoized)
-    const handleEditClick = useCallback((accessLevel, e) => {
-        e.stopPropagation(); // Prevent row click event
+    const handleEditClick = useCallback((accessLevel) => {
         setAccessLevelToEdit(accessLevel);
         setIsEditModalOpen(true);
     }, []);
 
-    // Handle Access Level Update (Memoized)
     const handleAccessLevelUpdated = useCallback((updatedAccessLevel) => {
-        setAccessLevels(prevAccessLevels =>
-            prevAccessLevels.map(accessLevel =>
-                accessLevel.id === updatedAccessLevel.id ? updatedAccessLevel : accessLevel
+        setAccessLevels(prev =>
+            prev.map(item =>
+                item.id === updatedAccessLevel.id ? updatedAccessLevel : item
             )
         );
+    }, []);
 
-        // If this access level was selected, update the selected access level as well
-        if (selectedAccessLevel && selectedAccessLevel.id === updatedAccessLevel.id) {
-            setSelectedAccessLevel(updatedAccessLevel);
-        }
-    }, [selectedAccessLevel]); // Dependency array includes selectedAccessLevel to update it accordingly
-
-    // Render Permission Status
     const renderPermissionStatus = useCallback((value) => {
         return value ? (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -77,12 +89,116 @@ const AccessLevelsPage = ({ auth }) => {
                 Denied
             </span>
         );
-    }, []); // No dependencies since it doesn't change
+    }, []);
 
-    // useEffect to fetch data on mount
-    useEffect(() => {
-        fetchAccessLevels();
-    }, [fetchAccessLevels]); // Ensure fetchAccessLevels is called once on mount
+    const columns = [
+        {
+            name: 'Name',
+            selector: row => row.name,
+            sortable: true,
+        },
+        ...(user?.add_edit_role ? [{
+            name: 'Actions',
+            center: true,
+            cell: (row) => (
+                <button
+                    onClick={() => handleEditClick(row)}
+                    className="text-indigo-600 hover:text-indigo-900"
+                >
+                    Edit
+                </button>
+            ),
+        }] : []),
+    ];
+
+    const ExpandedComponent = ({ data }) => (
+        <div className="py-4 px-2 bg-gray-50" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            <div className="border rounded-lg p-4 bg-white">
+                <h3 className="font-bold text-lg mb-3">Access Level Details: {data.name}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Role:</span>
+                        {renderPermissionStatus(data.add_edit_role)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Role:</span>
+                        {renderPermissionStatus(data.view_role)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Settings:</span>
+                        {renderPermissionStatus(data.settings)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit User:</span>
+                        {renderPermissionStatus(data.add_edit_user)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View User:</span>
+                        {renderPermissionStatus(data.view_user)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Asset:</span>
+                        {renderPermissionStatus(data.add_edit_asset)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Asset:</span>
+                        {renderPermissionStatus(data.view_asset)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Asset Masterlist:</span>
+                        {renderPermissionStatus(data.view_asset_masterlist)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Branch:</span>
+                        {renderPermissionStatus(data.add_edit_branch)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Branch:</span>
+                        {renderPermissionStatus(data.view_branch)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Add/Edit Transaction:</span>
+                        {renderPermissionStatus(data.add_edit_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Transaction:</span>
+                        {renderPermissionStatus(data.view_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Approve/Reject Transaction:</span>
+                        {renderPermissionStatus(data.approve_reject_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Receive Transaction:</span>
+                        {renderPermissionStatus(data.receive_transaction)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>View Reports:</span>
+                        {renderPermissionStatus(data.view_reports)}
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                        <span>Download Reports:</span>
+                        {renderPermissionStatus(data.download_reports)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    const LoadingComponent = () => (
+        <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+            <FaUserShield className="text-4xl text-gray-300" />
+            <p className="text-lg font-medium">Loading access levels...</p>
+        </div>
+    );
+
+    const NoDataComponent = () => (
+        <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+            <FaUserShield className="text-4xl text-gray-300" />
+            <p className="text-lg font-medium">No access levels found</p>
+            <p className="text-sm">Try adjusting your search criteria.</p>
+        </div>
+    );
 
     return (
         <Layout>
@@ -102,131 +218,35 @@ const AccessLevelsPage = ({ auth }) => {
                     </div>
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
-
-                            {loading ? (
-                                <p className="text-center py-4">Loading access levels...</p>
-                            ) : error ? (
+                            {error ? (
                                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                                     {error}
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                                {user?.add_edit_role && (
-                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                                )}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {accessLevels.length > 0 ? (
-                                                accessLevels.map(accessLevel => (
-                                                    <React.Fragment key={accessLevel.id}>
-                                                        <tr
-                                                            className={`hover:bg-gray-50 ${selectedAccessLevel?.id === accessLevel.id ? 'bg-blue-50' : ''}`}
-                                                        >
-                                                            <td
-                                                                className="px-6 py-4 whitespace-nowrap cursor-pointer"
-                                                                onClick={() => handleAccessLevelClick(accessLevel)}
-                                                            >{accessLevel.name}</td>
-                                                            {user?.add_edit_role && (
-                                                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                                    <button
-                                                                        onClick={(e) => handleEditClick(accessLevel, e)}
-                                                                        className="text-indigo-600 hover:text-indigo-900 mr-3"
-                                                                    >
-                                                                        Edit
-                                                                    </button>
-                                                                </td>
-                                                            )}
-                                                        </tr>
-                                                        {selectedAccessLevel?.id === accessLevel.id && (
-                                                            <tr>
-                                                                <td colSpan="3" className="px-6 py-4 bg-gray-50">
-                                                                    <div className="border rounded-lg p-4 bg-white">
-                                                                        <h3 className="font-bold text-lg mb-3">Access Level Details: {accessLevel.name}</h3>
-                                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Role:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_role)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Role:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_role)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Settings:</span>
-                                                                                {renderPermissionStatus(accessLevel.settings)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit User:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_user)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View User:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_user)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Asset:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_asset)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Asset:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_asset)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Asset Masterlist:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_asset_masterlist)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Branch:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_branch)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Branch:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_branch)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Add/Edit Transaction:</span>
-                                                                                {renderPermissionStatus(accessLevel.add_edit_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Transaction:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Approve/Reject Transaction:</span>
-                                                                                {renderPermissionStatus(accessLevel.approve_reject_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Receive Transaction:</span>
-                                                                                {renderPermissionStatus(accessLevel.receive_transaction)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>View Reports:</span>
-                                                                                {renderPermissionStatus(accessLevel.view_reports)}
-                                                                            </div>
-                                                                            <div className="flex justify-between border-b pb-2">
-                                                                                <span>Download Reports:</span>
-                                                                                {renderPermissionStatus(accessLevel.download_reports)}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </React.Fragment>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="3" className="px-6 py-4 text-center">No access levels found</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <>
+                                    <div className="mb-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Search by name..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="px-3 py-1.5 text-sm rounded-full border border-gray-300 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+
+                                    <DataTable
+                                        columns={columns}
+                                        data={filteredData}
+                                        progressPending={loading}
+                                        progressComponent={<LoadingComponent />}
+                                        pagination
+                                        expandableRows
+                                        expandableRowsComponent={ExpandedComponent}
+                                        highlightOnHover
+                                        striped
+                                        noDataComponent={<NoDataComponent />}
+                                    />
+                                </>
                             )}
                         </div>
                     </div>

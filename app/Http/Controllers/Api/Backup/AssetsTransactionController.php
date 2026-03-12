@@ -389,7 +389,7 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
     {
         try {
             $validator = Validator::make($request->all(), [
-                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED,IN PROGRESS,COMPLETED,REVERTED',
+                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED,IN PROGRESS,COMPLETED',
             ]);
 
             if ($validator->fails()) {
@@ -583,18 +583,16 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                             ->whereIn('id', $selectedItems)
                             ->where(function ($q) {
                                 $q->where('status', 'IN-TRANSIT')
-                                    ->orWhereNull('status')
-                                    ->orWhere('status', '');
+                                    ->orWhereNull('status');
                             })
                             ->get();
 
-                        // ✅ If no specific items were selected, fallback to all receivable items
+                        // ✅ If no specific items were selected, fallback to all IN-TRANSIT or NULL items
                         if ($transactionItems->isEmpty() && empty($selectedItems)) {
                             $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                                 ->where(function ($q) {
                                     $q->where('status', 'IN-TRANSIT')
-                                        ->orWhereNull('status')
-                                        ->orWhere('status', '');
+                                        ->orWhereNull('status');
                                 })
                                 ->get();
                         }
@@ -633,13 +631,9 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                             ->where('status', 'IN-TRANSIT')
                             ->update(['status' => 'IN-TRANSIT']);
 
-                        // ✅ If all items are done (no pending items left), mark transaction RECEIVED
+                        // ✅ If all items are done (no IN-TRANSIT left), mark transaction RECEIVED
                         $stillInTransit = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
-                            ->where(function ($q) {
-                                $q->where('status', 'IN-TRANSIT')
-                                    ->orWhereNull('status')
-                                    ->orWhere('status', '');
-                            })
+                            ->where('status', 'IN-TRANSIT')
                             ->exists();
 
                         if (!$stillInTransit) {
@@ -667,58 +661,6 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                 }
             }
 
-
-            // --------------------------------------------------------------------
-            // ASSET IN — REVERT
-            // --------------------------------------------------------------------
-            if ($transaction->assets_transaction_type === 'ASSET IN' && $request->assets_transaction_status === 'REVERTED') {
-                if ($transaction->assets_transaction_status === 'REVERTED') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'This transaction has already been reverted.'
-                    ], 400);
-                }
-
-                DB::beginTransaction();
-
-                try {
-                    $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
-
-                    foreach ($transactionItems as $item) {
-                        // Deduct the previously received stock from the branch
-                        $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
-                            ->where('asset_id', $item->asset_id)
-                            ->first();
-
-                        if ($assetBranchValue) {
-                            $assetBranchValue->decrement('asset_current_unit', $item->asset_unit);
-                        }
-
-                        // Item status not updated — enum column doesn't support REVERTED
-                    }
-
-                    $transaction->update([
-                        'assets_transaction_status' => 'REVERTED',
-                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
-                        'updated_by' => Auth::id(),
-                    ]);
-
-                    DB::commit();
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Receive transaction reverted successfully. Stock has been deducted.',
-                        'data' => new AssetsTransactionResource($transaction),
-                    ]);
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::error('Revert transaction failed: ' . $e->getMessage());
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Failed to revert transaction: ' . $e->getMessage(),
-                    ], 500);
-                }
-            }
 
             if ($transaction->assets_transaction_type == 'ASSET OUT' && $transaction->assets_transaction_status == 'IN PROGRESS') {
 
@@ -960,7 +902,6 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
             'transactionItems.assetsTransaction' => fn($q) => $q->select(
                 'id',
                 'assets_transaction_type',
-                'assets_transaction_status',
                 'assets_transaction_purpose_id',
                 'supplier_id',
                 'assets_from_branch_id',
@@ -1015,7 +956,6 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                 'transactionItems.assetsTransaction' => fn($q) => $q->select(
                     'id',
                     'assets_transaction_type',
-                    'assets_transaction_status',
                     'assets_transaction_purpose_id',
                     'supplier_id',
                     'assets_from_branch_id',

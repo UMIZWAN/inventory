@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 
-export default function ExportButton({ data, merges = [], filename = "Export", sheetName = "Sheet1", onClick }) {
+export default function ExportButton({ data, merges = [], filename = "Export", sheetName = "Sheet1", onClick, buttonClassName, excelClassName, csvClassName }) {
   const handleDownload = async (format = "xlsx") => {
     if (onClick) {
       // Let parent component handle data fetching + export
@@ -28,13 +28,13 @@ export default function ExportButton({ data, merges = [], filename = "Export", s
     <div className="flex gap-2">
       <button
         onClick={() => handleDownload("xlsx")}
-        className="bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700"
+        className={excelClassName || buttonClassName || "bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700"}
       >
         Download Excel
       </button>
       <button
         onClick={() => handleDownload("csv")}
-        className="bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"
+        className={csvClassName || buttonClassName || "bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"}
       >
         Download CSV
       </button>
