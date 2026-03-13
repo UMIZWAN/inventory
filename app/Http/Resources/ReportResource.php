@@ -96,6 +96,7 @@ class ReportResource extends JsonResource
                             return [
                                 'transaction_id' => $trx->id,
                                 'asset_transaction_type' => $trx->assets_transaction_type,
+                                'asset_transaction_purpose_name' => $trx->purpose->asset_transaction_purpose_name ?? null,
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,
                                 'assets_from_branch_id' => $trx->assets_from_branch_id ?? $trx->supplier_id,
@@ -112,6 +113,7 @@ class ReportResource extends JsonResource
                         'asset_current_unit' => $branch->asset_current_unit,
                         'asset_in' => $combinedAssetIn->isNotEmpty() ? $combinedAssetIn : null,
                         'asset_out' => $combinedAssetOut->isNotEmpty() ? $combinedAssetOut : null,
+                        'branch_value_log' => $branch->branch_value_log,
                     ];
                 })->values(),
         ];

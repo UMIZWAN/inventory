@@ -33,6 +33,7 @@ function SingleItemReport({ id, branch_id }) {
   const branch = data.branch_values[0] || {};
   const assetIns = branch.asset_in || [];
   const assetOuts = branch.asset_out || [];
+  const branchLog = branch.branch_value_log || [];
   const maxRows = Math.max(assetIns.length, assetOuts.length, 1);
 
   const exportData = [];
@@ -145,6 +146,29 @@ function SingleItemReport({ id, branch_id }) {
             </tbody>
           </table>
         </div>
+        {branchLog.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-md font-semibold mb-2">Stock Movement Log</h3>
+            <div className="max-h-64 overflow-y-auto border border-gray-300 rounded">
+              <table className="min-w-full text-sm text-left">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-2 border-b text-gray-600 font-medium">Movement</th>
+                    <th className="px-4 py-2 border-b text-gray-600 font-medium">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...branchLog].reverse().map((log, idx) => (
+                    <tr key={idx} className="border-t">
+                      <td className="px-4 py-2">{log.message}</td>
+                      <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{log.timestamp}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {isOpen && (

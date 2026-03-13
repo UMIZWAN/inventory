@@ -23,6 +23,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Http\Resources\TransactionHistoryResource;
 use App\Models\AssetsBranch;
+use App\Helpers\BranchValueLogger;
 
 class AssetsTransactionController extends Controller
 {
@@ -184,6 +185,8 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                         }
                     }
 
+                    BranchValueLogger::decrementLog($request->assets_from_branch_id, null, 'ASSET OUT', $request->assets_transaction_item_list);
+
                     DB::commit();
 
                     return response()->json([
@@ -191,7 +194,7 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                         'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' created successfully',
                         'data' => $transaction->load('transactionItems', 'fromBranch', 'purpose', 'createdBy')
                     ], 201);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -298,6 +301,8 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                         ]);
                     }
                 }
+
+                BranchValueLogger::incrementLog($request->assets_from_branch_id, null, 'ASSET IN', $request->assets_transaction_item_list);
 
                 DB::commit();
 
@@ -651,6 +656,24 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                             ]);
                         }
 
+                        $logItems = $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray();
+
+                        // Log decrement on source branch
+                        BranchValueLogger::decrementLog(
+                            $transaction->assets_from_branch_id,
+                            $transaction->assets_to_branch_id,
+                            'ASSET TRANSFER',
+                            $logItems
+                        );
+
+                        // Log increment on destination branch
+                        BranchValueLogger::incrementLog(
+                            $transaction->assets_from_branch_id,
+                            $transaction->assets_to_branch_id,
+                            'ASSET TRANSFER',
+                            $logItems
+                        );
+
                         DB::commit();
 
                         return response()->json([
@@ -702,6 +725,13 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                         'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
                         'updated_by' => Auth::id(),
                     ]);
+
+                    BranchValueLogger::decrementLog(
+                        $transaction->assets_from_branch_id,
+                        null,
+                        'ASSET IN',
+                        $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
+                    );
 
                     DB::commit();
 
@@ -778,6 +808,16 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                         'received_at' => Carbon::now()
                     ]);
 
+                    BranchValueLogger::incrementLog(
+                        $transaction->assets_from_branch_id,
+                        null,
+                        'ASSET OUT',
+                        collect($request->input('assets_transaction_item_list'))->map(fn($i) => [
+                            'asset_id' => $i['asset_id'],
+                            'asset_unit' => $i['asset_unit'],
+                        ])->toArray()
+                    );
+
                     DB::commit();
 
                     return response()->json([
@@ -837,7 +877,7 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                 'message' => 'Latest Running Number Retrieved',
                 'data' => $latestTransaction
             ], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve latest running number: ' . $e->getMessage()
@@ -1025,7 +1065,7 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                     'id',
                     'asset_transaction_purpose_name'
                 ),
-                'branchValues' => fn($q) => $q->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit')
+                'branchValues' => fn($q) => $q->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit', 'branch_value_log')
                     ->where('asset_branch_id', $branchId)
             ])
             ->first();

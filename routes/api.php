@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ShippingOptionController;
 use App\Http\Controllers\Api\UsersBranchController;
+use App\Http\Controllers\Api\AssetsImportController;
 use App\Http\Controllers\Api\SsoController;
 use Illuminate\Support\Facades\Cache;
 
@@ -68,7 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Assets Routes
     Route::get('assets/get-list-branch', [AssetsController::class, 'getListByBranch']);
     Route::get('assets/get-itemlist', [AssetsController::class, 'getAssetList']);
-    Route::post('/assets/import', [AssetsController::class, 'importFromCSV']);
+    Route::post('/assets/import', [AssetsImportController::class, 'importFromCSV']);
     Route::post('/assets/{id}/copy', [AssetsController::class, 'copyItems']);
     Route::get('assets/get-by-branch', [AssetsController::class, 'getByBranch']);
     Route::apiResource('assets', AssetsController::class);

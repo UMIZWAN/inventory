@@ -290,6 +290,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                 {Array.isArray(logs) && logs.length > 0 && !editMode && (
                     <Section title="Logs" items={logs} />
                 )}
+
             </div>
         </div>
     );
