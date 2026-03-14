@@ -350,15 +350,15 @@ function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }
                         </div>
                     )}
 
-                    {type === "receive" && transaction.assets_transaction_status !== "REVERTED" && (
+                    {type === "receive" && (
                         <div className="flex justify-end mt-6">
                             <button
                                 onClick={async () => {
-                                    if (!confirm("Are you sure you want to revert this receive transaction? The received stock will be deducted.")) return;
+                                    if (!confirm("Are you sure you want to revert this receive transaction? The received stock will be deducted and the transaction will be deleted.")) return;
                                     try {
                                         await revertTransaction(transaction.id);
                                         if (onRevert) onRevert();
-                                        alert("Transaction reverted successfully. Stock has been deducted.");
+                                        alert("Transaction reverted and deleted successfully.");
                                         onClose();
                                     } catch (err) {
                                         alert("Failed to revert transaction: " + (err.message || "Unknown error"));

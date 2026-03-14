@@ -83,6 +83,7 @@ class BranchValueLogger
             'ASSET TRANSFER' => $fromBranch . ' → ' . (AssetsBranch::find($assetsToBranchId)?->name ?? $assetsToBranchId) . " ($assetUnit)",
             'ASSET IN' => "$fromBranch ↑ ($assetUnit)",
             'ASSET OUT' => "$fromBranch ↓ ($assetUnit)",
+            'REVERT' => "$fromBranch REVERT ($assetUnit) BY " . (Auth::user()?->name ?? 'Unknown'),
             'CSV IMPORT' => "CSV IMPORT $fromBranch ↑ ($assetUnit) BY " . (Auth::user()?->name ?? 'Unknown'),
             'CSV IMPORT AMEND' => "CSV IMPORT AMEND $fromBranch QUANTITY TO ($assetUnit) BY " . (Auth::user()?->name ?? 'Unknown'),
             default => "$fromBranch ($assetUnit)",

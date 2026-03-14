@@ -147,26 +147,13 @@ function SingleItemReport({ id, branch_id }) {
           </table>
         </div>
         {branchLog.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-md font-semibold mb-2">Stock Movement Log</h3>
-            <div className="max-h-64 overflow-y-auto border border-gray-300 rounded">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th className="px-4 py-2 border-b text-gray-600 font-medium">Movement</th>
-                    <th className="px-4 py-2 border-b text-gray-600 font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...branchLog].reverse().map((log, idx) => (
-                    <tr key={idx} className="border-t">
-                      <td className="px-4 py-2">{log.message}</td>
-                      <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{log.timestamp}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold text-gray-700 mb-1">Stock Movement Log</h3>
+            <ul className="text-xs text-gray-400 max-h-48 overflow-y-auto space-y-0.5">
+              {[...branchLog].reverse().map((log, idx) => (
+                <li key={idx}>&#183; {log.message} ({log.timestamp})</li>
+              ))}
+            </ul>
           </div>
         )}
       </div>

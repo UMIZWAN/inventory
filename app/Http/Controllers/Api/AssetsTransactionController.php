@@ -692,53 +692,47 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
 
 
             // --------------------------------------------------------------------
-            // ASSET IN — REVERT
+            // ASSET IN — REVERT (deduct stock, then delete transaction)
             // --------------------------------------------------------------------
             if ($transaction->assets_transaction_type === 'ASSET IN' && $request->assets_transaction_status === 'REVERTED') {
-                if ($transaction->assets_transaction_status === 'REVERTED') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'This transaction has already been reverted.'
-                    ], 400);
-                }
-
                 DB::beginTransaction();
 
                 try {
                     $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
 
                     foreach ($transactionItems as $item) {
-                        // Deduct the previously received stock from the branch
                         $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
                             ->where('asset_id', $item->asset_id)
                             ->first();
 
-                        if ($assetBranchValue) {
-                            $assetBranchValue->decrement('asset_current_unit', $item->asset_unit);
+                        if (!$assetBranchValue) {
+                            throw new Exception("Branch value not found for asset ID {$item->asset_id}. Revert cancelled.");
                         }
 
-                        // Item status not updated — enum column doesn't support REVERTED
+                        if ($assetBranchValue->asset_current_unit < $item->asset_unit) {
+                            throw new Exception("Insufficient stock for asset ID {$item->asset_id}. Current: {$assetBranchValue->asset_current_unit}, Required: {$item->asset_unit}. Revert cancelled.");
+                        }
+
+                        $assetBranchValue->decrement('asset_current_unit', $item->asset_unit);
                     }
 
-                    $transaction->update([
-                        'assets_transaction_status' => 'REVERTED',
-                        'assets_transaction_remark' => $request->assets_transaction_remark ?? $transaction->assets_transaction_remark,
-                        'updated_by' => Auth::id(),
-                    ]);
-
+                    // Log before deleting (so branch_value records still exist)
                     BranchValueLogger::decrementLog(
                         $transaction->assets_from_branch_id,
                         null,
-                        'ASSET IN',
+                        'REVERT',
                         $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
                     );
+
+                    // Delete transaction items then the transaction
+                    AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->delete();
+                    $transaction->delete();
 
                     DB::commit();
 
                     return response()->json([
                         'success' => true,
-                        'message' => 'Receive transaction reverted successfully. Stock has been deducted.',
-                        'data' => new AssetsTransactionResource($transaction),
+                        'message' => 'Transaction reverted and deleted successfully. Stock has been deducted.',
                     ]);
                 } catch (Exception $e) {
                     DB::rollBack();

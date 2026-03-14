@@ -363,16 +363,11 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
             <div>
               <label className="block font-medium mb-1">Date</label>
               <input
-                type="date"
+                type="text"
                 name="date"
-                value={form.date}
+                value={form.date.split('-').reverse().join('/')}
                 readOnly
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
-                style={{
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  MozAppearance: "textfield",
-                }}
               />
             </div>
 

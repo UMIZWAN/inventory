@@ -13,7 +13,7 @@ function ItemsTable({ columns, items, onChange, onAdd, onRemove, showAddRemove =
                 {col.label}
               </th>
             ))}
-            {showAddRemove && <th className="border px-3 py-2 text-center">Actions</th>}
+            {showAddRemove && <th className="border px-3 py-2 text-center w-7">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -30,6 +30,9 @@ function ItemsTable({ columns, items, onChange, onAdd, onRemove, showAddRemove =
                     isClearable
                     className="react-select-container"
                     classNamePrefix="react-select"
+                    menuPortalTarget={document.body}
+                    maxMenuHeight={300}
+                    styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
                     formatOptionLabel={(opt, { context }) =>
                       context === "menu" ? (
                         <div className="flex justify-between">
@@ -52,7 +55,7 @@ function ItemsTable({ columns, items, onChange, onAdd, onRemove, showAddRemove =
                       min={col.min}
                       value={row[col.key]}
                       onChange={(e) => onChange(rowIndex, col.key, e.target.value)}
-                      className={`w-full border rounded px-2 py-1 ${col.align?.includes("right") ? "text-right" : ""
+                      className={`w-full border rounded px-2 py-1 ${col.maxWidth || ""} ${col.align?.includes("right") ? "text-right" : ""
                         }`}
                     />
                   )}
