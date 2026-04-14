@@ -468,6 +468,29 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                     DB::beginTransaction();
 
                     try {
+                        // Check stock availability before approving
+                        $itemsToApprove = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
+                            ->whereIn('id', $selectedItems)
+                            ->get();
+
+                        $insufficientItems = [];
+                        foreach ($itemsToApprove as $item) {
+                            $branchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                                ->where('asset_id', $item->asset_id)
+                                ->first();
+
+                            $currentUnit = $branchValue ? $branchValue->asset_current_unit : 0;
+
+                            if ($currentUnit < $item->asset_unit) {
+                                $asset = Assets::find($item->asset_id);
+                                $insufficientItems[] = ($asset->name ?? "ID {$item->asset_id}") . " (Available: {$currentUnit}, Requested: {$item->asset_unit})";
+                            }
+                        }
+
+                        if (!empty($insufficientItems)) {
+                            throw new Exception("Insufficient stock for: " . implode(', ', $insufficientItems));
+                        }
+
                         // ✅ Approve selected (including nulls)
                         AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->whereIn('id', $selectedItems)

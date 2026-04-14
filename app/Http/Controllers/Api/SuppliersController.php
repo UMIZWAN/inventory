@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -35,9 +36,9 @@ class SuppliersController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'supplier_name' => 'required|string|max:255',
-                'supplier_email' => 'required|email|unique:suppliers,supplier_email',
-                'supplier_office_number' => 'required|string|max:20',
-                'supplier_address' => 'required|string|max:255',
+                'supplier_email' => 'nullable|string',
+                'supplier_office_number' => 'nullable|string|max:20',
+                'supplier_address' => 'nullable|string|max:255',
             ]);
 
             if ($validator->fails()) {
@@ -83,7 +84,7 @@ class SuppliersController extends Controller
             ], 500);
         }
     }
-    
+
     public function update(Request $request, $id)
     {
         try {
@@ -97,9 +98,9 @@ class SuppliersController extends Controller
             }
             $validator = Validator::make($request->all(), [
                 'supplier_name' => 'sometimes|string|max:255',
-                'supplier_email' => 'required|email|unique:suppliers,supplier_email,' . $id . ',id',
-                'supplier_office_number' => 'sometimes|string|max:20',
-                'supplier_address' => 'sometimes|string|max:255',
+                'supplier_email' => 'nullable|string',
+                'supplier_office_number' => 'nullable|string|max:20',
+                'supplier_address' => 'nullable|string|max:255',
             ]);
             if ($validator->fails()) {
                 return response()->json([
