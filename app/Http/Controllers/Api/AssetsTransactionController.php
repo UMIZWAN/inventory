@@ -648,9 +648,6 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                                     'asset_location_id' => $transaction->assets_to_branch_id,
                                     'asset_id' => $item->asset_id,
                                     'asset_current_unit' => $item->asset_unit,
-                                    'asset_min_unit' => 0,
-                                    'asset_max_unit' => 0,
-                                    'created_by' => Auth::id(),
                                 ]);
                             }
                         }
