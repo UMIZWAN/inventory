@@ -13,10 +13,10 @@ class Cors
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $allowedOrigins = [
-            'http://127.0.0.1:8000',
-            // 'https://inventory.umgroup.com.my',
-        ];
+        $allowedOrigins = array_filter(array_map(
+            'trim',
+            explode(',', env('CORS_ALLOWED_ORIGINS', 'http://127.0.0.1:8000'))
+        ));
 
         $origin = $request->headers->get('Origin');
         $allowedOrigin = in_array($origin, $allowedOrigins) ? $origin : $allowedOrigins[0];
