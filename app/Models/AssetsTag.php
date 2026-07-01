@@ -12,9 +12,4 @@ class AssetsTag extends Model
     protected $table = 'assets_tag';
 
     protected $fillable = ['name'];
-
-    public function assets()
-    {
-        return $this->hasMany(Assets::class, 'asset_tag_id');
-    }
 }

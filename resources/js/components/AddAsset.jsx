@@ -14,6 +14,7 @@ function AddAsset({ setShowModal }) {
         asset_type: '',
         asset_running_number: '',
         asset_category_id: '',
+        asset_tag: '',
         assets_branch_id: '',
         asset_purchase_cost: '',
         asset_sales_cost: '',
@@ -22,6 +23,8 @@ function AddAsset({ setShowModal }) {
         assets_remark: "",
         asset_image: ''
     });
+
+    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
     const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
@@ -77,6 +80,7 @@ function AddAsset({ setShowModal }) {
                 asset_type: '',
                 asset_running_number: '',
                 asset_category_id: '',
+                asset_tag: '',
                 assets_branch_id: '',
                 asset_purchase_cost: '',
                 asset_sales_cost: '',
@@ -140,6 +144,16 @@ function AddAsset({ setShowModal }) {
                             <option value="">Select Category</option>
                             {categories.map(cat => (
                                 <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col">
+                        {label("Tag")}
+                        <select name="asset_tag" value={form.asset_tag} onChange={handleChange} className="p-2 border rounded">
+                            <option value="">Select Tag</option>
+                            {ASSET_TAG_OPTIONS.map(tag => (
+                                <option key={tag} value={tag}>{tag}</option>
                             ))}
                         </select>
                     </div>

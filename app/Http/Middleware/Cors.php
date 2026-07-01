@@ -13,26 +13,29 @@ class Cors
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $response = $next($request);
+        $allowedOrigins = [
+            'http://127.0.0.1:8000',
+            // 'https://inventory.umgroup.com.my',
+        ];
 
-        if (!$request->isMethod('OPTIONS')) {
-            // $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
-            // $response->headers->set('Access-Control-Allow-Origin', 'http://192.168.0.113:8000');
-            $response->headers->set('Access-Control-Allow-Origin', 'https://inventory.umgroup.com.my');
-            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN');
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
-        } else {
-            // Handle preflight OPTIONS request
-            $response = response('', 200);
-            // $response->headers->set('Access-Control-Allow-Origin', 'http://127.0.0.1:8000');
-            // $response->headers->set('Access-Control-Allow-Origin', 'http://192.168.0.113:8000');
-            $response->headers->set('Access-Control-Allow-Origin', 'https://inventory.umgroup.com.my');
-            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN');
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
-            $response->headers->set('Access-Control-Max-Age', '86400'); // 24 hours
+        $origin = $request->headers->get('Origin');
+        $allowedOrigin = in_array($origin, $allowedOrigins) ? $origin : $allowedOrigins[0];
+
+        if ($request->isMethod('OPTIONS')) {
+            return response('', 200, [
+                'Access-Control-Allow-Origin'      => $allowedOrigin,
+                'Access-Control-Allow-Methods'     => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers'     => 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN',
+                'Access-Control-Allow-Credentials' => 'true',
+                'Access-Control-Max-Age'           => '86400',
+            ]);
         }
+
+        $response = $next($request);
+        $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin);
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-XSRF-TOKEN');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
 
         return $response;
     }

@@ -22,7 +22,7 @@ class AssetsController extends Controller
     public function index()
     {
         try {
-            $assets = Assets::with(['category', 'tag', 'branchValues'])->latest()->get();
+            $assets = Assets::with(['category', 'branchValues'])->latest()->get();
 
             return response()->json([
                 'success' => true,
@@ -45,7 +45,7 @@ class AssetsController extends Controller
     public function show($id)
     {
         try {
-            $asset = Assets::with(['category', 'tag', 'branchValues'])->find($id);
+            $asset = Assets::with(['category', 'branchValues'])->find($id);
 
             if (!$asset) {
                 return response()->json([
@@ -75,7 +75,7 @@ class AssetsController extends Controller
             'asset_description' => 'nullable|string',
             'asset_type' => 'nullable|string|max:255',
             'asset_category_id' => 'required|exists:assets_category,id',
-            // 'asset_tag_id' => 'required|exists:assets_tag,id',
+            'asset_tag' => 'nullable|string|max:255',
             'asset_stable_unit' => 'required|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
@@ -99,7 +99,7 @@ class AssetsController extends Controller
                 'asset_description',
                 'asset_type',
                 'asset_category_id',
-                'asset_tag_id',
+                'asset_tag',
                 'asset_stable_unit',
                 'asset_purchase_cost',
                 'asset_sales_cost',
@@ -147,7 +147,7 @@ class AssetsController extends Controller
 
 
 
-            $asset->load(['category', 'tag', 'branchValues']);
+            $asset->load(['category', 'branchValues']);
 
 
             return response()->json([
@@ -173,7 +173,7 @@ class AssetsController extends Controller
             'asset_description' => 'nullable|string',
             'asset_type' => 'nullable|string|max:255',
             'asset_category_id' => 'nullable|exists:assets_category,id',
-            // 'asset_tag_id' => 'required|exists:assets_tag,id',
+            'asset_tag' => 'nullable|string|max:255',
             'asset_stable_unit' => 'nullable|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
@@ -307,7 +307,7 @@ class AssetsController extends Controller
                 }
             }
 
-            $asset->load(['category', 'tag', 'branchValues']);
+            $asset->load(['category', 'branchValues']);
 
             return response()->json([
                 'success' => true,
@@ -366,6 +366,7 @@ class AssetsController extends Controller
                 'asset_description' => $asset->asset_description ?? null,
                 'asset_type' => $asset->asset_type ?? null,
                 'asset_category_id' => $asset->asset_category_id,
+                'asset_tag' => $asset->asset_tag,
                 'asset_stable_unit' => $asset->asset_stable_unit,
                 'asset_purchase_cost' => $asset->asset_purchase_cost ?? null,
                 'asset_sales_cost' => $asset->asset_sales_cost ?? null,
@@ -413,8 +414,9 @@ class AssetsController extends Controller
             $search = $request->search;
             $type = $request->type;
             $categoryId = $request->input('asset_category_id');
+            $tag = $request->input('asset_tag');
 
-            $query = Assets::with(['category', 'tag'])
+            $query = Assets::with(['category'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
                     $query->where('asset_branch_id', $branchId);
                 })
@@ -437,6 +439,10 @@ class AssetsController extends Controller
 
             if (!empty($categoryId)) {
                 $query->where('asset_category_id', $categoryId);
+            }
+
+            if (!empty($tag)) {
+                $query->where('asset_tag', $tag);
             }
 
             $assets = $query->latest()->paginate($perPage);
@@ -462,7 +468,7 @@ class AssetsController extends Controller
 
     public function getAssetList()
     {
-        $assets = Assets::with(['category', 'tag', 'branchValues'])->latest()->get();
+        $assets = Assets::with(['category', 'branchValues'])->latest()->get();
 
         if ($assets->isEmpty()) {
             return response()->json([
@@ -515,7 +521,7 @@ class AssetsController extends Controller
             // Validate the branch ID
             $branchId = $request->asset_branch_id;
 
-            $assets = Assets::with(['category', 'tag'])
+            $assets = Assets::with(['category'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
                     $query->where('asset_branch_id', $branchId);
                 })

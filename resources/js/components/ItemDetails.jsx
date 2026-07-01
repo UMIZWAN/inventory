@@ -15,6 +15,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
     const [form, setForm] = useState({
         name: asset.name || '',
         asset_category_id: asset.asset_category_id || '',
+        asset_tag: asset.asset_tag || '',
         asset_stable_unit: asset.asset_stable_unit || '',
         asset_unit_measure: asset.asset_unit_measure || '',
         asset_description: asset.asset_description || '',
@@ -25,6 +26,8 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
         asset_running_number: asset.asset_running_number || '',
         asset_image: asset.asset_image || null,
     });
+
+    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
 
     const [imagePreview, setImagePreview] = useState(null);
     const [toast, setToast] = useState(null);
@@ -55,6 +58,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
             const payload = {
                 name: form.name,
                 asset_category_id: form.asset_category_id,
+                asset_tag: form.asset_tag,
                 asset_stable_unit: form.asset_stable_unit,
                 asset_unit_measure: form.asset_unit_measure,
                 asset_description: form.asset_description,
@@ -225,23 +229,24 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                             <span>{asset.asset_category_name ?? '—'}</span>
                         )}
                     />
-                    {/* <Detail
+                    <Detail
                         label="Tag"
                         value={editMode ? (
                             <select
-                                name="asset_tag_id"
-                                value={form.asset_tag_id ?? ''}
+                                name="asset_tag"
+                                value={form.asset_tag ?? ''}
                                 onChange={handleChange}
                                 className="w-full border rounded px-2 py-1 text-sm"
                             >
-                                {tags.map(t => (
-                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                <option value="">Select Tag</option>
+                                {ASSET_TAG_OPTIONS.map(tag => (
+                                    <option key={tag} value={tag}>{tag}</option>
                                 ))}
                             </select>
                         ) : (
-                            <span>{asset.asset_tag_name ?? '—'}</span>
+                            <span>{asset.asset_tag ?? '—'}</span>
                         )}
-                    /> */}
+                    />
                     <Detail label="Unit of Measure " value={isEditing('asset_unit_measure')} />
                     <Detail label="Cost" value={isEditing('asset_purchase_cost')} />
                     <Detail label="Price" value={isEditing('asset_sales_cost')} />

@@ -19,6 +19,11 @@ import confirmAction from '../../components/ConfirmModal';
 import Swal from 'sweetalert2';
 import { LINKS } from '../../constants/links';
 
+const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+
+const toTitleCase = (str = '') =>
+    str.toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
+
 const Assets = () => {
     const { user, selectedBranch } = useAuth();
     const { assets, categories, fetchCategories, fetchBranchAssets,
@@ -31,6 +36,7 @@ const Assets = () => {
     const [searchType, setSearchType] = useState('');
     const [filters, setFilters] = useState({
         category: '',
+        tag: '',
     });
 
     const [toast, setToast] = useState(null);
@@ -46,10 +52,11 @@ const Assets = () => {
             search: searchTerm,
             type: searchType,
             asset_category_id: filters.category,
+            asset_tag: filters.tag,
             branch_id: selectedBranch?.branch_id,
         };
         fetchBranchAssets(params);
-    }, [pagination.currentPage, searchTerm, searchType, filters.category, selectedBranch]);
+    }, [pagination.currentPage, searchTerm, searchType, filters.category, filters.tag, selectedBranch]);
 
     useEffect(() => {
 
@@ -250,11 +257,10 @@ const Assets = () => {
                             {/* Filters */}
                             <div className="flex flex-wrap gap-4">
                                 <div>
-                                    {/* <label className="block mb-1 text-xs font-bold">Categories:</label> */}
                                     <select
                                         value={filters.category}
                                         onChange={(e) => {
-                                            setPagination(prev => ({ ...prev, current_page: 1 })); // Reset to first page
+                                            setPagination(prev => ({ ...prev, current_page: 1 }));
                                             setFilters({ ...filters, category: e.target.value });
                                         }}
                                         className="px-2 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -264,7 +270,22 @@ const Assets = () => {
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
                                     </select>
+                                </div>
 
+                                <div>
+                                    <select
+                                        value={filters.tag}
+                                        onChange={(e) => {
+                                            setPagination(prev => ({ ...prev, current_page: 1 }));
+                                            setFilters({ ...filters, tag: e.target.value });
+                                        }}
+                                        className="px-2 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="">All Tags</option>
+                                        {ASSET_TAG_OPTIONS.map(tag => (
+                                            <option key={tag} value={tag}>{tag}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -278,10 +299,12 @@ const Assets = () => {
                             <button
                                 onClick={() => {
                                     const defaultFilters = {
-                                        category: ''
+                                        category: '',
+                                        tag: '',
                                     };
                                     setFilters(defaultFilters);
                                     setSearchTerm('');
+                                    setSearchType('');
                                 }}
                                 className="rounded bg-gray-300 text-gray-800 px-4 py-1 hover:bg-gray-400 text-sm"
                             >
@@ -362,7 +385,8 @@ const Assets = () => {
                                             Item
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Category
+                                            <div>Category</div>
+                                            <div>Tag</div>
                                         </th>
                                         {user?.add_edit_asset && (
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -404,28 +428,41 @@ const Assets = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_running_number || '—'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className="flex-shrink-0 h-10 w-10">
-                                                        <img className="h-10 w-10 rounded"
-                                                            src={asset.asset_image ? `${LINKS.API_BASE}/${asset.asset_image}` : placeholder}
-                                                            // src={asset.asset_image || placeholder}
-                                                            alt={asset.name}
-                                                            onError={(e) => {
-                                                                e.target.onerror = null;
-                                                                e.target.src = placeholder;
-                                                            }}
-                                                        />
+                                            <td className="px-6 py-4 align-middle">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-shrink-0 h-10 w-10 relative">
+                                                        {asset.asset_image ? (
+                                                            <img
+                                                                className="h-10 w-10 rounded object-cover border border-gray-100"
+                                                                src={`${LINKS.API_BASE}/${asset.asset_image}`}
+                                                                alt={asset.name}
+                                                                onError={(e) => {
+                                                                    e.target.onerror = null;
+                                                                    e.target.style.display = 'none';
+                                                                    const fb = e.target.parentElement.querySelector('[data-fallback]');
+                                                                    if (fb) fb.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        <div
+                                                            data-fallback
+                                                            className="h-10 w-10 rounded border border-gray-200 bg-gray-50 text-gray-400 items-center justify-center"
+                                                            style={{ display: asset.asset_image ? 'none' : 'flex' }}
+                                                        >
+                                                            <FiPackage className="w-5 h-5" strokeWidth={1.5} />
+                                                        </div>
                                                     </div>
-                                                    <div className="flex justify-between items-center ml-2">
-                                                        <div>
+                                                    <div className="flex justify-between items-center gap-3 flex-1 min-w-0">
+                                                        <div className="min-w-0">
                                                             <div
-                                                                className="text-sm font-medium text-gray-900 truncate max-w-2xs break-words"
-                                                                title={asset.name} // shows full name on hover
+                                                                className="text-sm font-semibold text-gray-900 capitalize leading-snug break-words"
+                                                                title={asset.name}
                                                             >
-                                                                {asset.name}
+                                                                {toTitleCase(asset.name)}
                                                             </div>
-                                                            <div className="text-xs text-gray-500">{asset.asset_type}</div>
+                                                            {asset.asset_type && (
+                                                                <div className="text-xs text-gray-500 mt-0.5">{asset.asset_type}</div>
+                                                            )}
                                                         </div>
                                                         {user?.add_edit_asset && (
                                                             <button
@@ -434,17 +471,17 @@ const Assets = () => {
                                                                     handleDuplicate(asset);
                                                                 }}
                                                                 title="Duplicate"
-                                                                className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1 ml-4"
+                                                                className="invisible group-hover:visible text-purple-600 hover:text-purple-800 p-1 flex-shrink-0"
                                                             >
                                                                 <FiCopy className="w-4 h-4" />
                                                             </button>
                                                         )}
                                                     </div>
-
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.asset_category_name || '—'}
+                                            <td className="px-6 py-4 text-sm text-gray-500 break-words align-middle">
+                                                <div>{asset.asset_category_name || ' '}</div>
+                                                <div className="text-xs text-gray-400 mt-0.5">{asset.asset_tag || ' '}</div>
                                             </td>
                                             {user?.add_edit_asset && (
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

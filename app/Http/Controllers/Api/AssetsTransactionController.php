@@ -164,7 +164,7 @@ class AssetsTransactionController extends Controller
                         'attachment' => $attachmentPath,
                     ]);
 
-Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
+                    Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                     foreach ($request->assets_transaction_item_list as $item) {
                         AssetsTransactionItemList::create([
                             'asset_transaction_id' => $transaction->id,
@@ -367,10 +367,31 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                             ->where('asset_id', $item['asset_id'])
                             ->first();
 
-                        if ($assetBranchValue) {
-                            $assetBranchValue->decrement('asset_current_unit', $item['asset_unit']);
+                        if (!$assetBranchValue || $assetBranchValue->asset_current_unit < $item['asset_unit']) {
+                            DB::rollBack();
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Insufficient stock for asset ID ' . $item['asset_id'] . '.',
+                            ], 422);
                         }
+
+                        $assetBranchValue->decrement('asset_current_unit', $item['asset_unit']);
                     }
+                }
+
+                if ($request->assets_transaction_status == 'IN-TRANSIT') {
+                    $logItems = collect($request->assets_transaction_item_list)
+                        ->map(fn($i) => [
+                            'asset_id' => $i['asset_id'],
+                            'asset_unit' => $i['asset_unit']
+                        ])->toArray();
+
+                    BranchValueLogger::decrementLog(
+                        $request->assets_from_branch_id,
+                        $request->assets_to_branch_id,
+                        'ASSET TRANSFER',
+                        $logItems
+                    );
                 }
 
                 DB::commit();
@@ -575,6 +596,14 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                             'updated_at' => now(),
                         ]);
 
+                        // Log deduction from source branch
+                        BranchValueLogger::decrementLog(
+                            $transaction->assets_from_branch_id,
+                            $transaction->assets_to_branch_id,
+                            'ASSET TRANSFER',
+                            $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
+                        );
+
                         DB::commit();
 
                         return response()->json([
@@ -678,13 +707,13 @@ Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
 
                         $logItems = $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray();
 
-                        // Log decrement on source branch
-                        BranchValueLogger::decrementLog(
-                            $transaction->assets_from_branch_id,
-                            $transaction->assets_to_branch_id,
-                            'ASSET TRANSFER',
-                            $logItems
-                        );
+                        // // Log decrement on source branch
+                        // BranchValueLogger::decrementLog(
+                        //     $transaction->assets_from_branch_id,
+                        //     $transaction->assets_to_branch_id,
+                        //     'ASSET TRANSFER',
+                        //     $logItems
+                        // );
 
                         // Log increment on destination branch
                         BranchValueLogger::incrementLog(

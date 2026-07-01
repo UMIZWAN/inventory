@@ -19,7 +19,7 @@ class Assets extends Model
         'asset_description',
         'asset_type',
         'asset_category_id',
-        'asset_tag_id',
+        'asset_tag',
         'asset_stable_unit',
         'asset_purchase_cost',
         'asset_sales_cost',
@@ -56,11 +56,6 @@ class Assets extends Model
         return $this->belongsTo(AssetsCategory::class, 'asset_category_id');
     }
 
-    public function tag()
-    {
-        return $this->belongsTo(AssetsTag::class, 'asset_tag_id');
-    }
-
     // public function itemList()
     // {
     //     return $this->hasMany(AssetsTransactionItemList::class, 'assets_id');
@@ -90,7 +85,7 @@ class Assets extends Model
             'name' => 'Nama',
             'asset_type' => 'Tipe Aset',
             'asset_category_id' => 'Kategori Aset',
-            'asset_tag_id' => 'Tag Aset',
+            'asset_tag' => 'Tag Aset',
             'asset_stable_unit' => 'Unit Aset Tetap',
             'asset_current_unit' => 'Unit Aset Sekarang',
             'asset_purchase_cost' => 'Harga Beli',
@@ -118,13 +113,6 @@ class Assets extends Model
                     AssetsCategory::find($vals['new'])->name ?? 'Unknown Category' : 'None';
                 $vals['old'] = isset($vals['old']) ?
                     AssetsCategory::find($vals['old'])->name ?? 'Unknown Category' : 'None';
-            }
-
-            if ($field == 'asset_tag_id') {
-                $vals['new'] = isset($vals['new']) ?
-                    AssetsTag::find($vals['new'])->name ?? 'Unknown Tag' : 'None';
-                $vals['old'] = isset($vals['old']) ?
-                    AssetsTag::find($vals['old'])->name ?? 'Unknown Tag' : 'None';
             }
 
             if ($field == 'assets_branch_id') {

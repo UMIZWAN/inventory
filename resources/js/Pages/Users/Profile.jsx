@@ -64,6 +64,27 @@ export default function Profile() {
         </div>
 
         {user.email === 'kamal@gmail.com' && (
+          <div className="mb-4">
+            <button
+              className="text-sm text-orange-600 underline hover:text-orange-800"
+              onClick={async () => {
+                if (!window.confirm('Run fix transfer stock script? This will deduct source branch quantities for affected ASSET TRANSFER transactions.')) return;
+                try {
+                  const res = await api.post('/api/fix-transfer-stock');
+                  setMigrationLog({ success: true, text: res.data.output || res.data.message });
+                } catch (e) {
+                  const data = e.response?.data;
+                  const text = data?.output || data?.error || 'An unknown error occurred.';
+                  setMigrationLog({ success: false, text });
+                }
+              }}
+            >
+              Fix Transfer Stock
+            </button>
+          </div>
+        )}
+
+        {user.email === 'kamal@gmail.com' && (
           <div className="mb-6">
             <button
               className="text-sm text-red-600 underline hover:text-red-800"
