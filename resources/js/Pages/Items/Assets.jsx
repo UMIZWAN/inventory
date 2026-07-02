@@ -19,10 +19,28 @@ import confirmAction from '../../components/ConfirmModal';
 import Swal from 'sweetalert2';
 import { LINKS } from '../../constants/links';
 
-const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Others'];
 
 const toTitleCase = (str = '') =>
     str.toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
+
+const normalizeTags = (raw) => {
+    if (raw == null || raw === '') return [];
+    const items = Array.isArray(raw) ? raw : [raw];
+    const out = [];
+    for (const item of items) {
+        if (typeof item !== 'string') { if (item != null) out.push(String(item)); continue; }
+        const trimmed = item.trim();
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) { parsed.forEach(p => p && out.push(String(p))); continue; }
+            } catch { /* fall through */ }
+        }
+        out.push(item);
+    }
+    return [...new Set(out.filter(Boolean))];
+};
 
 const Assets = () => {
     const { user, selectedBranch } = useAuth();
@@ -62,6 +80,15 @@ const Assets = () => {
 
         fetchCategories();
     }, []);
+
+    // Keep the open modal in sync with the freshest data whenever assets refresh
+    useEffect(() => {
+        if (!selectedAsset || !assets?.length) return;
+        const fresh = assets.find(a => a.id === selectedAsset.id);
+        if (fresh && fresh !== selectedAsset) {
+            setSelectedAsset(fresh);
+        }
+    }, [assets]);
 
     const handleView = (asset) => setSelectedAsset(asset);
 
@@ -481,7 +508,11 @@ const Assets = () => {
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500 break-words align-middle">
                                                 <div>{asset.asset_category_name || ' '}</div>
-                                                <div className="text-xs text-gray-400 mt-0.5">{asset.asset_tag || ' '}</div>
+                                                <div className="text-xs text-gray-400 mt-0.5 space-y-0.5">
+                                                    {normalizeTags(asset.asset_tag).map(tag => (
+                                                        <div key={tag}>{tag}</div>
+                                                    ))}
+                                                </div>
                                             </td>
                                             {user?.add_edit_asset && (
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -523,7 +554,10 @@ const Assets = () => {
                             onClose={() => {
                                 setSelectedAsset(null);
                             }}
-                            onUpdated={() => fetchBranchAssets({ branch_id: selectedBranch?.branch_id })}
+                            onUpdated={(updated) => {
+                                if (updated) setSelectedAsset(updated);
+                                fetchBranchAssets({ branch_id: selectedBranch?.branch_id });
+                            }}
                         />
                     )}
                 </div>

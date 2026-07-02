@@ -75,7 +75,8 @@ class AssetsController extends Controller
             'asset_description' => 'nullable|string',
             'asset_type' => 'nullable|string|max:255',
             'asset_category_id' => 'required|exists:assets_category,id',
-            'asset_tag' => 'nullable|string|max:255',
+            'asset_tag' => 'nullable|array',
+            'asset_tag.*' => 'string|max:255',
             'asset_stable_unit' => 'required|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
@@ -173,7 +174,8 @@ class AssetsController extends Controller
             'asset_description' => 'nullable|string',
             'asset_type' => 'nullable|string|max:255',
             'asset_category_id' => 'nullable|exists:assets_category,id',
-            'asset_tag' => 'nullable|string|max:255',
+            'asset_tag' => 'nullable|array',
+            'asset_tag.*' => 'string|max:255',
             'asset_stable_unit' => 'nullable|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
@@ -312,7 +314,7 @@ class AssetsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Asset updated successfully',
-                'data' => $asset
+                'data' => new AssetsResource($asset)
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -442,7 +444,7 @@ class AssetsController extends Controller
             }
 
             if (!empty($tag)) {
-                $query->where('asset_tag', $tag);
+                $query->whereJsonContains('asset_tag', $tag);
             }
 
             $assets = $query->latest()->paginate($perPage);

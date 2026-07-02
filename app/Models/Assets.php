@@ -31,6 +31,7 @@ class Assets extends Model
 
     protected $casts = [
         'assets_log' => 'array',
+        'asset_tag' => 'array',
         'asset_purchase_cost' => 'decimal:4',
         'asset_sales_cost' => 'decimal:4',
     ];
@@ -144,6 +145,13 @@ class Assets extends Model
             // Format the change description
             $oldValue = $vals['old'] ?? 'None';
             $newValue = $vals['new'] ?? 'None';
+
+            if (is_array($oldValue)) {
+                $oldValue = empty($oldValue) ? 'None' : implode(', ', $oldValue);
+            }
+            if (is_array($newValue)) {
+                $newValue = empty($newValue) ? 'None' : implode(', ', $newValue);
+            }
 
             $descriptions[] = "{$fieldName} dari '{$oldValue}' menjadi '{$newValue}'";
         }

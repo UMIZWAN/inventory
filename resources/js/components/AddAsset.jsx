@@ -14,7 +14,7 @@ function AddAsset({ setShowModal }) {
         asset_type: '',
         asset_running_number: '',
         asset_category_id: '',
-        asset_tag: '',
+        asset_tag: [],
         assets_branch_id: '',
         asset_purchase_cost: '',
         asset_sales_cost: '',
@@ -24,7 +24,7 @@ function AddAsset({ setShowModal }) {
         asset_image: ''
     });
 
-    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Others'];
     const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
@@ -38,6 +38,15 @@ function AddAsset({ setShowModal }) {
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleTagToggle = (tag) => {
+        setForm(prev => ({
+            ...prev,
+            asset_tag: prev.asset_tag.includes(tag)
+                ? prev.asset_tag.filter(t => t !== tag)
+                : [...prev.asset_tag, tag],
+        }));
     };
 
     const handleFileChange = (e) => {
@@ -80,7 +89,7 @@ function AddAsset({ setShowModal }) {
                 asset_type: '',
                 asset_running_number: '',
                 asset_category_id: '',
-                asset_tag: '',
+                asset_tag: [],
                 assets_branch_id: '',
                 asset_purchase_cost: '',
                 asset_sales_cost: '',
@@ -148,14 +157,21 @@ function AddAsset({ setShowModal }) {
                         </select>
                     </div>
 
-                    <div className="flex flex-col">
-                        {label("Tag")}
-                        <select name="asset_tag" value={form.asset_tag} onChange={handleChange} className="p-2 border rounded">
-                            <option value="">Select Tag</option>
+                    <div className="flex flex-col col-span-2">
+                        {label("Tags")}
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 p-2 border rounded">
                             {ASSET_TAG_OPTIONS.map(tag => (
-                                <option key={tag} value={tag}>{tag}</option>
+                                <label key={tag} className="inline-flex items-center gap-1.5 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.asset_tag.includes(tag)}
+                                        onChange={() => handleTagToggle(tag)}
+                                        className="rounded"
+                                    />
+                                    <span className="text-sm text-gray-700">{tag}</span>
+                                </label>
                             ))}
-                        </select>
+                        </div>
                     </div>
 
                     <div className="flex flex-col">

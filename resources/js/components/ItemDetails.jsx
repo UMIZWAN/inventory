@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaEdit, FaSave } from "react-icons/fa";
 import { MdOutlineCancel } from "react-icons/md";
 import { useAssetMeta } from '../context/AssetsContext';
@@ -6,6 +6,24 @@ import placeholder from '../assets/image/placeholder.png';
 import { useAuth } from '../context/AuthContext';
 import { Link } from '@inertiajs/react';
 import { LINKS } from '../constants/links';
+
+const normalizeTags = (raw) => {
+    if (raw == null || raw === '') return [];
+    const items = Array.isArray(raw) ? raw : [raw];
+    const out = [];
+    for (const item of items) {
+        if (typeof item !== 'string') { if (item != null) out.push(String(item)); continue; }
+        const trimmed = item.trim();
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) { parsed.forEach(p => p && out.push(String(p))); continue; }
+            } catch { /* fall through */ }
+        }
+        out.push(item);
+    }
+    return [...new Set(out.filter(Boolean))];
+};
 
 const ItemDetails = ({ asset, onClose, onUpdated }) => {
     const { user, selectedBranch } = useAuth();
@@ -15,7 +33,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
     const [form, setForm] = useState({
         name: asset.name || '',
         asset_category_id: asset.asset_category_id || '',
-        asset_tag: asset.asset_tag || '',
+        asset_tag: normalizeTags(asset.asset_tag),
         asset_stable_unit: asset.asset_stable_unit || '',
         asset_unit_measure: asset.asset_unit_measure || '',
         asset_description: asset.asset_description || '',
@@ -27,17 +45,45 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
         asset_image: asset.asset_image || null,
     });
 
-    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Others'];
 
     const [imagePreview, setImagePreview] = useState(null);
     const [toast, setToast] = useState(null);
     const logs = asset.assets_log || [];
+
+    // Re-sync form when the asset prop changes (e.g. after save)
+    useEffect(() => {
+        setForm({
+            name: asset.name || '',
+            asset_category_id: asset.asset_category_id || '',
+            asset_tag: normalizeTags(asset.asset_tag),
+            asset_stable_unit: asset.asset_stable_unit || '',
+            asset_unit_measure: asset.asset_unit_measure || '',
+            asset_description: asset.asset_description || '',
+            asset_type: asset.asset_type || '',
+            asset_purchase_cost: asset.asset_purchase_cost || '',
+            asset_sales_cost: asset.asset_sales_cost || '',
+            assets_remark: asset.assets_remark || '',
+            asset_running_number: asset.asset_running_number || '',
+            asset_image: asset.asset_image || null,
+        });
+        setImagePreview(null);
+    }, [asset]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm(prev => ({
             ...prev,
             [name]: value,
+        }));
+    };
+
+    const handleTagToggle = (tag) => {
+        setForm(prev => ({
+            ...prev,
+            asset_tag: prev.asset_tag.includes(tag)
+                ? prev.asset_tag.filter(t => t !== tag)
+                : [...prev.asset_tag, tag],
         }));
     };
 
@@ -69,20 +115,26 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                 asset_running_number: form.asset_running_number,
             };
 
+            let updated;
+
             // If there's a new image file, use FormData
             if (form.asset_image instanceof File) {
                 const formData = new FormData();
                 Object.entries(payload).forEach(([key, value]) => {
-                    formData.append(key, value);
+                    if (Array.isArray(value)) {
+                        value.forEach(v => formData.append(`${key}[]`, v));
+                    } else {
+                        formData.append(key, value ?? '');
+                    }
                 });
                 formData.append('asset_image', form.asset_image);
 
-                await updateAsset(asset.id, formData);
+                updated = await updateAsset(asset.id, formData);
             } else {
-                // Otherwise, send as regular JSON
-                await updateAsset(asset.id, payload);
-                if (onUpdated) onUpdated(); // Refresh parent list
+                updated = await updateAsset(asset.id, payload);
             }
+
+            if (onUpdated) onUpdated(updated);
 
             setEditMode(false);
             setToast('Asset updated successfully!');
@@ -230,21 +282,23 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                         )}
                     />
                     <Detail
-                        label="Tag"
+                        label="Tags"
                         value={editMode ? (
-                            <select
-                                name="asset_tag"
-                                value={form.asset_tag ?? ''}
-                                onChange={handleChange}
-                                className="w-full border rounded px-2 py-1 text-sm"
-                            >
-                                <option value="">Select Tag</option>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 border rounded px-2 py-1">
                                 {ASSET_TAG_OPTIONS.map(tag => (
-                                    <option key={tag} value={tag}>{tag}</option>
+                                    <label key={tag} className="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={form.asset_tag.includes(tag)}
+                                            onChange={() => handleTagToggle(tag)}
+                                            className="rounded"
+                                        />
+                                        <span className="text-sm text-gray-700">{tag}</span>
+                                    </label>
                                 ))}
-                            </select>
+                            </div>
                         ) : (
-                            <span>{asset.asset_tag ?? '—'}</span>
+                            <span>{normalizeTags(asset.asset_tag).join(', ') || '—'}</span>
                         )}
                     />
                     <Detail label="Unit of Measure " value={isEditing('asset_unit_measure')} />
