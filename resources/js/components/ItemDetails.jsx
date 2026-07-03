@@ -45,7 +45,11 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
         asset_image: asset.asset_image || null,
     });
 
-    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Others'];
+    const PRESET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+    const initialNormalized = normalizeTags(asset.asset_tag);
+    const initialOther = initialNormalized.find(t => !PRESET_TAG_OPTIONS.includes(t)) || '';
+    const [otherChecked, setOtherChecked] = useState(!!initialOther);
+    const [otherText, setOtherText] = useState(initialOther);
 
     const [imagePreview, setImagePreview] = useState(null);
     const [toast, setToast] = useState(null);
@@ -53,10 +57,12 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
 
     // Re-sync form when the asset prop changes (e.g. after save)
     useEffect(() => {
+        const normalized = normalizeTags(asset.asset_tag);
+        const other = normalized.find(t => !PRESET_TAG_OPTIONS.includes(t)) || '';
         setForm({
             name: asset.name || '',
             asset_category_id: asset.asset_category_id || '',
-            asset_tag: normalizeTags(asset.asset_tag),
+            asset_tag: normalized.filter(t => PRESET_TAG_OPTIONS.includes(t)),
             asset_stable_unit: asset.asset_stable_unit || '',
             asset_unit_measure: asset.asset_unit_measure || '',
             asset_description: asset.asset_description || '',
@@ -67,6 +73,8 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
             asset_running_number: asset.asset_running_number || '',
             asset_image: asset.asset_image || null,
         });
+        setOtherChecked(!!other);
+        setOtherText(other);
         setImagePreview(null);
     }, [asset]);
 
@@ -100,11 +108,15 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
         setSubmitting(true);
 
         try {
+            const finalTags = otherChecked && otherText.trim()
+                ? [...form.asset_tag, otherText.trim()]
+                : form.asset_tag;
+
             // Create a clean payload with all required fields
             const payload = {
                 name: form.name,
                 asset_category_id: form.asset_category_id,
-                asset_tag: form.asset_tag,
+                asset_tag: finalTags,
                 asset_stable_unit: form.asset_stable_unit,
                 asset_unit_measure: form.asset_unit_measure,
                 asset_description: form.asset_description,
@@ -284,8 +296,8 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                     <Detail
                         label="Tags"
                         value={editMode ? (
-                            <div className="flex flex-wrap gap-x-3 gap-y-1 border rounded px-2 py-1">
-                                {ASSET_TAG_OPTIONS.map(tag => (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border rounded px-2 py-1">
+                                {PRESET_TAG_OPTIONS.map(tag => (
                                     <label key={tag} className="inline-flex items-center gap-1.5 cursor-pointer">
                                         <input
                                             type="checkbox"
@@ -296,6 +308,29 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                                         <span className="text-sm text-gray-700">{tag}</span>
                                     </label>
                                 ))}
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={otherChecked}
+                                        onChange={() => {
+                                            setOtherChecked(prev => {
+                                                if (prev) setOtherText('');
+                                                return !prev;
+                                            });
+                                        }}
+                                        className="rounded"
+                                    />
+                                    <span className="text-sm text-gray-700">Others</span>
+                                </label>
+                                {otherChecked && (
+                                    <input
+                                        type="text"
+                                        value={otherText}
+                                        onChange={(e) => setOtherText(e.target.value)}
+                                        placeholder="Specify..."
+                                        className="text-sm border rounded px-2 py-0.5 flex-1 min-w-[8rem]"
+                                    />
+                                )}
                             </div>
                         ) : (
                             <span>{normalizeTags(asset.asset_tag).join(', ') || '—'}</span>

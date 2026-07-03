@@ -24,7 +24,9 @@ function AddAsset({ setShowModal }) {
         asset_image: ''
     });
 
-    const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Others'];
+    const PRESET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+    const [otherChecked, setOtherChecked] = useState(false);
+    const [otherText, setOtherText] = useState('');
     const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
@@ -73,7 +75,10 @@ function AddAsset({ setShowModal }) {
         setShowModal(false);
         setSubmitting(true);
         try {
-            await addAsset(form);
+            const finalTags = otherChecked && otherText.trim()
+                ? [...form.asset_tag, otherText.trim()]
+                : form.asset_tag;
+            await addAsset({ ...form, asset_tag: finalTags });
 
             await Swal.fire({
                 icon: 'success',
@@ -99,6 +104,8 @@ function AddAsset({ setShowModal }) {
                 asset_image: ''
             });
             setImagePreview(null);
+            setOtherChecked(false);
+            setOtherText('');
         } catch (error) {
             console.error('Error adding asset:', error);
             Swal.fire({
@@ -159,8 +166,8 @@ function AddAsset({ setShowModal }) {
 
                     <div className="flex flex-col col-span-2">
                         {label("Tags")}
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 p-2 border rounded">
-                            {ASSET_TAG_OPTIONS.map(tag => (
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 p-2 border rounded">
+                            {PRESET_TAG_OPTIONS.map(tag => (
                                 <label key={tag} className="inline-flex items-center gap-1.5 cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -171,6 +178,29 @@ function AddAsset({ setShowModal }) {
                                     <span className="text-sm text-gray-700">{tag}</span>
                                 </label>
                             ))}
+                            <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={otherChecked}
+                                    onChange={() => {
+                                        setOtherChecked(prev => {
+                                            if (prev) setOtherText('');
+                                            return !prev;
+                                        });
+                                    }}
+                                    className="rounded"
+                                />
+                                <span className="text-sm text-gray-700">Others</span>
+                            </label>
+                            {otherChecked && (
+                                <input
+                                    type="text"
+                                    value={otherText}
+                                    onChange={(e) => setOtherText(e.target.value)}
+                                    placeholder="Specify..."
+                                    className="text-sm border rounded px-2 py-0.5 flex-1 min-w-[8rem]"
+                                />
+                            )}
                         </div>
                     </div>
 

@@ -444,7 +444,17 @@ class AssetsController extends Controller
             }
 
             if (!empty($tag)) {
-                $query->whereJsonContains('asset_tag', $tag);
+                if ($tag === 'Others') {
+                    $presets = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+                    $placeholders = implode(',', array_fill(0, count($presets), '?'));
+                    $query->whereNotNull('asset_tag')
+                        ->whereRaw(
+                            "EXISTS (SELECT 1 FROM JSON_TABLE(asset_tag, '$[*]' COLUMNS(t VARCHAR(255) PATH '$')) jt WHERE jt.t NOT IN ($placeholders))",
+                            $presets
+                        );
+                } else {
+                    $query->whereJsonContains('asset_tag', $tag);
+                }
             }
 
             $assets = $query->latest()->paginate($perPage);
