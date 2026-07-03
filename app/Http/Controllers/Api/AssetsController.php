@@ -446,12 +446,13 @@ class AssetsController extends Controller
             if (!empty($tag)) {
                 if ($tag === 'Others') {
                     $presets = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
-                    $placeholders = implode(',', array_fill(0, count($presets), '?'));
+                    // Match assets whose tag array contains at least one value not in the preset list.
+                    // Works on MySQL 5.7+ (no JSON_TABLE required).
+                    $sumExpr = collect($presets)
+                        ->map(fn() => "IF(JSON_CONTAINS(asset_tag, JSON_QUOTE(?)), 1, 0)")
+                        ->implode(' + ');
                     $query->whereNotNull('asset_tag')
-                        ->whereRaw(
-                            "EXISTS (SELECT 1 FROM JSON_TABLE(asset_tag, '$[*]' COLUMNS(t VARCHAR(255) PATH '$')) jt WHERE jt.t NOT IN ($placeholders))",
-                            $presets
-                        );
+                        ->whereRaw("JSON_LENGTH(asset_tag) > ($sumExpr)", $presets);
                 } else {
                     $query->whereJsonContains('asset_tag', $tag);
                 }
