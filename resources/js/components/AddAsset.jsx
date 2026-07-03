@@ -24,7 +24,7 @@ function AddAsset({ setShowModal }) {
         asset_image: ''
     });
 
-    const PRESET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+    const PRESET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Event Gift', 'Booking Gift', 'Customer Visit Gift'];
     const [otherChecked, setOtherChecked] = useState(false);
     const [otherText, setOtherText] = useState('');
     const [imagePreview, setImagePreview] = useState(null);

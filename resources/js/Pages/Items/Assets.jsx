@@ -19,7 +19,7 @@ import confirmAction from '../../components/ConfirmModal';
 import Swal from 'sweetalert2';
 import { LINKS } from '../../constants/links';
 
-const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Others'];
+const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Event Gift', 'Booking Gift', 'Customer Visit Gift', 'Others'];
 
 const toTitleCase = (str = '') =>
     str.toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());

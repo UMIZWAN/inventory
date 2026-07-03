@@ -45,7 +45,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
         asset_image: asset.asset_image || null,
     });
 
-    const PRESET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+    const PRESET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Event Gift', 'Booking Gift', 'Customer Visit Gift'];
     const initialNormalized = normalizeTags(asset.asset_tag);
     const initialOther = initialNormalized.find(t => !PRESET_TAG_OPTIONS.includes(t)) || '';
     const [otherChecked, setOtherChecked] = useState(!!initialOther);

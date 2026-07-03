@@ -445,7 +445,7 @@ class AssetsController extends Controller
 
             if (!empty($tag)) {
                 if ($tag === 'Others') {
-                    $presets = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift'];
+                    $presets = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Event Gift', 'Booking Gift', 'Customer Visit Gift'];
                     // Match assets whose tag array contains at least one value not in the preset list.
                     // Works on MySQL 5.7+ (no JSON_TABLE required).
                     $sumExpr = collect($presets)
