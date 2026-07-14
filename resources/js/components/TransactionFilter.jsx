@@ -45,15 +45,15 @@ function TransactionFilter({ onFilterChange, filterType = "transfer" }) {
                 />
             </div>
 
-            {/* Item Name */}
+            {/* Item Name / Code */}
             <div>
-                <label className="block mb-1">Item Name</label>
+                <label className="block mb-1">Item Name/Code</label>
                 <input
                     type="text"
                     value={filters.itemName}
                     onChange={(e) => handleChange('itemName', e.target.value)}
                     className={inputStyle}
-                    placeholder="e.g. Printer"
+                    placeholder="e.g. Printer or AST-000123"
                 />
             </div>
 

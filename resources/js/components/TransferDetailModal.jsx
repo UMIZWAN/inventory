@@ -6,8 +6,9 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import TransferDeliveryOrderPDF from "./TransferDeliveryOrderPDF";
 import { useOptions } from "../context/OptionContext";
 import { FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
+import api from "../api/api";
 
-export default function TransferDetailModal({ isOpen, onClose, data, buttons }) {
+export default function TransferDetailModal({ isOpen, onClose, data, buttons, onAmend }) {
   const { getCategoryById, assets } = useAssetMeta();
   const { user } = useAuth();
   const { shipping, fetchShipping } = useOptions();
@@ -15,6 +16,21 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons }) 
   const [selectedItems, setSelectedItems] = useState([]);
   const [localItems, setLocalItems] = useState([]);
   const [showStatus, setShowStatus] = useState(false); // ✅ hide status column initially
+  const canAmend = user?.email === "kamal@gmail.com";
+
+  const handleAmend = async () => {
+    if (!confirm("Are you sure you want to amend this transfer? Stock movements will be reversed and the transaction will be removed.")) return;
+    try {
+      const res = await api.put(`/api/assets-transaction/${data.id}`, {
+        assets_transaction_status: "REVERTED",
+      });
+      alert(res.data?.message || "Transfer reverted successfully.");
+      if (onAmend) onAmend();
+      onClose();
+    } catch (err) {
+      alert("Failed to amend transfer: " + (err.response?.data?.message || err.message || "Unknown error"));
+    }
+  };
 
   // Initialize modal data
   useEffect(() => {
@@ -324,6 +340,15 @@ export default function TransferDetailModal({ isOpen, onClose, data, buttons }) 
 
                 {/* Footer Buttons */}
                 <div className="mt-4 flex justify-end space-x-2">
+                  {canAmend && data?.assets_transaction_status !== "REVERTED" && (
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md px-3 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white"
+                      onClick={handleAmend}
+                    >
+                      Amend
+                    </button>
+                  )}
                   {buttons?.secondary && (
                     <button
                       type="button"

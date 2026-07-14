@@ -50,9 +50,11 @@ export default function CheckoutList() {
     const filteredList = assetOut.filter((txn) => {
         const txnDate = txn.created_at.slice(0, 10);
 
-        const assetNames = txn.assets_transaction_item_list.map(item => {
+        const assetSearchText = txn.assets_transaction_item_list.map(item => {
             const asset = assets.find(a => a.id === item.asset_id);
-            return asset?.name?.toLowerCase() || '';
+            const name = item.asset_name || item.assets?.name || asset?.name || '';
+            const code = item.assets?.asset_running_number || asset?.asset_running_number || '';
+            return `${name.toLowerCase()} ${code.toLowerCase()}`;
         });
 
         const matchesSearch =
@@ -61,7 +63,7 @@ export default function CheckoutList() {
 
         const matchesItem =
             !filters.itemName ||
-            assetNames.some(name => name.includes(filters.itemName.toLowerCase()));
+            assetSearchText.some(text => text.includes(filters.itemName.toLowerCase()));
 
         const matchesPurpose =
             !filters.purpose || txn.asset_transaction_purpose_name == filters.purpose;

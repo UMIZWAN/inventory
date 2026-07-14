@@ -196,9 +196,11 @@ export default function TransferList({ status, mode }) {
 
   const filteredTransfers = assetTransfer.filter((txn) => {
     const txnDate = txn.created_at.slice(0, 10);
-    const assetNames = txn.assets_transaction_item_list.map(item => {
+    const assetSearchText = txn.assets_transaction_item_list.map(item => {
       const found = assets.find(a => a.id === item.asset_id);
-      return found?.name?.toLowerCase() || '';
+      const name = item.asset_name || item.assets?.name || found?.name || '';
+      const code = item.assets?.asset_running_number || found?.asset_running_number || '';
+      return `${name.toLowerCase()} ${code.toLowerCase()}`;
     });
 
     const matchesSearch =
@@ -207,7 +209,7 @@ export default function TransferList({ status, mode }) {
 
     const matchesItem =
       !filters.itemName ||
-      assetNames.some(name => name.includes(filters.itemName.toLowerCase()));
+      assetSearchText.some(text => text.includes(filters.itemName.toLowerCase()));
 
     const matchesDate =
       (!filters.fromDate || txnDate >= filters.fromDate) &&

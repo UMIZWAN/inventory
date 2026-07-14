@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import logo from '../assets/image/universal group - black logo.jpg';
 import api from "../api/api";
 import { useAssetMeta } from "../context/AssetsContext";
+import { useAuth } from "../context/AuthContext";
 import { PDFDownloadLink, Document, Page, View, Text, StyleSheet, Font, Image } from "@react-pdf/renderer";
 import { LINKS } from '../constants/links';
 
@@ -128,6 +129,8 @@ const InvoicePDF = ({ transaction, getAssetDetails }) => {
 function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }) {
 
     const { fetchAssetTransaction } = useAssetMeta();
+    const { user } = useAuth();
+    const canAmend = user?.email === 'kamal@gmail.com';
     const [balanceUnits, setBalanceUnits] = useState({});
 
     const purposeName = transaction?.asset_transaction_purpose_name || transaction?.purpose?.asset_transaction_purpose_name;
@@ -159,9 +162,10 @@ function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }
 
     const completeTransaction = async (txnId = transaction.id, balanceUnits, remark = '', status = 'COMPLETED') => {
         try {
+            // An untouched Balance Unit box means nothing came back — all units were used
             const formattedItems = getItemList.map((item, index) => ({
                 asset_id: item.asset_id,
-                asset_unit: balanceUnits[index] ?? item.asset_unit,
+                asset_unit: balanceUnits[index] ?? 0,
                 status: "", // optional
             }));
 
@@ -179,33 +183,34 @@ function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-4 max-w-4xl w-full relative">
-                <button onClick={onClose} className="absolute top-2 right-3 text-gray-500 hover:text-black text-2xl">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full relative h-[85vh] flex flex-col">
+                <button onClick={onClose} className="absolute top-2 right-3 text-gray-500 hover:text-black text-2xl z-10">
                     &times;
                 </button>
 
-                <div className="flex justify-between items-center m-4">
-                    <h2 className="text-2xl font-bold">{type === "receive" ? "Receive Details" : "Transaction Invoice"}</h2>
-                    {type === "transfer" && (
-                        <PDFDownloadLink
-                            document={
-                                <InvoicePDF
-                                    transaction={transaction}
-                                    type={type}
-                                />
-                            }
-                            fileName={`${type === "receive" ? "Receive" : "Invoice"}_${transaction.assets_transaction_running_number}.pdf`}
-                            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm mr-6"
-                        >
-                            {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
-                        </PDFDownloadLink>
-                    )}
-                </div>
+                {/* Pinned header */}
+                <div className="flex-shrink-0 px-6 pt-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold">{type === "receive" ? "Receive Details" : "Transaction Invoice"}</h2>
+                        {type === "transfer" && (
+                            <PDFDownloadLink
+                                document={
+                                    <InvoicePDF
+                                        transaction={transaction}
+                                        type={type}
+                                    />
+                                }
+                                fileName={`${type === "receive" ? "Receive" : "Invoice"}_${transaction.assets_transaction_running_number}.pdf`}
+                                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm mr-6"
+                            >
+                                {({ loading }) => (loading ? "Generating PDF..." : "Download PDF")}
+                            </PDFDownloadLink>
+                        )}
+                    </div>
 
-                <div className="bg-white p-4">
-                    <div className="flex justify-between mb-4 mr-8">
-                        <div className="mb-6 space-y-1">
+                    <div className="flex justify-between mr-8">
+                        <div className="space-y-1">
                             <p><strong>Branch:</strong> {transaction.assets_from_branch_name || transaction.from_branch.name}</p>
 
                             {type === "transfer" && (
@@ -221,16 +226,12 @@ function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }
                             )}
 
                             {["New SA", "Insurance", "CSI", "Cash", "CASH"].includes(purposeName) && (
-                                <div className="mb-2">
-                                    <p>
-                                        <strong>Customer Name:</strong> {transaction.assets_recipient_name}
-                                    </p>
-                                </div>
+                                <p>
+                                    <strong>Customer Name:</strong> {transaction.assets_recipient_name}
+                                </p>
                             )}
-
                         </div>
-                        <div className="mb-6 space-y-1">
-
+                        <div className="space-y-1">
                             {type === "transfer" && (
                                 <>
                                     {transaction.assets_transaction_purpose &&
@@ -248,14 +249,16 @@ function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }
                             )}
 
                             <p><strong>Reference Number:</strong> {transaction.assets_transaction_running_number}</p>
-
-
                         </div>
                     </div>
 
-                    <h3 className="text-xl font-semibold mb-2">Item List</h3>
+                    <h3 className="text-xl font-semibold mt-4 mb-2">Item List</h3>
+                </div>
+
+                {/* Scrollable item list */}
+                <div className="flex-1 overflow-y-auto px-6 min-h-0">
                     <table className="min-w-full border border-gray-300">
-                        <thead className="bg-gray-100">
+                        <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm">
                             <tr>
                                 <th className="px-4 py-2 border">Code</th>
                                 <th className="px-4 text-left py-2 border">Asset Name</th>
@@ -287,7 +290,9 @@ function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }
                                             <td className="px-4 py-2 border text-center">
                                                 <input
                                                     type="number"
-                                                    value={balanceUnits[index]}
+                                                    value={balanceUnits[index] ?? ''}
+                                                    placeholder="0"
+                                                    min="0"
                                                     onChange={(e) => handleBalanceChange(index, e.target.value)}
                                                     className="w-16 border rounded px-1 py-0.5 text-center"
                                                 />
@@ -302,75 +307,73 @@ function TransactionDetail({ transaction, onClose, type = "transfer", onRevert }
                             })}
                         </tbody>
                     </table>
+                </div>
 
-                    <div className="flex justify-end mt-4">
-                        <p className="text-lg font-bold">Total Amount: RM {totalAmount.toFixed(2)}</p>
+                {/* Pinned footer */}
+                <div className="flex-shrink-0 px-6 py-3 border-t border-gray-200 bg-white rounded-b-lg">
+                    <div className="flex justify-between items-start gap-4">
+                        <div className="text-sm space-y-1 min-w-0">
+                            <p className="truncate"><strong>Remark:</strong> {transaction.assets_transaction_remark || "-"}</p>
+                            {type === "transfer" && (
+                                <p>
+                                    <strong>Attachment:</strong>{" "}
+                                    {transaction.attachment ? (
+                                        <a
+                                            href={`${LINKS.API_BASE}/${transaction.attachment}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 underline hover:text-blue-800"
+                                        >
+                                            View File
+                                        </a>
+                                    ) : (
+                                        "-"
+                                    )}
+                                </p>
+                            )}
+                        </div>
+                        <p className="text-lg font-bold whitespace-nowrap">Total Amount: RM {totalAmount.toFixed(2)}</p>
                     </div>
 
-                    <div className="mt-4">
-                        <p><strong>Remark:</strong> {transaction.assets_transaction_remark || "-"}</p>
-                    </div>
-
-                    {type === "transfer" && (
-                        <div className="mt-4">
-                            <p>
-                                <strong>Attachment:</strong>{" "}
-                                {transaction.attachment ? (
-                                    <a
-                                        href={`${LINKS.API_BASE}/${transaction.attachment}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 underline hover:text-blue-800"
-                                    >
-                                        View File
-                                    </a>
-                                ) : (
-                                    "-"
-                                )}
-                            </p>
+                    {(transaction.assets_transaction_status === "IN PROGRESS" ||
+                        (canAmend && transaction.assets_transaction_status !== 'REVERTED')) && (
+                        <div className="flex justify-end gap-2 mt-3">
+                            {canAmend && transaction.assets_transaction_status !== 'REVERTED' && (
+                                <button
+                                    onClick={async () => {
+                                        if (!confirm("Are you sure you want to amend this transaction? Any stock movements caused by it will be reversed and the transaction will be removed from history.")) return;
+                                        try {
+                                            const result = await revertTransaction(transaction.id);
+                                            if (onRevert) onRevert();
+                                            alert(result?.message || "Transaction reverted successfully.");
+                                            onClose();
+                                        } catch (err) {
+                                            alert("Failed to revert transaction: " + (err.message || "Unknown error"));
+                                        }
+                                    }}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                                >
+                                    Amend
+                                </button>
+                            )}
+                            {transaction.assets_transaction_status === "IN PROGRESS" && (
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await completeTransaction(transaction.id, balanceUnits);
+                                            alert("Transaction completed successfully.");
+                                            onClose();
+                                        } catch (err) {
+                                            alert("Failed to complete transaction: " + err.message);
+                                        }
+                                    }}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                                >
+                                    Complete Transaction
+                                </button>
+                            )}
                         </div>
                     )}
-
-                    {transaction.assets_transaction_status === "IN PROGRESS" && (
-                        <div className="flex justify-end mt-6">
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        await completeTransaction(transaction.id, balanceUnits);
-                                        alert("Transaction completed successfully.");
-                                        onClose();
-                                    } catch (err) {
-                                        alert("Failed to complete transaction: " + err.message);
-                                    }
-                                }}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-                            >
-                                Complete Transaction
-                            </button>
-                        </div>
-                    )}
-
-                    {type === "receive" && (
-                        <div className="flex justify-end mt-6">
-                            <button
-                                onClick={async () => {
-                                    if (!confirm("Are you sure you want to revert this receive transaction? The received stock will be deducted and the transaction will be deleted.")) return;
-                                    try {
-                                        await revertTransaction(transaction.id);
-                                        if (onRevert) onRevert();
-                                        alert("Transaction reverted and deleted successfully.");
-                                        onClose();
-                                    } catch (err) {
-                                        alert("Failed to revert transaction: " + (err.message || "Unknown error"));
-                                    }
-                                }}
-                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                            >
-                                Revert
-                            </button>
-                        </div>
-                    )}
-
                 </div>
             </div>
         </div>
