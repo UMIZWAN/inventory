@@ -29,7 +29,7 @@ const ImportAssets = () => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
 
-    if (user?.email !== 'kamal@gmail.com') {
+    if (user?.email !== 'dayangnh95@gmail.com' && user?.email !== 'umwongsw@gmail.com' && user?.email !== 'nafiqahcyindy@gmail.com') {
         return (
             <Layout>
                 <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded-xl mt-8">

@@ -210,7 +210,8 @@ const Sidebar = () => {
                     )}
 
                     {(user?.email === "dayangnh95@gmail.com" ||
-                        user?.email === "umwongsw@gmail.com") && (
+                        user?.email === "umwongsw@gmail.com" ||
+                        user?.email === "nafiqahcyindy@gmail.com") && (
                         <Link href="/import">
                             <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
                                 <FiShield className="text-sky-600" />

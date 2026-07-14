@@ -146,8 +146,6 @@ export const AssetMetaProvider = ({ children }) => {
       }
 
       const response = await api.post(`/api/assets/${id}/upload`, data, config);
-      fetchAssets(user?.branch_id);
-      fetchBranchAssets();
       const payload = response.data?.data;
       return payload?.data ?? payload;
     } catch (err) {
