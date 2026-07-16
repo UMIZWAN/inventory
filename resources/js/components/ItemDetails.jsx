@@ -27,7 +27,7 @@ const normalizeTags = (raw) => {
 
 const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = false }) => {
     const { user, selectedBranch } = useAuth();
-    const { updateAsset, categories } = useAssetMeta();
+    const { updateAsset, categories, branches, fetchBranches } = useAssetMeta();
     const [editMode, setEditMode] = useState(startInEdit);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
@@ -55,6 +55,49 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
     const [toast, setToast] = useState(null);
     const logs = asset.assets_log || [];
 
+    useEffect(() => {
+        fetchBranches();
+    }, []);
+
+    const branchQtyMap = new Map(
+        (asset.branch_values || [])
+            .filter(bv => bv.is_enabled !== false)
+            .map(bv => [bv.asset_branch_id, bv.asset_current_unit])
+    );
+    // Branches newly ticked / unticked in edit mode. Unticking is only allowed
+    // when the branch holds no stock (backend refuses removal otherwise).
+    const [newBranchIds, setNewBranchIds] = useState(new Set());
+    const [removedBranchIds, setRemovedBranchIds] = useState(new Set());
+
+    const handleBranchToggle = (branchId) => {
+        if (branchQtyMap.has(branchId)) {
+            const qty = Number(branchQtyMap.get(branchId)) || 0;
+            if (qty > 0) {
+                alert('Cannot disable this branch: it still has stock. Transfer or clear the stock first.');
+                return;
+            }
+            setRemovedBranchIds(prev => {
+                const next = new Set(prev);
+                if (next.has(branchId)) {
+                    next.delete(branchId);
+                } else {
+                    next.add(branchId);
+                }
+                return next;
+            });
+            return;
+        }
+        setNewBranchIds(prev => {
+            const next = new Set(prev);
+            if (next.has(branchId)) {
+                next.delete(branchId);
+            } else {
+                next.add(branchId);
+            }
+            return next;
+        });
+    };
+
     // Re-sync form when the asset prop changes (e.g. after save)
     useEffect(() => {
         const normalized = normalizeTags(asset.asset_tag);
@@ -76,6 +119,8 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
         setOtherChecked(!!other);
         setOtherText(other);
         setImagePreview(null);
+        setNewBranchIds(new Set());
+        setRemovedBranchIds(new Set());
     }, [asset]);
 
     const handleChange = (e) => {
@@ -127,6 +172,12 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                 asset_running_number: form.asset_running_number,
             };
 
+            const newBranchValues = [...newBranchIds].map(branchId => ({
+                asset_branch_id: branchId,
+                asset_current_unit: 0,
+            }));
+            const branchRemovals = [...removedBranchIds];
+
             let updated;
 
             // If there's a new image file, use FormData
@@ -139,10 +190,23 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                         formData.append(key, value ?? '');
                     }
                 });
+                newBranchValues.forEach((bv, i) => {
+                    formData.append(`asset_branch_values[${i}][asset_branch_id]`, bv.asset_branch_id);
+                    formData.append(`asset_branch_values[${i}][asset_current_unit]`, bv.asset_current_unit);
+                });
+                branchRemovals.forEach(id => {
+                    formData.append('asset_branch_values_remove[]', id);
+                });
                 formData.append('asset_image', form.asset_image);
 
                 updated = await updateAsset(asset.id, formData);
             } else {
+                if (newBranchValues.length > 0) {
+                    payload.asset_branch_values = newBranchValues;
+                }
+                if (branchRemovals.length > 0) {
+                    payload.asset_branch_values_remove = branchRemovals;
+                }
                 updated = await updateAsset(asset.id, payload);
             }
 
@@ -193,7 +257,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                 name={field}
                 value={form[field] ?? ''}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             />
         ) : (
             <span>{asset[field] ?? ''}</span>
@@ -203,7 +267,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
         ? ""
         : "fixed inset-0 z-50 flex items-center justify-center bg-gray-800/60";
     const cardClass = asPage
-        ? "relative bg-white rounded-2xl shadow w-full max-w-4xl p-6 sm:p-8"
+        ? "relative border border-gray-200 bg-white rounded-2xl w-full max-w-4xl p-6 sm:p-8"
         : "relative bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto";
 
     return (
@@ -241,7 +305,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                 value={form.asset_type ?? ''}
                                 onChange={handleChange}
                                 placeholder="Type/Size"
-                                className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                                className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                             />
                         ) : (
                             asset.asset_type && (
@@ -265,6 +329,8 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                         setEditMode(false);
                                         setForm({ ...asset, asset_image: null });
                                         setImagePreview(null);
+                                        setNewBranchIds(new Set());
+                                        setRemovedBranchIds(new Set());
                                     }}
                                     className="inline-flex items-center justify-center gap-1 bg-white shadow-sm shadow-gray-600/30 px-3 py-0.5 rounded-full text-[11px] text-gray-500 hover:text-gray-800"
                                     disabled={submitting}
@@ -313,8 +379,8 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                             type="file"
                             name="asset_image"
                             onChange={handleFileChange}
-                            className="mt-2 w-40 mx-auto p-1 text-slate-500 text-sm rounded file:bg-blue-200 file:text-blue-700
-                            file:font-semibold file:border-none file:px-1 file:py-1 file:mr-3 file:rounded hover:file:bg-blue-100 border"
+                            className="mt-2 w-40 mx-auto p-1 text-slate-500 text-sm rounded file:bg-indigo-100 file:text-indigo-700
+                            file:font-semibold file:border-none file:px-1 file:py-1 file:mr-3 file:rounded hover:file:bg-indigo-200 border"
                         />
                     )}
                 </div>
@@ -338,7 +404,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                 name="asset_category_id"
                                 value={form.asset_category_id ?? ''}
                                 onChange={handleChange}
-                                className="w-full border rounded px-2 py-1 text-sm"
+                                className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                             >
                                 {categories.map(c => (
                                     <option key={c.id} value={c.id}>{c.name}</option>
@@ -358,7 +424,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                             type="checkbox"
                                             checked={form.asset_tag.includes(tag)}
                                             onChange={() => handleTagToggle(tag)}
-                                            className="rounded"
+                                            className="rounded accent-indigo-600"
                                         />
                                         <span className="text-sm text-gray-700">{tag}</span>
                                     </label>
@@ -373,7 +439,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                                 return !prev;
                                             });
                                         }}
-                                        className="rounded"
+                                        className="rounded accent-indigo-600"
                                     />
                                     <span className="text-sm text-gray-700">Others</span>
                                 </label>
@@ -383,7 +449,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                         value={otherText}
                                         onChange={(e) => setOtherText(e.target.value)}
                                         placeholder="Specify..."
-                                        className="text-sm border rounded px-2 py-0.5 flex-1 min-w-[8rem]"
+                                        className="text-sm border border-gray-300 rounded px-2 py-0.5 flex-1 min-w-[8rem] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                                     />
                                 )}
                             </div>
@@ -407,13 +473,49 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                             name="assets_remark"
                             value={form.assets_remark ?? ''}
                             onChange={handleChange}
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                             rows={3}
                         />
                     ) : (
                         <p className="text-sm text-gray-700">{asset.assets_remark ?? ''}</p>
                     )}
                 </div>
+
+                {Array.isArray(branches) && branches.length > 0 && (
+                    <div className="mt-6">
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Enabled in Branch:</h3>
+                        <div className="border border-gray-200 rounded-xl overflow-hidden max-w-xs">
+                            <div className="flex items-center px-3 py-1.5 text-[11px] uppercase tracking-[0.08em] text-gray-500 bg-gray-50 border-b border-gray-200">
+                                <span className="flex-1">Branch</span>
+                                <span>Quantity</span>
+                            </div>
+                            <div className="max-h-56 overflow-y-auto">
+                                {branches.map((branch, idx) => {
+                                    const alreadyEnabled = branchQtyMap.has(branch.id);
+                                    const isChecked = alreadyEnabled
+                                        ? !removedBranchIds.has(branch.id)
+                                        : newBranchIds.has(branch.id);
+                                    return (
+                                        <label
+                                            key={branch.id}
+                                            className={`flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 border-b border-gray-100 last:border-b-0 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} ${editMode ? 'cursor-pointer' : ''}`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                disabled={!editMode}
+                                                onChange={() => handleBranchToggle(branch.id)}
+                                                className="rounded accent-indigo-600 disabled:opacity-100"
+                                            />
+                                            <span className="flex-1">{branch.name}</span>
+                                            <span className="text-gray-500">{branchQtyMap.get(branch.id) ?? '—'}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {Array.isArray(logs) && logs.length > 0 && !editMode && (
                     <Section title="Logs" items={logs} />

@@ -22,7 +22,9 @@ class AssetsController extends Controller
     public function index()
     {
         try {
-            $assets = Assets::with(['category', 'branchValues'])->latest()->get();
+            $assets = Assets::with(['category', 'branchValues' => function ($query) {
+                $query->where('is_enabled', true);
+            }])->latest()->get();
 
             return response()->json([
                 'success' => true,
@@ -265,6 +267,14 @@ class AssetsController extends Controller
                     $branchChanges = [];
 
                     if ($branch) {
+                        if (!$branch->is_enabled) {
+                            $branchChanges['assets_branch_id'] = [
+                                'old' => null,
+                                'new' => $branchValue['asset_branch_id']
+                            ];
+                            $branch->is_enabled = true;
+                        }
+
                         if (isset($branchValue['asset_location_id']) && $branch->asset_location_id != $branchValue['asset_location_id']) {
                             $branchChanges['assets_location_id'] = [
                                 'old' => $branch->asset_location_id,
@@ -288,6 +298,7 @@ class AssetsController extends Controller
                             'asset_branch_id' => $branchValue['asset_branch_id'],
                             'asset_location_id' => $branchValue['asset_location_id'] ?? null,
                             'asset_current_unit' => $branchValue['asset_current_unit'] ?? 0,
+                            'is_enabled' => true,
                         ]);
 
                         $branchChanges['assets_branch_id'] = [
@@ -306,6 +317,23 @@ class AssetsController extends Controller
 
                     if (!empty($branchChanges)) {
                         $asset->appendLogSentence('mengemaskini cabang', $branchChanges);
+                    }
+                }
+            }
+
+            // Remove branch records unticked in the UI; only allowed when the branch holds no stock
+            if ($request->has('asset_branch_values_remove') && is_array($request->asset_branch_values_remove)) {
+                foreach ($request->asset_branch_values_remove as $branchId) {
+                    $branch = AssetsBranchValues::where('asset_id', $asset->id)
+                        ->where('asset_branch_id', $branchId)
+                        ->first();
+
+                    if ($branch && $branch->is_enabled && ($branch->asset_current_unit ?? 0) == 0) {
+                        $branch->is_enabled = false;
+                        $branch->save();
+                        $asset->appendLogSentence('mengemaskini cabang', [
+                            'assets_branch_id' => ['old' => $branchId, 'new' => null],
+                        ]);
                     }
                 }
             }
@@ -419,13 +447,19 @@ class AssetsController extends Controller
             $categoryId = $request->input('asset_category_id');
             $tag = $request->input('asset_tag');
             $includeInactive = $request->boolean('include_inactive');
+            // Masterlist viewers get the quantity breakdown across all branches;
+            // everyone else only sees the quantity at the currently selected branch.
+            $allBranches = $request->boolean('all_branches') && (Auth::user()->accessLevel->view_asset_masterlist ?? false);
 
             $query = Assets::with(['category'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                    $query->where('asset_branch_id', $branchId)->where('is_enabled', true);
                 })
-                ->with(['branchValues' => function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                ->with(['branchValues' => function ($query) use ($branchId, $allBranches) {
+                    if (!$allBranches) {
+                        $query->where('asset_branch_id', $branchId);
+                    }
+                    $query->where('is_enabled', true);
                 }]);
 
             if ($search) {
@@ -487,7 +521,9 @@ class AssetsController extends Controller
 
     public function getAssetList()
     {
-        $assets = Assets::with(['category', 'branchValues'])->latest()->get();
+        $assets = Assets::with(['category', 'branchValues' => function ($query) {
+            $query->where('is_enabled', true);
+        }])->latest()->get();
 
         if ($assets->isEmpty()) {
             return response()->json([
@@ -543,10 +579,10 @@ class AssetsController extends Controller
 
             $assets = Assets::with(['category'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                    $query->where('asset_branch_id', $branchId)->where('is_enabled', true);
                 })
                 ->with(['branchValues' => function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                    $query->where('asset_branch_id', $branchId)->where('is_enabled', true);
                 }])
                 ->latest()
                 ->get();

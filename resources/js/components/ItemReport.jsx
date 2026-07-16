@@ -30,8 +30,8 @@ function ItemReport({ id, branchId }) {
     return () => { cancelled = true; };
   }, [id, branchId]);
 
-  if (loading) return <div className="bg-white p-6 rounded-2xl shadow text-sm text-gray-500">Loading report...</div>;
-  if (!data) return <div className="bg-white p-6 rounded-2xl shadow text-sm text-gray-500">No report data found.</div>;
+  if (loading) return <div className="border border-gray-200 bg-white p-6 rounded-2xl text-sm text-gray-500">Loading report...</div>;
+  if (!data) return <div className="border border-gray-200 bg-white p-6 rounded-2xl text-sm text-gray-500">No report data found.</div>;
 
   const branch = data.branch_values[0] || {};
   const assetIns = branch.asset_in || [];
@@ -83,7 +83,7 @@ function ItemReport({ id, branchId }) {
 
   return (
     <>
-      <div className="bg-white p-6 rounded-2xl shadow space-y-4">
+      <div className="border border-gray-200 bg-white p-6 rounded-2xl space-y-4">
         <div className='flex justify-between items-center mb-4'>
           <h2 className="text-2xl font-bold uppercase">Item Report</h2>
           <ExportButton

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import api from '../api/api';
 import { useAuth } from './AuthContext';
 
@@ -41,10 +41,17 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
+  // Guards against out-of-order responses: only the latest request may update state,
+  // otherwise a slow page-1 response can overwrite a newer page-2 result and
+  // re-trigger the fetch effect in a loop.
+  const branchAssetsReqId = useRef(0);
+
   const fetchBranchAssets = (params = {}) => {
+    const reqId = ++branchAssetsReqId.current;
     setLoading(true);
     api.get('/api/assets/get-by-branch', { params })
       .then(response => {
+        if (reqId !== branchAssetsReqId.current) return; // stale response, discard
         if (response.data.success) {
           const paginationData = response.data.pagination;
           setAssets(response.data.data); // paginated list
@@ -60,7 +67,7 @@ export const AssetMetaProvider = ({ children }) => {
         console.error('Error fetching assets:', error);
       })
       .finally(() => {
-        setLoading(false);
+        if (reqId === branchAssetsReqId.current) setLoading(false);
       });
   };
 

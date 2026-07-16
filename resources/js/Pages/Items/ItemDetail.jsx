@@ -35,16 +35,16 @@ const ItemDetail = ({ id }) => {
             <Head title="Item Details" />
 
             {error && (
-                <div className="bg-white rounded-2xl shadow p-6">
+                <div className="border border-gray-200 bg-white rounded-2xl p-6">
                     <p className="text-red-600 text-sm mb-4">{error}</p>
-                    <button onClick={goBack} className="text-sm text-blue-600 hover:underline">
+                    <button onClick={goBack} className="text-sm text-indigo-600 hover:underline">
                         &larr; Back to Stock List
                     </button>
                 </div>
             )}
 
             {!error && !asset && (
-                <div className="bg-white rounded-2xl shadow p-6 text-sm text-gray-500">
+                <div className="border border-gray-200 bg-white rounded-2xl p-6 text-sm text-gray-500">
                     Loading asset...
                 </div>
             )}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AddAsset from '../../components/AddAsset';
-import { FiEye, FiEdit2, FiTrash2, FiCopy } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2, FiCopy, FiSearch } from 'react-icons/fi';
 import Layout from '../../components/layout/Layout';
 import { useAssetMeta } from '../../context/AssetsContext';
 import placeholder from '../../assets/image/placeholder.png';
@@ -73,9 +73,10 @@ const Assets = () => {
             asset_tag: filters.tag,
             include_inactive: filters.showInactive ? 1 : 0,
             branch_id: selectedBranch?.branch_id,
+            all_branches: user?.view_asset_masterlist ? 1 : 0,
         };
         fetchBranchAssets(params);
-    }, [pagination.currentPage, pagination.perPage, searchTerm, searchType, filters.category, filters.tag, filters.showInactive, selectedBranch]);
+    }, [pagination.currentPage, pagination.perPage, searchTerm, searchType, filters.category, filters.tag, filters.showInactive, selectedBranch, user?.view_asset_masterlist]);
 
     useEffect(() => {
 
@@ -92,7 +93,8 @@ const Assets = () => {
             per_page: 10000,
             search: searchTerm,
             asset_category_id: filters.category,
-            branch_id: selectedBranch?.branch_id
+            branch_id: selectedBranch?.branch_id,
+            all_branches: user?.view_asset_masterlist ? 1 : 0,
         };
 
         try {
@@ -105,8 +107,12 @@ const Assets = () => {
                 Category: asset.asset_category_name || '—',
                 'Unit Cost': user?.add_edit_asset ? `RM ${Number(asset.asset_purchase_cost).toFixed(2)}` : '',
                 Price: `RM ${Number(asset.asset_sales_cost).toFixed(2)}`,
-                Branch: asset.branch_values[0]?.asset_branch_name || '—',
-                Quantity: asset.branch_values[0]?.asset_current_unit || 0,
+                Branch: user?.view_asset_masterlist
+                    ? (asset.branch_values || []).map(bv => bv.asset_branch_name).join(', ') || '—'
+                    : asset.branch_values[0]?.asset_branch_name || '—',
+                Quantity: user?.view_asset_masterlist
+                    ? (asset.branch_values || []).map(bv => `${bv.asset_branch_name}: ${bv.asset_current_unit || 0}`).join(' | ') || '—'
+                    : asset.branch_values[0]?.asset_current_unit || 0,
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(fullExportData);
@@ -243,17 +249,18 @@ const Assets = () => {
                     </div>
                 )}
 
-                <div className="max-w-9xl mx-auto">
-                    <div>
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 mb-4">
+                <div className="py-1 px-1 max-w-9xl mx-auto">
+                    <div className="rounded-2xl bg-white p-4">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
                             {/* Search Input */}
-                            <div className="w-full lg:w-1/4">
+                            <div className="relative w-full lg:w-1/4">
+                                <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-gray-400 pointer-events-none" />
                                 <input
                                     type="text"
-                                    placeholder="Search by name/code..."
+                                    placeholder="Search by name/code…"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full px-4 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full min-h-[38px] pl-[30px] pr-3 text-sm bg-white border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-500"
                                 />
                             </div>
 
@@ -261,46 +268,42 @@ const Assets = () => {
                             <div className="w-full lg:w-1/5">
                                 <input
                                     type="text"
-                                    placeholder="Type/Size..."
+                                    placeholder="Type/Size…"
                                     value={searchType}
                                     onChange={(e) => setSearchType(e.target.value)}
-                                    className="w-full px-4 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full min-h-[38px] px-3 text-sm bg-white border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-500"
                                 />
                             </div>
 
                             {/* Filters */}
-                            <div className="flex flex-wrap gap-4">
-                                <div>
-                                    <select
-                                        value={filters.category}
-                                        onChange={(e) => {
-                                            setPagination(prev => ({ ...prev, current_page: 1 }));
-                                            setFilters({ ...filters, category: e.target.value });
-                                        }}
-                                        className="px-2 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Categories</option>
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <select
+                                    value={filters.category}
+                                    onChange={(e) => {
+                                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                                        setFilters({ ...filters, category: e.target.value });
+                                    }}
+                                    className="min-h-[38px] px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-500"
+                                >
+                                    <option value="">All Categories</option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                    ))}
+                                </select>
 
-                                <div>
-                                    <select
-                                        value={filters.tag}
-                                        onChange={(e) => {
-                                            setPagination(prev => ({ ...prev, current_page: 1 }));
-                                            setFilters({ ...filters, tag: e.target.value });
-                                        }}
-                                        className="px-2 py-1 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">All Tags</option>
-                                        {ASSET_TAG_OPTIONS.map(tag => (
-                                            <option key={tag} value={tag}>{tag}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <select
+                                    value={filters.tag}
+                                    onChange={(e) => {
+                                        setPagination(prev => ({ ...prev, currentPage: 1 }));
+                                        setFilters({ ...filters, tag: e.target.value });
+                                    }}
+                                    className="min-h-[38px] px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-500"
+                                >
+                                    <option value="">All Tags</option>
+                                    {ASSET_TAG_OPTIONS.map(tag => (
+                                        <option key={tag} value={tag}>{tag}</option>
+                                    ))}
+                                </select>
 
                                 {user?.add_edit_asset && (
                                     <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
@@ -308,10 +311,10 @@ const Assets = () => {
                                             type="checkbox"
                                             checked={filters.showInactive}
                                             onChange={(e) => {
-                                                setPagination(prev => ({ ...prev, current_page: 1 }));
+                                                setPagination(prev => ({ ...prev, currentPage: 1 }));
                                                 setFilters({ ...filters, showInactive: e.target.checked });
                                             }}
-                                            className="rounded"
+                                            className="rounded accent-indigo-600"
                                         />
                                         Show Deactivated
                                     </label>
@@ -321,13 +324,13 @@ const Assets = () => {
                             {user?.add_edit_asset && (
                                 <button
                                     onClick={() => setShowModal(true)}
-                                    className="text-sm bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700 lg:ml-auto whitespace-nowrap"
+                                    className="flex-shrink-0 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 lg:ml-auto whitespace-nowrap"
                                 >
                                     + New Stock Registration
                                 </button>
                             )}
                         </div>
-                        <div className="flex items-center gap-2 mt-4 py-2">
+                        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
                             <button
                                 onClick={() => {
                                     const defaultFilters = {
@@ -339,7 +342,7 @@ const Assets = () => {
                                     setSearchTerm('');
                                     setSearchType('');
                                 }}
-                                className="rounded bg-gray-300 text-gray-800 px-4 py-1 hover:bg-gray-400 text-sm"
+                                className="px-4 py-2 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50"
                             >
                                 Clear
                             </button>
@@ -350,14 +353,14 @@ const Assets = () => {
                             />
 
                             {selectedAssets.length > 0 && (
-                                <div className="flex items-center bg-gray-100 rounded ml-auto">
+                                <div className="flex items-center bg-white rounded-lg px-2 py-1 ml-auto">
                                     <span className="text-sm text-gray-700 mr-2">
                                         {selectedAssets.length} item(s) selected
                                     </span>
                                     <div className="flex space-x-2">
                                         {user?.receive_transaction && (
                                             <button
-                                                className="flex items-center text-sm bg-white text-blue-700 px-3 py-1 rounded hover:bg-blue-50 shadow-sm shadow-blue-600/50"
+                                                className="flex items-center text-sm bg-white text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 shadow-sm shadow-blue-600/50"
                                                 onClick={() => handleBulkAction("receive")}
                                             >
                                                 <FiPackage className="text-blue-500 mr-1" />
@@ -367,7 +370,7 @@ const Assets = () => {
                                         {user?.add_edit_transaction && (
                                             <>
                                                 <button
-                                                    className="flex items-center text-sm bg-white text-emerald-700 px-3 py-1 rounded hover:bg-emerald-50 shadow-sm shadow-emerald-600/50"
+                                                    className="flex items-center text-sm bg-white text-emerald-700 px-3 py-1 rounded-lg hover:bg-emerald-50 shadow-sm shadow-emerald-600/50"
                                                     onClick={() => handleBulkAction("REQUESTED")}
                                                 >
                                                     <FiSend className="text-emerald-500 mr-1" />
@@ -375,14 +378,14 @@ const Assets = () => {
                                                 </button>
 
                                                 <button
-                                                    className="flex items-center text-sm bg-white text-yellow-700 px-3 py-1 rounded hover:bg-yellow-50 shadow-sm shadow-yellow-600/50"
+                                                    className="flex items-center text-sm bg-white text-yellow-700 px-3 py-1 rounded-lg hover:bg-yellow-50 shadow-sm shadow-yellow-600/50"
                                                     onClick={() => handleBulkAction("IN-TRANSIT")}
                                                 >
                                                     <FiTruck className="text-yellow-500 mr-1" />
                                                     Transfer
                                                 </button>
                                                 <button
-                                                    className="flex items-center text-sm bg-white text-purple-700 px-3 py-1 rounded hover:bg-purple-50 shadow-sm shadow-purple-600/50"
+                                                    className="flex items-center text-sm bg-white text-purple-700 px-3 py-1 rounded-lg hover:bg-purple-50 shadow-sm shadow-purple-600/50"
                                                     onClick={() => handleBulkAction("invoice")}
                                                 >
                                                     <FiFileText className="text-purple-500 mr-1" />
@@ -396,53 +399,54 @@ const Assets = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <div className="border border-gray-200 rounded-2xl bg-white shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-3 py-1 text-center">
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className="border-b border-gray-200">
+                                        <th className="px-3 py-2 text-center">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedAssets.length === assets.length && assets.length > 0}
                                                 onChange={handleSelectAll}
+                                                className="accent-indigo-600"
                                             />
                                         </th>
-                                        <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             Code
                                         </th>
-                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                        <th className="px-2 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             <div>Name</div>
                                             <div>Type/Size</div>
                                         </th>
-                                        <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             <div>Category</div>
                                             <div>Tag</div>
                                         </th>
                                         {user?.add_edit_asset && (
-                                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-1 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                                 Cost
                                             </th>
                                         )}
-                                        <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-left text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             Price
                                         </th>
-                                        <th className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             Date Created
                                         </th>
-                                        <th className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             Quantity
                                         </th>
-                                        <th className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             Action
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody>
                                     {assets.map((asset) => (
                                         <tr
                                             key={asset.id}
-                                            className="hover:bg-gray-50 group"
+                                            className="border-b border-gray-100 hover:bg-gray-50 group"
                                         >
                                             <td className="px-3 py-1 text-center">
                                                 <input
@@ -534,7 +538,19 @@ const Assets = () => {
                                                 {new Date(asset.created_at).toLocaleDateString('en-GB')}
                                             </td>
                                             <td className="px-1 py-2 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                {asset.branch_values[0]?.asset_branch_name || '—'}: {asset.branch_values[0]?.asset_current_unit || '0'}
+                                                {user?.view_asset_masterlist ? (
+                                                    asset.branch_values?.length ? (
+                                                        <div className="space-y-0.5">
+                                                            {asset.branch_values.map(bv => (
+                                                                <div key={bv.asset_branch_id}>
+                                                                    {bv.asset_branch_name}: {bv.asset_current_unit || '0'}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : '—'
+                                                ) : (
+                                                    `${asset.branch_values[0]?.asset_branch_name || '—'}: ${asset.branch_values[0]?.asset_current_unit || '0'}`
+                                                )}
                                             </td>
                                             <td className="px-1 py-2 whitespace-nowrap text-center">
                                                 <div className="inline-flex flex-col items-center gap-1">
@@ -543,7 +559,7 @@ const Assets = () => {
                                                             e.stopPropagation();
                                                             handleView(asset);
                                                         }}
-                                                        className="inline-flex items-center justify-center gap-1 w-16 bg-white shadow-sm shadow-blue-600/30 px-3 py-0.5 rounded-full text-[11px] text-blue-600 hover:text-blue-800"
+                                                        className="inline-flex items-center justify-center gap-1 w-16 bg-white px-3 py-0.5 rounded-full text-[11px] text-indigo-600 hover:text-indigo-800"
                                                     >
                                                         <FiEye className="w-3 h-3" />
                                                         View
@@ -554,7 +570,7 @@ const Assets = () => {
                                                                 e.stopPropagation();
                                                                 handleView(asset, true);
                                                             }}
-                                                            className="inline-flex items-center justify-center gap-1 w-16 bg-white shadow-sm shadow-amber-600/30 px-3 py-0.5 rounded-full text-[11px] text-amber-600 hover:text-amber-800"
+                                                            className="inline-flex items-center justify-center gap-1 w-16 bg-white px-3 py-0.5 rounded-full text-[11px] text-amber-600 hover:text-amber-800"
                                                         >
                                                             <FiEdit2 className="w-3 h-3" />
                                                             Edit

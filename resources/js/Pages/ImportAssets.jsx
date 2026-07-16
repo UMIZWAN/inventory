@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { FiUpload, FiDownload } from 'react-icons/fi';
 import api from '../api/api';
 import Layout from '../components/layout/Layout';
 import { useAuth } from '../context/AuthContext';
@@ -32,8 +34,10 @@ const ImportAssets = () => {
     if (user?.email !== 'dayangnh95@gmail.com' && user?.email !== 'umwongsw@gmail.com' && user?.email !== 'nafiqahcyindy@gmail.com') {
         return (
             <Layout>
-                <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded-xl mt-8">
-                    <p className="text-red-600 font-semibold">You do not have permission to access this page.</p>
+                <div className="py-1 px-1">
+                    <div className="border border-gray-200 rounded-2xl bg-white p-6 shadow-sm">
+                        <p className="text-red-600 font-semibold text-sm">You do not have permission to access this page.</p>
+                    </div>
                 </div>
             </Layout>
         );
@@ -131,120 +135,132 @@ const ImportAssets = () => {
 
     return (
         <Layout>
-            <div className="max-w-6xl mx-auto p-6 bg-white shadow rounded-xl mt-8">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Import Assets CSV</h2>
-                    <button
-                        onClick={downloadTemplate}
-                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 text-sm border border-gray-300"
-                    >
-                        Download Template
-                    </button>
-                </div>
-
-                <p className="text-sm text-gray-500 mb-4">
-                    Required fields: <span className="font-medium">{REQUIRED_FIELDS.join(', ')}</span>
-                </p>
-
-                <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileChange}
-                    className="mb-4 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded file:bg-blue-500 file:text-white hover:file:bg-blue-600"
-                />
-
-                {/* CSV Preview Table */}
-                {preview.length > 0 && (
-                    <div className="mb-4">
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-md font-semibold">
-                                Preview ({preview.length} rows)
-                                {errors.length > 0 && (
-                                    <span className="text-red-600 ml-2 text-sm font-normal">
-                                        — {errors.length} row(s) with errors
-                                    </span>
-                                )}
-                            </h3>
-                        </div>
-                        <div className="overflow-auto max-h-96 border rounded">
-                            <table className="min-w-full text-xs text-left">
-                                <thead className="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th className="px-3 py-2 border-b text-gray-600 font-medium">#</th>
-                                        {headers.map((h, i) => (
-                                            <th key={i} className={`px-3 py-2 border-b font-medium ${REQUIRED_FIELDS.includes(h) ? 'text-gray-900' : 'text-gray-500'}`}>
-                                                {h}
-                                                {REQUIRED_FIELDS.includes(h) && <span className="text-red-500">*</span>}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {preview.map((row, idx) => {
-                                        const rowNum = idx + 1;
-                                        const hasError = errorRowSet.has(rowNum);
-                                        const badFields = errorFieldMap[rowNum] || new Set();
-                                        return (
-                                            <tr key={idx} className={hasError ? 'bg-red-50' : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                <td className="px-3 py-1.5 border-b text-gray-400">{rowNum}</td>
-                                                {headers.map((h, i) => (
-                                                    <td
-                                                        key={i}
-                                                        className={`px-3 py-1.5 border-b ${badFields.has(h) ? 'text-red-600 font-semibold bg-red-100' : 'text-gray-700'}`}
-                                                    >
-                                                        {row[h] || (badFields.has(h) ? 'MISSING' : '—')}
-                                                    </td>
-                                                ))}
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+            <Head title="Import CSV" />
+            <div className="py-1 px-1">
+                <div className="border border-gray-200 rounded-2xl bg-white p-4 shadow-sm">
+                    <div className="flex items-center justify-between gap-4 mb-3">
+                        <h2 className="text-sm font-semibold text-gray-800">Import Assets CSV</h2>
+                        <button
+                            onClick={downloadTemplate}
+                            className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50"
+                        >
+                            <FiDownload className="w-3.5 h-3.5" />
+                            Download Template
+                        </button>
                     </div>
-                )}
 
-                <button
-                    onClick={handleUpload}
-                    disabled={loading || errors.length > 0}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                >
-                    {loading ? 'Uploading...' : 'Upload CSV'}
-                </button>
+                    <p className="text-sm text-gray-500 mb-4">
+                        Required fields: <span className="font-medium text-gray-700">{REQUIRED_FIELDS.join(', ')}</span>
+                    </p>
 
-                {errors.length > 0 && (
-                    <p className="text-red-600 text-sm mt-2">Fix the highlighted errors before importing.</p>
-                )}
+                    <label className="flex items-center gap-3 mb-4 px-3 py-3 border border-dashed border-gray-300 rounded-xl bg-gray-50/50 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-colors">
+                        <FiUpload className="flex-shrink-0 w-5 h-5 text-gray-400" />
+                        <div className="text-sm">
+                            <span className="text-indigo-600 font-medium">Choose a CSV file</span>
+                            <span className="text-gray-500"> or drag it here</span>
+                            {csvFile && <div className="text-xs text-gray-500 mt-0.5">{csvFile.name}</div>}
+                        </div>
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+                    </label>
 
-                {message && (
-                    <div className="mt-4 text-sm text-gray-700">{message}</div>
-                )}
-
-                {results.length > 0 && (
-                    <div className="mt-6">
-                        <h3 className="text-md font-semibold mb-2">Results</h3>
-                        <div className="space-y-2 max-h-64 overflow-auto border rounded p-2 text-sm">
-                            {results.map((r, i) => (
-                                <div
-                                    key={i}
-                                    className={`p-2 rounded border ${r.success ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}`}
-                                >
-                                    <p>
-                                        <strong>{r.row.name || '[No Name]'}</strong> —{' '}
-                                        {r.success ? 'Imported' : 'Failed'}
-                                    </p>
-                                    {!r.success && (
-                                        <ul className="list-disc list-inside text-red-600">
-                                            {typeof r.errors === 'object'
-                                                ? Object.values(r.errors).flat().map((e, j) => <li key={j}>{e}</li>)
-                                                : <li>{r.errors}</li>}
-                                        </ul>
+                    {/* CSV Preview Table */}
+                    {preview.length > 0 && (
+                        <div className="mb-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-[11px] uppercase tracking-[0.08em] text-gray-500">
+                                    Preview ({preview.length} rows)
+                                    {errors.length > 0 && (
+                                        <span className="text-red-600 ml-2 font-normal normal-case tracking-normal">
+                                            — {errors.length} row(s) with errors
+                                        </span>
                                     )}
-                                </div>
-                            ))}
+                                </h3>
+                            </div>
+                            <div className="overflow-auto max-h-96 border border-gray-200 rounded-xl">
+                                <table className="min-w-full text-xs text-left">
+                                    <thead className="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th className="px-3 py-2 border-b border-gray-200 text-gray-500 font-medium">#</th>
+                                            {headers.map((h, i) => (
+                                                <th key={i} className={`px-3 py-2 border-b border-gray-200 font-medium ${REQUIRED_FIELDS.includes(h) ? 'text-gray-900' : 'text-gray-500'}`}>
+                                                    {h}
+                                                    {REQUIRED_FIELDS.includes(h) && <span className="text-red-500">*</span>}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {preview.map((row, idx) => {
+                                            const rowNum = idx + 1;
+                                            const hasError = errorRowSet.has(rowNum);
+                                            const badFields = errorFieldMap[rowNum] || new Set();
+                                            return (
+                                                <tr key={idx} className={hasError ? 'bg-red-50' : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                    <td className="px-3 py-1.5 border-b border-gray-100 text-gray-400">{rowNum}</td>
+                                                    {headers.map((h, i) => (
+                                                        <td
+                                                            key={i}
+                                                            className={`px-3 py-1.5 border-b border-gray-100 ${badFields.has(h) ? 'text-red-600 font-semibold bg-red-100' : 'text-gray-700'}`}
+                                                        >
+                                                            {row[h] || (badFields.has(h) ? 'MISSING' : '—')}
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+
+                    <button
+                        onClick={handleUpload}
+                        disabled={loading || errors.length > 0}
+                        className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                    >
+                        {loading ? 'Uploading...' : 'Upload CSV'}
+                    </button>
+
+                    {errors.length > 0 && (
+                        <p className="text-red-600 text-sm mt-2">Fix the highlighted errors before importing.</p>
+                    )}
+
+                    {message && (
+                        <div className="mt-4 text-sm text-gray-700">{message}</div>
+                    )}
+
+                    {results.length > 0 && (
+                        <div className="mt-6">
+                            <h3 className="text-[11px] uppercase tracking-[0.08em] text-gray-500 mb-2">Results</h3>
+                            <div className="space-y-2 max-h-64 overflow-auto border border-gray-200 rounded-xl p-2 text-sm">
+                                {results.map((r, i) => (
+                                    <div
+                                        key={i}
+                                        className={`p-2 rounded-lg border ${r.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}
+                                    >
+                                        <p>
+                                            <strong>{r.row.name || '[No Name]'}</strong> —{' '}
+                                            {r.success ? 'Imported' : 'Failed'}
+                                        </p>
+                                        {!r.success && (
+                                            <ul className="list-disc list-inside text-red-600">
+                                                {typeof r.errors === 'object'
+                                                    ? Object.values(r.errors).flat().map((e, j) => <li key={j}>{e}</li>)
+                                                    : <li>{r.errors}</li>}
+                                            </ul>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </Layout>
     );

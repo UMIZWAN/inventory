@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
-import DataTable from 'react-data-table-component';
 import { BiCategory } from 'react-icons/bi';
+import { FiSearch } from 'react-icons/fi';
 import { useAssetMeta } from '../context/AssetsContext';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/layout/Layout';
 import { Head } from '@inertiajs/react';
+
+const GRID_COLS = { display: 'grid', gridTemplateColumns: '1fr 100px' };
 
 const CategoryPage = () => {
   const { user } = useAuth();
@@ -69,56 +71,26 @@ const CategoryPage = () => {
     setIsEditing(true);
   };
 
-  const columns = [
-    {
-      name: 'Name',
-      selector: row => row.name,
-      sortable: true,
-    },
-    ...(user?.settings ? [{
-      name: 'Actions',
-      center: true,
-      cell: (row) => (
-        <button
-          onClick={() => handleEdit(row)}
-          className="text-indigo-600 hover:text-indigo-900"
-        >
-          Edit
-        </button>
-      ),
-    }] : []),
-  ];
-
-  const LoadingComponent = () => (
-    <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
-      <BiCategory className="text-4xl text-gray-300" />
-      <p className="text-lg font-medium">Loading categories...</p>
-    </div>
-  );
-
-  const NoDataComponent = () => (
-    <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
-      <BiCategory className="text-4xl text-gray-300" />
-      <p className="text-lg font-medium">No categories found</p>
-      <p className="text-sm">Try adjusting your search criteria.</p>
-    </div>
-  );
+  const handleCancel = () => {
+    setForm({ name: '', id: null });
+    setIsEditing(false);
+  };
 
   return (
     <Layout>
       <Head title="Asset Categories" />
-      <div className="max-w-7xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Asset Categories</h1>
-
-        <div className={`flex flex-col ${user?.settings ? 'lg:flex-row' : ''} gap-4`}>
+      <div className="py-1 px-1">
+        <div className="flex flex-col gap-4">
           {user?.settings && (
-            <div className="bg-white shadow-md rounded-lg p-4 lg:w-1/3 h-fit">
-              <h2 className="text-lg font-semibold mb-3">{isEditing ? 'Edit Category' : 'Add Category'}</h2>
+            <div className="border border-gray-200 rounded-2xl bg-white p-4 shadow-sm">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">
+                {isEditing ? 'Edit Category' : 'Add Category'}
+              </h2>
               <form onSubmit={handleSubmit} className="space-y-3">
                 <input
                   type="text"
                   placeholder="Category name"
-                  className="border border-gray-300 rounded px-3 py-2 w-full"
+                  className="w-full min-h-[38px] px-3 text-sm bg-white border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-500"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
@@ -126,18 +98,15 @@ const CategoryPage = () => {
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                   >
                     {isEditing ? 'Update' : 'Add'}
                   </button>
                   {isEditing && (
                     <button
                       type="button"
-                      className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                      onClick={() => {
-                        setForm({ name: '', id: null });
-                        setIsEditing(false);
-                      }}
+                      className="px-4 py-2 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50"
+                      onClick={handleCancel}
                     >
                       Cancel
                     </button>
@@ -147,27 +116,69 @@ const CategoryPage = () => {
             </div>
           )}
 
-          <div className="bg-white shadow-md rounded-lg p-4 flex-1">
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search by name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1.5 text-sm rounded-full border border-gray-300 w-full sm:w-1/3 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+          <div className="border border-gray-200 rounded-2xl bg-white p-4 shadow-sm flex-1">
+            {/* Panel head: search */}
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="relative w-full max-w-[280px]">
+                <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search by name…"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full min-h-[38px] pl-[30px] pr-3 text-sm bg-white border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
             </div>
 
-            <DataTable
-              columns={columns}
-              data={filteredData}
-              progressPending={loading}
-              progressComponent={<LoadingComponent />}
-              pagination
-              highlightOnHover
-              striped
-              noDataComponent={<NoDataComponent />}
-            />
+            {loading ? (
+              <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+                <BiCategory className="text-4xl text-gray-300" />
+                <p className="text-lg font-medium">Loading categories...</p>
+              </div>
+            ) : (
+              <>
+                {/* Table head */}
+                <div
+                  style={GRID_COLS}
+                  className="px-3 pb-2 text-[11px] uppercase tracking-[0.08em] text-gray-500 border-b border-gray-200 mb-1"
+                >
+                  <span>Name</span>
+                  <span className="text-right">Actions</span>
+                </div>
+
+                {/* Rows */}
+                {filteredData.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+                    <BiCategory className="text-4xl text-gray-300" />
+                    <p className="text-lg font-medium">No categories found</p>
+                    <p className="text-sm">Try adjusting your search criteria.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    {filteredData.map((row) => (
+                      <div
+                        key={row.id}
+                        style={GRID_COLS}
+                        className="items-center px-3 py-3.5 text-sm border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      >
+                        <span className="font-semibold">{row.name}</span>
+                        <span className="text-right">
+                          {user?.settings && (
+                            <button
+                              onClick={() => handleEdit(row)}
+                              className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                            >
+                              Edit
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

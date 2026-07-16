@@ -1,15 +1,25 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Head } from '@inertiajs/react';
-import DataTable from 'react-data-table-component';
-import { MdAlternateEmail } from "react-icons/md";
-import { FiMapPin, FiUser } from 'react-icons/fi';
-import { FaUserShield } from "react-icons/fa6";
+import { FiMapPin, FiUser, FiChevronRight, FiSearch, FiCheckCircle } from 'react-icons/fi';
 import api from '../../api/api';
 import Layout from '../../components/layout/Layout';
 import AddUserModal from './AddUserModal';
 import EditUserModal from './EditUserModal';
 import { useAuth } from '../../context/AuthContext';
 import ExportButton from '../../components/ExportButton';
+import Pagination from '../../components/Pagination';
+
+const PERM_GROUPS = [
+    ['Roles', [['view_role', 'View Role'], ['add_edit_role', 'Add/Edit Role']]],
+    ['Users', [['view_user', 'View User'], ['add_edit_user', 'Add/Edit User']]],
+    ['Assets', [['view_asset', 'View Asset'], ['view_asset_masterlist', 'View Asset Masterlist'], ['add_edit_asset', 'Add/Edit Asset']]],
+    ['Branches', [['view_branch', 'View Branch'], ['add_edit_branch', 'Add/Edit Branch']]],
+    ['Transactions', [['view_transaction', 'View Transaction'], ['add_edit_transaction', 'Add/Edit Transaction'], ['receive_transaction', 'Receive Transaction'], ['approve_reject_transaction', 'Approve/Reject Transaction']]],
+    ['Reports', [['view_reports', 'View Reports'], ['download_reports', 'Download Reports']]],
+    ['General', [['settings', 'Settings']]],
+];
+
+const GRID_COLS = { display: 'grid', gridTemplateColumns: '32px 1.3fr 1.3fr 160px 110px' };
 
 const UserPage = () => {
     const { user } = useAuth();
@@ -22,16 +32,20 @@ const UserPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [branchFilter, setBranchFilter] = useState('');
     const [branches, setBranches] = useState([]);
+    const [accessLevelFilter, setAccessLevelFilter] = useState('');
+    const [accessLevels, setAccessLevels] = useState([]);
     const [successMessage, setSuccessMessage] = useState(null);
     const [totalRows, setTotalRows] = useState(0);
     const [perPage, setPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+    const [expandedIds, setExpandedIds] = useState(new Set());
 
     const debounceTimer = useRef(null);
     const isInitialMount = useRef(true);
 
     useEffect(() => {
         fetchBranches();
+        fetchAccessLevels();
     }, []);
 
     useEffect(() => {
@@ -51,7 +65,7 @@ const UserPage = () => {
             fetchUsers();
         }, 400);
         return () => clearTimeout(debounceTimer.current);
-    }, [searchTerm, branchFilter]);
+    }, [searchTerm, branchFilter, accessLevelFilter]);
 
     const fetchBranches = async () => {
         try {
@@ -61,6 +75,17 @@ const UserPage = () => {
             }
         } catch (error) {
             console.error('Error fetching branches:', error);
+        }
+    };
+
+    const fetchAccessLevels = async () => {
+        try {
+            const response = await api.get('/api/access-levels');
+            if (response.data.success) {
+                setAccessLevels(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching access levels:', error);
         }
     };
 
@@ -75,6 +100,7 @@ const UserPage = () => {
                     per_page: perPage,
                     name: searchTerm,
                     ...(branchFilter && { branch_id: branchFilter }),
+                    ...(accessLevelFilter && { access_level_id: accessLevelFilter }),
                 },
             });
 
@@ -92,7 +118,7 @@ const UserPage = () => {
         }
     };
 
-    const handleUserAdded = (newUser) => {
+    const handleUserAdded = () => {
         fetchUsers();
         setSuccessMessage('User added successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -104,7 +130,7 @@ const UserPage = () => {
     };
 
     const handleDeleteClick = async (u) => {
-        const confirmDelete = window.confirm(`Are you sure you want to delete ${u.name}?`);
+        const confirmDelete = window.confirm(`Are you sure you want to deactivate ${u.name}?`);
         if (!confirmDelete) return;
 
         try {
@@ -113,13 +139,13 @@ const UserPage = () => {
 
             if (response.data.success) {
                 setUsers(prevUsers => prevUsers.filter(item => item.id !== u.id));
-                alert('User deleted successfully');
+                alert('User deactivated successfully');
             } else {
-                alert(response.data.message || 'Failed to delete user');
+                alert(response.data.message || 'Failed to deactivate user');
             }
         } catch (error) {
-            console.error('Error deleting user:', error);
-            alert('An error occurred while deleting the user');
+            console.error('Error deactivating user:', error);
+            alert('An error occurred while deactivating the user');
         } finally {
             setLoading(false);
         }
@@ -133,13 +159,9 @@ const UserPage = () => {
         setTimeout(() => setSuccessMessage(null), 3000);
     };
 
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
-
-    const handlePerRowsChange = (newPerPage, page) => {
+    const handlePerPageChange = (newPerPage) => {
         setPerPage(newPerPage);
-        setCurrentPage(page);
+        setCurrentPage(1);
     };
 
     const handleExport = async (format) => {
@@ -150,6 +172,7 @@ const UserPage = () => {
                     per_page: 9999,
                     name: searchTerm,
                     ...(branchFilter && { branch_id: branchFilter }),
+                    ...(accessLevelFilter && { access_level_id: accessLevelFilter }),
                 },
             });
 
@@ -175,257 +198,244 @@ const UserPage = () => {
         }
     };
 
-    const renderPermissionStatus = (value) => {
-        return value ? (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Allowed
-            </span>
-        ) : (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                Denied
-            </span>
-        );
+    const toggleExpand = (id) => {
+        setExpandedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
     };
 
-    const columns = [
-        {
-            name: 'Name',
-            selector: row => row.name,
-            sortable: true,
-        },
-        {
-            name: 'Detail',
-            cell: (row) => (
-                <div className="py-2">
-                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                        <MdAlternateEmail className="self-center" />
-                        {row.email}
-                    </div>
-                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                        <FiUser className="self-center" />
-                        {row.username ? row.username : <span className="text-gray-400 italic">Not provided</span>}
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-gray-700">
-                        <FiMapPin className="mt-1" />
-                        <div className="flex flex-wrap gap-1">
-                            {row.users_branch?.map((branch) => (
-                                <span
-                                    key={branch.id}
-                                    className="inline-block bg-gray-200 text-gray-800 text-xs px-2 py-0.5 rounded-full"
-                                >
-                                    {branch.branch_name}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="flex items-stretch gap-2 text-sm text-gray-700">
-                        <FaUserShield className="self-center" />
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {row.access_level_name}
-                        </span>
-                    </div>
-                </div>
-            ),
-            grow: 2,
-        },
-        ...(user?.add_edit_user ? [{
-            name: 'Actions',
-            center: true,
-            cell: (row) => (
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => handleEditClick(row)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                    >
-                        Edit
-                    </button>
-                    <button
-                        onClick={() => handleDeleteClick(row)}
-                        className="text-red-600 hover:text-red-900"
-                    >
-                        Delete
-                    </button>
-                </div>
-            ),
-        }] : []),
-    ];
-
-    const ExpandedComponent = ({ data }) => (
-        <div className="py-4 px-2 bg-gray-50">
-            <div className="border rounded-lg p-4 bg-white overflow-hidden">
-                <h3 className="font-bold text-lg mb-3">Access Level Details: {data.access_level_name}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Add/Edit Role:</span>
-                        {renderPermissionStatus(data.add_edit_role)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>View Role:</span>
-                        {renderPermissionStatus(data.view_role)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Settings:</span>
-                        {renderPermissionStatus(data.settings)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Add/Edit User:</span>
-                        {renderPermissionStatus(data.add_edit_user)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>View User:</span>
-                        {renderPermissionStatus(data.view_user)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Add/Edit Asset:</span>
-                        {renderPermissionStatus(data.add_edit_asset)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>View Asset:</span>
-                        {renderPermissionStatus(data.view_asset)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>View Asset Masterlist:</span>
-                        {renderPermissionStatus(data.view_asset_masterlist)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Add/Edit Branch:</span>
-                        {renderPermissionStatus(data.add_edit_branch)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>View Branch:</span>
-                        {renderPermissionStatus(data.view_branch)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Add/Edit Transaction:</span>
-                        {renderPermissionStatus(data.add_edit_transaction)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>View Transaction:</span>
-                        {renderPermissionStatus(data.view_transaction)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Approve/Reject Transaction:</span>
-                        {renderPermissionStatus(data.approve_reject_transaction)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Receive Transaction:</span>
-                        {renderPermissionStatus(data.receive_transaction)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>View Reports:</span>
-                        {renderPermissionStatus(data.view_reports)}
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                        <span>Download Reports:</span>
-                        {renderPermissionStatus(data.download_reports)}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const LoadingComponent = () => (
-        <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
-            <FiUser className="text-4xl text-gray-300" />
-            <p className="text-lg font-medium">Loading users...</p>
-        </div>
-    );
-
-    const NoDataComponent = () => (
-        <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
-            <FiUser className="text-4xl text-gray-300" />
-            <p className="text-lg font-medium">No users found</p>
-            <p className="text-sm">Try adjusting your search or filter criteria.</p>
-        </div>
-    );
+    const pagination = {
+        currentPage,
+        perPage,
+        total: totalRows,
+        lastPage: Math.max(1, Math.ceil(totalRows / perPage)),
+    };
 
     return (
         <Layout>
-            <div className="py-6">
-                <Head title="Users" />
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">Users</h1>
-                        {user?.add_edit_user && (
+            <Head title="Users" />
+            <div className="py-1 px-1">
+                <div className="border border-gray-200 rounded-2xl bg-white p-4 shadow-sm">
+                    {successMessage && (
+                        <div className="mb-3 bg-green-50 border border-green-200 text-green-700 px-4 py-2.5 rounded-lg text-sm relative">
+                            <span>{successMessage}</span>
                             <button
-                                onClick={() => setIsAddModalOpen(true)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                onClick={() => setSuccessMessage(null)}
+                                className="absolute top-0 right-0 px-3 py-2 text-green-600 hover:text-green-800"
                             >
-                                Add User
+                                &times;
                             </button>
-                        )}
-                    </div>
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            {successMessage && (
-                                <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-                                    <span className="block sm:inline">{successMessage}</span>
-                                    <button
-                                        onClick={() => setSuccessMessage(null)}
-                                        className="absolute top-0 right-0 px-4 py-3"
-                                    >
-                                        <span className="text-green-700 text-xl">&times;</span>
-                                    </button>
-                                </div>
-                            )}
+                        </div>
+                    )}
 
-                            {error ? (
-                                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                                    {error}
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="mb-4 flex flex-wrap gap-2 items-center justify-between">
-                                        <div className="flex flex-wrap gap-2 items-center">
-                                            <input
-                                                type="text"
-                                                placeholder="Search by name..."
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                                className="px-3 py-1.5 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                            />
-                                            <select
-                                                value={branchFilter}
-                                                onChange={(e) => setBranchFilter(e.target.value)}
-                                                className="px-3 py-1.5 text-sm rounded-full border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                            >
-                                                <option value="">All Branches</option>
-                                                {branches.map(branch => (
-                                                    <option key={branch.id} value={branch.id}>
-                                                        {branch.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <ExportButton
-                                            onClick={handleExport}
-                                            excelClassName="px-4 py-1.5 text-sm rounded-lg text-white bg-green-600 hover:bg-green-700"
-                                            csvClassName="px-4 py-1.5 text-sm rounded-lg text-white bg-teal-600 hover:bg-teal-700"
-                                        />
-                                    </div>
-
-                                    <DataTable
-                                        columns={columns}
-                                        data={users}
-                                        progressPending={loading}
-                                        progressComponent={<LoadingComponent />}
-                                        pagination
-                                        paginationServer
-                                        paginationTotalRows={totalRows}
-                                        paginationPerPage={perPage}
-                                        paginationDefaultPage={currentPage}
-                                        onChangePage={handlePageChange}
-                                        onChangeRowsPerPage={handlePerRowsChange}
-                                        expandableRows
-                                        expandableRowsComponent={ExpandedComponent}
-                                        highlightOnHover
-                                        striped
-                                        noDataComponent={<NoDataComponent />}
-                                    />
-                                </>
+                    {/* Panel head: search + filter + export + add */}
+                    <div className="flex flex-nowrap items-center justify-between gap-3 mb-3">
+                        <div className="flex flex-nowrap items-center gap-3 min-w-0">
+                            <div className="relative w-[220px] flex-shrink-0">
+                                <FiSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-gray-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by name…"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full min-h-[38px] pl-[30px] pr-3 text-sm bg-white border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-500"
+                                />
+                            </div>
+                            <select
+                                value={branchFilter}
+                                onChange={(e) => setBranchFilter(e.target.value)}
+                                className="min-h-[38px] px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-500"
+                            >
+                                <option value="">All Branches</option>
+                                {branches.map(branch => (
+                                    <option key={branch.id} value={branch.id}>
+                                        {branch.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                value={accessLevelFilter}
+                                onChange={(e) => setAccessLevelFilter(e.target.value)}
+                                className="min-h-[38px] px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-500"
+                            >
+                                <option value="">All Access Levels</option>
+                                {accessLevels.map(level => (
+                                    <option key={level.id} value={level.id}>
+                                        {level.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <ExportButton
+                                onClick={handleExport}
+                                excelClassName="px-3 py-2 text-xs rounded-lg text-white bg-green-600 hover:bg-green-700"
+                                csvClassName="px-3 py-2 text-xs rounded-lg text-white bg-teal-600 hover:bg-teal-700"
+                            />
+                            {user?.add_edit_user && (
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="flex-shrink-0 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                >
+                                    Add User
+                                </button>
                             )}
                         </div>
                     </div>
+
+                    {error ? (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            {error}
+                        </div>
+                    ) : loading ? (
+                        <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+                            <FiUser className="text-4xl text-gray-300" />
+                            <p className="text-lg font-medium">Loading users...</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Table head */}
+                            <div
+                                style={GRID_COLS}
+                                className="px-3 pb-2 text-[11px] uppercase tracking-[0.08em] text-gray-500 border-b border-gray-200 mb-1"
+                            >
+                                <span></span>
+                                <span>Name</span>
+                                <span>Email/Username</span>
+                                <span>Access Level</span>
+                                <span>Actions</span>
+                            </div>
+
+                            {/* Rows */}
+                            {users.length === 0 ? (
+                                <div className="flex flex-col items-center gap-2 py-8 text-gray-500">
+                                    <FiUser className="text-4xl text-gray-300" />
+                                    <p className="text-lg font-medium">No users found</p>
+                                    <p className="text-sm">Try adjusting your search or filter criteria.</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col">
+                                    {users.map((row) => {
+                                        const isOpen = expandedIds.has(row.id);
+                                        return (
+                                            <div key={row.id}>
+                                                <div
+                                                    style={GRID_COLS}
+                                                    onClick={() => toggleExpand(row.id)}
+                                                    className={`items-center px-3 py-3.5 text-sm border-b border-gray-100 cursor-pointer transition-colors ${
+                                                        isOpen ? 'bg-indigo-50' : 'hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    <FiChevronRight
+                                                        className={`w-3.5 h-3.5 transition-transform ${
+                                                            isOpen ? 'rotate-90 text-indigo-600' : 'text-gray-400'
+                                                        }`}
+                                                    />
+                                                    <span className="font-semibold ml-1 truncate pr-2">{row.name}</span>
+                                                    <span className="pr-2 min-w-0">
+                                                        <div className="text-gray-600 truncate">{row.email}</div>
+                                                        <div className="text-xs text-gray-400 truncate">
+                                                            {row.username || <span className="italic">Not provided</span>}
+                                                        </div>
+                                                    </span>
+                                                    <span>
+                                                        <span className="inline-flex text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800">
+                                                            {row.access_level_name}
+                                                        </span>
+                                                    </span>
+                                                    <span className="inline-flex gap-3">
+                                                        {user?.add_edit_user && (
+                                                            <>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleEditClick(row);
+                                                                    }}
+                                                                    className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteClick(row);
+                                                                    }}
+                                                                    className="text-red-600 hover:text-red-800 hover:underline"
+                                                                >
+                                                                    Deactivate
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                {/* Expanded detail */}
+                                                {isOpen && (
+                                                    <div className="p-4">
+                                                        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4 text-sm text-gray-700">
+                                                            <div className="flex items-start gap-2">
+                                                                <FiMapPin className="text-gray-400 mt-0.5" />
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {row.users_branch?.length ? row.users_branch.map((branch) => (
+                                                                        <span
+                                                                            key={branch.id}
+                                                                            className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full"
+                                                                        >
+                                                                            {branch.branch_name}
+                                                                        </span>
+                                                                    )) : <span className="text-gray-400 italic">No branches</span>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                            {PERM_GROUPS.map(([group, perms]) => (
+                                                                <div key={group} className="border border-gray-200 rounded-[10px] p-3">
+                                                                    <h4 className="text-[11px] uppercase tracking-[0.06em] text-gray-500 mb-2">
+                                                                        {group}
+                                                                    </h4>
+                                                                    {perms.map(([key, label]) => {
+                                                                        const allowed = !!row[key];
+                                                                        return (
+                                                                            <div
+                                                                                key={key}
+                                                                                className={`flex items-center gap-2 py-[5px] text-[13.5px] ${
+                                                                                    allowed ? 'text-gray-800' : 'text-gray-400'
+                                                                                }`}
+                                                                            >
+                                                                                <FiCheckCircle
+                                                                                    className={`flex-shrink-0 w-[15px] h-[15px] ${
+                                                                                        allowed ? 'text-indigo-600' : 'text-gray-200'
+                                                                                    }`}
+                                                                                />
+                                                                                {label}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            <Pagination
+                                pagination={pagination}
+                                onPageChange={setCurrentPage}
+                                onPerPageChange={handlePerPageChange}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -433,9 +443,7 @@ const UserPage = () => {
             <AddUserModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                onUserAdded={(newUser) => {
-                    handleUserAdded(newUser);
-                }}
+                onUserAdded={handleUserAdded}
             />
 
             {/* Edit User Modal */}
