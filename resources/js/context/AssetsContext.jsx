@@ -20,7 +20,7 @@ export const AssetMetaProvider = ({ children }) => {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     lastPage: 1,
-    perPage: 10,
+    perPage: Number(localStorage.getItem('assets_per_page')) || 10,
     total: 0
   });
 

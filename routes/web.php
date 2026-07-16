@@ -103,6 +103,7 @@ Route::get('/report/item/{id}/{branch}', function ($id, $branch) {
 Route::prefix('items')->group(function () {
     Route::get('/master-list', fn() => Inertia::render('Items/MasterListPage'));
     Route::get('/item-list', fn() => Inertia::render('Items/Assets'));
+    Route::get('/item/{id}', fn($id) => Inertia::render('Items/ItemDetail', ['id' => (int) $id]));
     Route::get('/asset-transaction', fn() => Inertia::render('Items/StockTransfer'));
     Route::get('/asset-transfer', fn() => Inertia::render('Items/TransferForm'));
 });

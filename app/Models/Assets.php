@@ -20,6 +20,7 @@ class Assets extends Model
         'asset_type',
         'asset_category_id',
         'asset_tag',
+        'is_active',
         'asset_stable_unit',
         'asset_purchase_cost',
         'asset_sales_cost',
@@ -32,6 +33,7 @@ class Assets extends Model
     protected $casts = [
         'assets_log' => 'array',
         'asset_tag' => 'array',
+        'is_active' => 'boolean',
         'asset_purchase_cost' => 'decimal:4',
         'asset_sales_cost' => 'decimal:4',
     ];

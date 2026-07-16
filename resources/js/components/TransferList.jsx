@@ -458,10 +458,15 @@ export default function TransferList({ status, mode }) {
                     <div className="space-y-4 mt-2">
                       {txn.assets_transaction_item_list.map((item, index) => {
                         const isRejected = item.status === "REJECTED";
+                        const isDeactivated = item.assets?.is_active === false;
                         return (
                           <ul
                             key={index}
-                            className={`list-disc list-inside text-sm mb-1 ${isRejected ? "text-gray-400 line-through flex items-center gap-1" : "text-gray-800"
+                            className={`list-disc list-inside text-sm mb-1 ${isRejected
+                              ? "text-gray-400 line-through flex items-center gap-1"
+                              : isDeactivated
+                                ? "text-black line-through"
+                                : "text-gray-800"
                               }`}
                           >
                             <li className="flex items-center gap-1">

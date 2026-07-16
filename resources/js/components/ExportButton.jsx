@@ -30,13 +30,13 @@ export default function ExportButton({ data, merges = [], filename = "Export", s
         onClick={() => handleDownload("xlsx")}
         className={excelClassName || buttonClassName || "bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700"}
       >
-        Download Excel
+        Excel
       </button>
       <button
         onClick={() => handleDownload("csv")}
         className={csvClassName || buttonClassName || "bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"}
       >
-        Download CSV
+        CSV
       </button>
     </div>
   );

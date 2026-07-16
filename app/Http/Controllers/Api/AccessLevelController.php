@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccessLevel;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Exception;
@@ -21,12 +22,26 @@ class AccessLevelController extends Controller
         try {
             $accessLevels = AccessLevel::latest()->get();
 
+            $cached = Cache::remember('access_levels_cache', 3600, function () use ($accessLevels) {
+                return $accessLevels;
+            });
+
+            // Computed fresh every request (not cached) so it can't go stale
+            // when users are assigned/reassigned/removed between access-level cache refreshes.
+            $userCounts = User::whereNotNull('access_level_id')
+                ->selectRaw('access_level_id, count(*) as count')
+                ->groupBy('access_level_id')
+                ->pluck('count', 'access_level_id');
+
+            $data = $cached->map(function ($level) use ($userCounts) {
+                $level->users_count = $userCounts[$level->id] ?? 0;
+                return $level;
+            });
+
             return response()->json([
                 'success' => true,
                 'message' => 'List of Access Levels',
-                'data' => Cache::remember('access_levels_cache', 3600, function () use ($accessLevels) {
-                    return $accessLevels;
-                })
+                'data' => $data
             ], 200);
         } catch (Exception $e) {
             return response()->json([

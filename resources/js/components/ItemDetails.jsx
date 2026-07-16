@@ -25,10 +25,10 @@ const normalizeTags = (raw) => {
     return [...new Set(out.filter(Boolean))];
 };
 
-const ItemDetails = ({ asset, onClose, onUpdated }) => {
+const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = false }) => {
     const { user, selectedBranch } = useAuth();
     const { updateAsset, categories } = useAssetMeta();
-    const [editMode, setEditMode] = useState(false);
+    const [editMode, setEditMode] = useState(startInEdit);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
         name: asset.name || '',
@@ -158,6 +158,25 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
         }
     };
 
+    const handleToggleActive = async () => {
+        const deactivating = asset.is_active !== false;
+        if (!confirm(deactivating
+            ? "Deactivate this asset? It will be hidden from the Stock List but remain visible (struck through) in transaction history."
+            : "Reactivate this asset? It will appear in the Stock List again.")) return;
+
+        setSubmitting(true);
+        try {
+            const updated = await updateAsset(asset.id, { is_active: deactivating ? 0 : 1 });
+            if (onUpdated) onUpdated(updated);
+            setToast(deactivating ? 'Asset deactivated.' : 'Asset activated.');
+            setTimeout(() => setToast(null), 3000);
+        } catch (err) {
+            alert('Failed: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         setForm({ ...form, asset_image: file });
@@ -177,39 +196,68 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                 className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
             />
         ) : (
-            <span>{asset[field] ?? '—'}</span>
+            <span>{asset[field] ?? ''}</span>
         );
 
+    const wrapperClass = asPage
+        ? ""
+        : "fixed inset-0 z-50 flex items-center justify-center bg-gray-800/60";
+    const cardClass = asPage
+        ? "relative bg-white rounded-2xl shadow w-full max-w-4xl p-6 sm:p-8"
+        : "relative bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto";
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/60">
+        <div className={wrapperClass}>
             {toast && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white text-sm px-4 py-2 rounded shadow">
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white text-sm px-4 py-2 rounded shadow">
                     {toast}
                 </div>
             )}
 
-            <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                    aria-label="Close"
-                >
-                    &times;
-                </button>
+            <div className={cardClass}>
+                {!asPage && (
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+                )}
 
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                        {editMode ? 'Edit Asset' : 'Asset Details'}
-                    </h2>
-                    <div className="space-x-2">
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            {asset.asset_running_number} - {asset.name}
+                            {asset.is_active === false && (
+                                <span className="ml-3 align-middle px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    Deactivated
+                                </span>
+                            )}
+                        </h2>
+                        {editMode ? (
+                            <input
+                                name="asset_type"
+                                value={form.asset_type ?? ''}
+                                onChange={handleChange}
+                                placeholder="Type/Size"
+                                className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                            />
+                        ) : (
+                            asset.asset_type && (
+                                <p className="text-sm font-bold text-gray-500 mt-1">{asset.asset_type}</p>
+                            )
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
                         {editMode ? (
                             <>
                                 <button
                                     onClick={handleSubmit}
-                                    className="bg-white shadow-sm shadow-green-600/30 px-4 py-1 rounded-xs text-green-600 hover:text-green-800 hover:bg-green-100 focus:outline-2"
+                                    className="inline-flex items-center justify-center gap-1 bg-white shadow-sm shadow-green-600/30 px-3 py-0.5 rounded-full text-[11px] text-green-600 hover:text-green-800"
                                     disabled={submitting}
                                 >
-                                    <FaSave className="inline-block mr-1 mb-1" />
+                                    <FaSave className="w-3 h-3" />
                                     Save
                                 </button>
                                 <button
@@ -218,10 +266,10 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                                         setForm({ ...asset, asset_image: null });
                                         setImagePreview(null);
                                     }}
-                                    className="bg-white shadow-sm shadow-gray-600/30 px-3 py-1 rounded-xs text-gray-500 hover:text-gray-800 hover:bg-gray-100 focus:outline-2 mr-6"
+                                    className="inline-flex items-center justify-center gap-1 bg-white shadow-sm shadow-gray-600/30 px-3 py-0.5 rounded-full text-[11px] text-gray-500 hover:text-gray-800"
                                     disabled={submitting}
                                 >
-                                    <MdOutlineCancel className="inline-block mr-1 mb-1" />
+                                    <MdOutlineCancel className="w-3 h-3" />
                                     Cancel
                                 </button>
                             </>
@@ -230,52 +278,59 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                                 <>
                                     <button
                                         onClick={() => setEditMode(true)}
-                                        className="bg-white shadow-sm shadow-blue-600/30 px-2 py-1 rounded-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 focus:outline-2 mr-2"
+                                        className="inline-flex items-center justify-center gap-1 bg-white shadow-sm shadow-amber-600/30 px-3 py-0.5 rounded-full text-[11px] text-amber-600 hover:text-amber-800"
                                     >
-                                        <FaEdit className="inline-block mr-1 mb-1" />
+                                        <FaEdit className="w-3 h-3" />
                                         Edit
                                     </button>
+                                    {user?.email === 'kamal@gmail.com' && (
+                                        <button
+                                            onClick={handleToggleActive}
+                                            disabled={submitting}
+                                            className={asset.is_active === false
+                                                ? "inline-flex items-center justify-center gap-1 bg-white shadow-sm shadow-green-600/30 px-3 py-0.5 rounded-full text-[11px] text-green-600 hover:text-green-800"
+                                                : "inline-flex items-center justify-center gap-1 bg-white shadow-sm shadow-red-600/30 px-3 py-0.5 rounded-full text-[11px] text-red-600 hover:text-red-800"}
+                                        >
+                                            {asset.is_active === false ? 'Activate' : 'Deactivate'}
+                                        </button>
+                                    )}
                                 </>
                             )
                         )}
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-6">
-                    <div className="flex-shrink-0 relative">
+                <div className="mb-6 text-center">
+                    <div className="relative w-40 h-40 min-w-[10rem] min-h-[10rem] mx-auto">
                         <img
                             src={imagePreview || `${LINKS.API_BASE}/${form.asset_image}` || placeholder}
                             alt={form.name}
-                            className="w-40 h-40 object-cover rounded-xl border border-gray-200"
+                            className="w-full h-full object-cover rounded-xl border border-gray-200"
                         />
-                        {editMode && (
-                            <input
-                                type="file"
-                                name="asset_image"
-                                onChange={handleFileChange}
-                                className="mt-2 w-40 p-1 text-slate-500 text-sm rounded file:bg-blue-200 file:text-blue-700 
-                                file:font-semibold file:border-none file:px-1 file:py-1 file:mr-3 file:rounded hover:file:bg-blue-100 border"
-                            />
-                        )}
                     </div>
-                    <div className="flex-1 space-y-2">
-                        <div>
-                            <label className="text-sm font-semibold text-gray-600">Name:</label>
-                            {isEditing('name')}
-                        </div>
-                        <div>
-                            <label className="text-sm font-semibold text-gray-600">Type/Size:</label>
-                            {isEditing('asset_type')}
-                        </div>
-                        <div>
-                            <label className="text-sm font-semibold text-gray-600">Description:</label>
-                            {isEditing('asset_description')}
-                        </div>
-                    </div>
+                    {editMode && (
+                        <input
+                            type="file"
+                            name="asset_image"
+                            onChange={handleFileChange}
+                            className="mt-2 w-40 mx-auto p-1 text-slate-500 text-sm rounded file:bg-blue-200 file:text-blue-700
+                            file:font-semibold file:border-none file:px-1 file:py-1 file:mr-3 file:rounded hover:file:bg-blue-100 border"
+                        />
+                    )}
                 </div>
 
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
-                    <Detail label="Code" value={isEditing('asset_running_number')} />
+                {editMode && (
+                    <div className="mb-4">
+                        <label className="text-sm font-semibold text-gray-600">Name:</label>
+                        {isEditing('name')}
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-800">
+                    <Detail label="Description" value={isEditing('asset_description')} />
+                    {editMode && (
+                        <Detail label="Code" value={isEditing('asset_running_number')} />
+                    )}
                     <Detail
                         label="Category"
                         value={editMode ? (
@@ -290,7 +345,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                                 ))}
                             </select>
                         ) : (
-                            <span>{asset.asset_category_name ?? '—'}</span>
+                            <span>{asset.asset_category_name ?? ''}</span>
                         )}
                     />
                     <Detail
@@ -333,7 +388,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                                 )}
                             </div>
                         ) : (
-                            <span>{normalizeTags(asset.asset_tag).join(', ') || '—'}</span>
+                            <span>{normalizeTags(asset.asset_tag).join(', ')}</span>
                         )}
                     />
                     <Detail label="Unit of Measure " value={isEditing('asset_unit_measure')} />
@@ -341,17 +396,7 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                     <Detail label="Price" value={isEditing('asset_sales_cost')} />
                     <Detail label="Stable Quantity" value={isEditing('asset_stable_unit')} />
                     {!editMode && (
-                        <>
-                            <Detail label="Current Quantity" value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? '—'} />
-                            <Detail
-                                label="Branch"
-                                value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_branch_name ?? '—'}
-                            />
-                            {/* <Detail
-                                label="Location"
-                                value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_location_name ?? '—'}
-                            /> */}
-                        </>
+                        <Detail label="Current Quantity" value={asset.branch_values?.find(bv => bv.asset_branch_id === user?.branch_id)?.asset_current_unit ?? 0} />
                     )}
                 </div>
 
@@ -366,20 +411,9 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
                             rows={3}
                         />
                     ) : (
-                        <p className="text-sm text-gray-700">{asset.assets_remark ?? '—'}</p>
+                        <p className="text-sm text-gray-700">{asset.assets_remark ?? ''}</p>
                     )}
                 </div>
-
-                {!editMode && (
-                    <div className="mt-6">
-                        <Link
-                            href={`/report/item/${asset.id}/${selectedBranch?.branch_id}`}
-                            className="text-sm font-semibold text-blue-600 hover:underline"
-                        >
-                            Transaction History
-                        </Link>
-                    </div>
-                )}
 
                 {Array.isArray(logs) && logs.length > 0 && !editMode && (
                     <Section title="Logs" items={logs} />
@@ -392,8 +426,8 @@ const ItemDetails = ({ asset, onClose, onUpdated }) => {
 
 const Detail = ({ label, value }) => (
     <div>
-        <span className="text-gray-600 font-medium">{label}:</span>
-        <div className="text-gray-800 mt-1">{value}</div>
+        <span className="block text-center text-gray-600 font-medium">{label}:</span>
+        <div className="text-gray-800 mt-1 text-center">{value}</div>
     </div>
 );
 

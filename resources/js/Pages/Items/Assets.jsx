@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import AddAsset from '../../components/AddAsset';
-import ItemDetails from '../../components/ItemDetails';
 import { FiEye, FiEdit2, FiTrash2, FiCopy } from 'react-icons/fi';
 import Layout from '../../components/layout/Layout';
 import { useAssetMeta } from '../../context/AssetsContext';
 import placeholder from '../../assets/image/placeholder.png';
 import ExportButton from '../../components/ExportButton';
 import { useAuth } from '../../context/AuthContext';
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import api from '../../api/api';
 import Pagination from '../../components/Pagination';
 import * as XLSX from "xlsx";
@@ -47,7 +46,6 @@ const Assets = () => {
     const { assets, categories, fetchCategories, fetchBranchAssets,
         fetchAllBranchAssets, pagination, setPagination } = useAssetMeta();
     const [showModal, setShowModal] = useState(false);
-    const [selectedAsset, setSelectedAsset] = useState(null);
     const [selectedAssets, setSelectedAssets] = useState([]);
     const [actionType, setActionType] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +53,7 @@ const Assets = () => {
     const [filters, setFilters] = useState({
         category: '',
         tag: '',
+        showInactive: false,
     });
 
     const [toast, setToast] = useState(null);
@@ -67,30 +66,25 @@ const Assets = () => {
     useEffect(() => {
         const params = {
             page: pagination.currentPage,
+            per_page: pagination.perPage,
             search: searchTerm,
             type: searchType,
             asset_category_id: filters.category,
             asset_tag: filters.tag,
+            include_inactive: filters.showInactive ? 1 : 0,
             branch_id: selectedBranch?.branch_id,
         };
         fetchBranchAssets(params);
-    }, [pagination.currentPage, searchTerm, searchType, filters.category, filters.tag, selectedBranch]);
+    }, [pagination.currentPage, pagination.perPage, searchTerm, searchType, filters.category, filters.tag, filters.showInactive, selectedBranch]);
 
     useEffect(() => {
 
         fetchCategories();
     }, []);
 
-    // Keep the open modal in sync with the freshest data whenever assets refresh
-    useEffect(() => {
-        if (!selectedAsset || !assets?.length) return;
-        const fresh = assets.find(a => a.id === selectedAsset.id);
-        if (fresh && fresh !== selectedAsset) {
-            setSelectedAsset(fresh);
-        }
-    }, [assets]);
-
-    const handleView = (asset) => setSelectedAsset(asset);
+    const handleView = (asset, editMode = false) => {
+        window.open(`/items/item/${asset.id}${editMode ? '?edit=1' : ''}`, '_blank');
+    };
 
     const handleExport = async (format = "xlsx") => {
         const params = {
@@ -131,6 +125,11 @@ const Assets = () => {
         if (page >= 1 && page <= pagination.lastPage) {
             setPagination(prev => ({ ...prev, currentPage: page }));
         }
+    };
+
+    const handlePerPageChange = (perPage) => {
+        localStorage.setItem('assets_per_page', perPage);
+        setPagination(prev => ({ ...prev, perPage, currentPage: 1 }));
     };
 
     const handleDuplicate = async (asset) => {
@@ -244,19 +243,7 @@ const Assets = () => {
                     </div>
                 )}
 
-                <div className="p-6 max-w-9xl mx-auto">
-                    <div className="flex justify-between items-center mb-4">
-                        <h1 className="text-2xl font-bold">Stock List</h1>
-                        {user?.add_edit_asset && (
-                            <button
-                                onClick={() => setShowModal(true)}
-                                className="text-sm bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700"
-                            >
-                                + New Stock Registration
-                            </button>
-                        )}
-                    </div>
-
+                <div className="max-w-9xl mx-auto">
                     <div>
                         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 mb-4">
                             {/* Search Input */}
@@ -314,20 +301,39 @@ const Assets = () => {
                                         ))}
                                     </select>
                                 </div>
+
+                                {user?.add_edit_asset && (
+                                    <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={filters.showInactive}
+                                            onChange={(e) => {
+                                                setPagination(prev => ({ ...prev, current_page: 1 }));
+                                                setFilters({ ...filters, showInactive: e.target.checked });
+                                            }}
+                                            className="rounded"
+                                        />
+                                        Show Deactivated
+                                    </label>
+                                )}
                             </div>
+
+                            {user?.add_edit_asset && (
+                                <button
+                                    onClick={() => setShowModal(true)}
+                                    className="text-sm bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700 lg:ml-auto whitespace-nowrap"
+                                >
+                                    + New Stock Registration
+                                </button>
+                            )}
                         </div>
-                        <div className="flex gap-2 mt-4">
-                            {/* <button
-                                onClick={() => fetchBranchAssets(filters)}
-                                className="rounded bg-blue-600 text-white px-4 py-1 hover:bg-blue-700 text-sm"
-                            >
-                                Apply
-                            </button> */}
+                        <div className="flex items-center gap-2 mt-4 py-2">
                             <button
                                 onClick={() => {
                                     const defaultFilters = {
                                         category: '',
                                         tag: '',
+                                        showInactive: false,
                                     };
                                     setFilters(defaultFilters);
                                     setSearchTerm('');
@@ -337,60 +343,57 @@ const Assets = () => {
                             >
                                 Clear
                             </button>
-                        </div>
-                    </div>
+                            <ExportButton
+                                filename="Assets_List"
+                                sheetName="Assets"
+                                onClick={handleExport}
+                            />
 
-                    <div className='flex justify-between py-4'>
-                        <ExportButton
-                            filename="Assets_List"
-                            sheetName="Assets"
-                            onClick={handleExport}
-                        />
+                            {selectedAssets.length > 0 && (
+                                <div className="flex items-center bg-gray-100 rounded ml-auto">
+                                    <span className="text-sm text-gray-700 mr-2">
+                                        {selectedAssets.length} item(s) selected
+                                    </span>
+                                    <div className="flex space-x-2">
+                                        {user?.receive_transaction && (
+                                            <button
+                                                className="flex items-center text-sm bg-white text-blue-700 px-3 py-1 rounded hover:bg-blue-50 shadow-sm shadow-blue-600/50"
+                                                onClick={() => handleBulkAction("receive")}
+                                            >
+                                                <FiPackage className="text-blue-500 mr-1" />
+                                                Receive
+                                            </button>
+                                        )}
+                                        {user?.add_edit_transaction && (
+                                            <>
+                                                <button
+                                                    className="flex items-center text-sm bg-white text-emerald-700 px-3 py-1 rounded hover:bg-emerald-50 shadow-sm shadow-emerald-600/50"
+                                                    onClick={() => handleBulkAction("REQUESTED")}
+                                                >
+                                                    <FiSend className="text-emerald-500 mr-1" />
+                                                    Request
+                                                </button>
 
-                        {selectedAssets.length > 0 && (
-                            <div className="flex justify-between items-center bg-gray-100 rounded">
-                                <span className="text-sm text-gray-700 mr-2">
-                                    {selectedAssets.length} item(s) selected
-                                </span>
-                                <div className="flex space-x-2">
-                                    {user?.receive_transaction && (
-                                        <button
-                                            className="flex items-center text-sm bg-white text-blue-700 px-3 py-1 rounded hover:bg-blue-50 shadow-sm shadow-blue-600/50"
-                                            onClick={() => handleBulkAction("receive")}
-                                        >
-                                            <FiPackage className="text-blue-500 mr-1" />
-                                            Receive
-                                        </button>
-                                    )}
-                                    {user?.add_edit_transaction && (
-                                        <>
-                                            <button
-                                                className="flex items-center text-sm bg-white text-emerald-700 px-3 py-1 rounded hover:bg-emerald-50 shadow-sm shadow-emerald-600/50"
-                                                onClick={() => handleBulkAction("REQUESTED")}
-                                            >
-                                                <FiSend className="text-emerald-500 mr-1" />
-                                                Request
-                                            </button>
-
-                                            <button
-                                                className="flex items-center text-sm bg-white text-yellow-700 px-3 py-1 rounded hover:bg-yellow-50 shadow-sm shadow-yellow-600/50"
-                                                onClick={() => handleBulkAction("IN-TRANSIT")}
-                                            >
-                                                <FiTruck className="text-yellow-500 mr-1" />
-                                                Transfer
-                                            </button>
-                                            <button
-                                                className="flex items-center text-sm bg-white text-purple-700 px-3 py-1 rounded hover:bg-purple-50 shadow-sm shadow-purple-600/50"
-                                                onClick={() => handleBulkAction("invoice")}
-                                            >
-                                                <FiFileText className="text-purple-500 mr-1" />
-                                                Invoice
-                                            </button>
-                                        </>
-                                    )}
+                                                <button
+                                                    className="flex items-center text-sm bg-white text-yellow-700 px-3 py-1 rounded hover:bg-yellow-50 shadow-sm shadow-yellow-600/50"
+                                                    onClick={() => handleBulkAction("IN-TRANSIT")}
+                                                >
+                                                    <FiTruck className="text-yellow-500 mr-1" />
+                                                    Transfer
+                                                </button>
+                                                <button
+                                                    className="flex items-center text-sm bg-white text-purple-700 px-3 py-1 rounded hover:bg-purple-50 shadow-sm shadow-purple-600/50"
+                                                    onClick={() => handleBulkAction("invoice")}
+                                                >
+                                                    <FiFileText className="text-purple-500 mr-1" />
+                                                    Invoice
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
 
                     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -398,39 +401,40 @@ const Assets = () => {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 py-3 text-center">
+                                        <th className="px-3 py-1 text-center">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedAssets.length === assets.length && assets.length > 0}
                                                 onChange={handleSelectAll}
                                             />
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Code
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                            Item
+                                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                            <div>Name</div>
+                                            <div>Type/Size</div>
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             <div>Category</div>
                                             <div>Tag</div>
                                         </th>
                                         {user?.add_edit_asset && (
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                unit Cost
+                                            <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Cost
                                             </th>
                                         )}
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Price
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Branch
+                                        <th className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Date Created
                                         </th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Quantity
                                         </th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Date Created
+                                        <th className="px-1 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Action
                                         </th>
                                     </tr>
                                 </thead>
@@ -438,10 +442,9 @@ const Assets = () => {
                                     {assets.map((asset) => (
                                         <tr
                                             key={asset.id}
-                                            className="hover:bg-gray-50 group cursor-pointer"
-                                            onClick={() => handleView(asset)}
+                                            className="hover:bg-gray-50 group"
                                         >
-                                            <td className="px-4 py-4 text-center">
+                                            <td className="px-3 py-1 text-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedAssets.includes(asset.id)}
@@ -452,10 +455,10 @@ const Assets = () => {
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                                                 {asset.asset_running_number || '—'}
                                             </td>
-                                            <td className="px-6 py-4 align-middle">
+                                            <td className="px-1 py-2 align-middle">
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex-shrink-0 h-10 w-10 relative">
                                                         {asset.asset_image ? (
@@ -482,10 +485,15 @@ const Assets = () => {
                                                     <div className="flex justify-between items-center gap-3 flex-1 min-w-0">
                                                         <div className="min-w-0">
                                                             <div
-                                                                className="text-sm font-semibold text-gray-900 capitalize leading-snug break-words"
+                                                                className={`text-sm font-semibold capitalize leading-snug break-words ${asset.is_active === false ? 'text-gray-400 line-through' : 'text-gray-900'}`}
                                                                 title={asset.name}
                                                             >
                                                                 {toTitleCase(asset.name)}
+                                                                {asset.is_active === false && (
+                                                                    <span className="ml-2 no-underline px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-100 text-red-800 align-middle inline-block">
+                                                                        Deactivated
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             {asset.asset_type && (
                                                                 <div className="text-xs text-gray-500 mt-0.5">{asset.asset_type}</div>
@@ -506,7 +514,7 @@ const Assets = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500 break-words align-middle">
+                                            <td className="px-1 py-2 text-sm text-gray-500 break-words align-middle">
                                                 <div>{asset.asset_category_name || ' '}</div>
                                                 <div className="text-xs text-gray-400 mt-0.5 space-y-0.5">
                                                     {normalizeTags(asset.asset_tag).map(tag => (
@@ -515,21 +523,44 @@ const Assets = () => {
                                                 </div>
                                             </td>
                                             {user?.add_edit_asset && (
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                                                     RM {Number(asset.asset_purchase_cost).toFixed(2) || '0.00'}
                                                 </td>
                                             )}
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td className="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                                                 RM {Number(asset.asset_sales_cost).toFixed(2) || '0.00'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {asset.branch_values[0]?.asset_branch_name || '—'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                {asset.branch_values[0]?.asset_current_unit || '0'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                            <td className="px-1 py-2 whitespace-nowrap text-sm text-gray-500 text-center">
                                                 {new Date(asset.created_at).toLocaleDateString('en-GB')}
+                                            </td>
+                                            <td className="px-1 py-2 whitespace-nowrap text-sm text-gray-500 text-center">
+                                                {asset.branch_values[0]?.asset_branch_name || '—'}: {asset.branch_values[0]?.asset_current_unit || '0'}
+                                            </td>
+                                            <td className="px-1 py-2 whitespace-nowrap text-center">
+                                                <div className="inline-flex flex-col items-center gap-1">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleView(asset);
+                                                        }}
+                                                        className="inline-flex items-center justify-center gap-1 w-16 bg-white shadow-sm shadow-blue-600/30 px-3 py-0.5 rounded-full text-[11px] text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        <FiEye className="w-3 h-3" />
+                                                        View
+                                                    </button>
+                                                    {user?.add_edit_asset && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleView(asset, true);
+                                                            }}
+                                                            className="inline-flex items-center justify-center gap-1 w-16 bg-white shadow-sm shadow-amber-600/30 px-3 py-0.5 rounded-full text-[11px] text-amber-600 hover:text-amber-800"
+                                                        >
+                                                            <FiEdit2 className="w-3 h-3" />
+                                                            Edit
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -542,24 +573,13 @@ const Assets = () => {
                     <Pagination
                         pagination={pagination}
                         onPageChange={handlePageChange}
+                        onPerPageChange={handlePerPageChange}
                     />
 
                     {showModal && (
                         <AddAsset setShowModal={setShowModal} />
                     )}
 
-                    {selectedAsset && (
-                        <ItemDetails
-                            asset={selectedAsset}
-                            onClose={() => {
-                                setSelectedAsset(null);
-                            }}
-                            onUpdated={(updated) => {
-                                if (updated) setSelectedAsset(updated);
-                                fetchBranchAssets({ branch_id: selectedBranch?.branch_id });
-                            }}
-                        />
-                    )}
                 </div>
             </Layout>
         </>

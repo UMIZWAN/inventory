@@ -176,6 +176,7 @@ class AssetsController extends Controller
             'asset_category_id' => 'nullable|exists:assets_category,id',
             'asset_tag' => 'nullable|array',
             'asset_tag.*' => 'string|max:255',
+            'is_active' => 'nullable|boolean',
             'asset_stable_unit' => 'nullable|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
@@ -417,6 +418,7 @@ class AssetsController extends Controller
             $type = $request->type;
             $categoryId = $request->input('asset_category_id');
             $tag = $request->input('asset_tag');
+            $includeInactive = $request->boolean('include_inactive');
 
             $query = Assets::with(['category'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
@@ -441,6 +443,10 @@ class AssetsController extends Controller
 
             if (!empty($categoryId)) {
                 $query->where('asset_category_id', $categoryId);
+            }
+
+            if (!$includeInactive) {
+                $query->where('is_active', true);
             }
 
             if (!empty($tag)) {
@@ -495,6 +501,7 @@ class AssetsController extends Controller
             return [
                 'id' => $asset->id,
                 'name' => $asset->name,
+                'is_active' => $asset->is_active ?? true,
                 'asset_running_number' => $asset->asset_running_number,
                 'asset_category_id' => $asset->asset_category_id,
                 'asset_category_name' => $asset->category->name ?? null,

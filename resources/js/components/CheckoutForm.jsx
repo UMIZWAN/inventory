@@ -104,7 +104,8 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
             type: "select",
             options: branchItem.map((a) => ({
                 value: a.id, label: a.name,
-                qty: a.branch_values[0]?.asset_current_unit
+                qty: a.branch_values[0]?.asset_current_unit,
+                isInactive: a.is_active === false,
             })),
             width: "w-80",
         },
@@ -167,6 +168,21 @@ export default function CheckoutForm({ setShowCheckoutForm, selectedItems }) {
                 attachment,
                 totalAmount,
             };
+
+            const deactivatedItem = form.items.find(({ item }) => {
+                const asset = branchItem.find(a => a.id === Number(item));
+                return asset?.is_active === false;
+            });
+
+            if (deactivatedItem) {
+                const assetName = branchItem.find(a => a.id === Number(deactivatedItem.item))?.name || 'Unknown item';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Deactivated Item Selected',
+                    text: `"${assetName}" is deactivated. You have selected a deactivated item, cannot proceed with the transaction.`,
+                });
+                return;
+            }
 
             const invalidItem = form.items.find(({ item, quantity }) => {
                 const asset = branchItem.find(a => a.id === Number(item));

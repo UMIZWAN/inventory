@@ -43,6 +43,7 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
           value: a.id,
           label: `${a.asset_running_number} - ${a.name}`,
           qty: branchQty ? String(branchQty.asset_current_unit) : '0',
+          isInactive: a.is_active === false,
         };
       }),
       width: "w-[500px]"
@@ -113,6 +114,21 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const deactivatedItem = items.find(({ item }) => {
+      const asset = itemList.find(a => a.id === Number(item));
+      return asset?.is_active === false;
+    });
+
+    if (deactivatedItem) {
+      const assetName = itemList.find(a => a.id === Number(deactivatedItem.item))?.name || 'Unknown item';
+      Swal.fire({
+        icon: 'error',
+        title: 'Deactivated Item Selected',
+        text: `"${assetName}" is deactivated. You have selected a deactivated item, cannot proceed with the transaction.`,
+      });
+      return;
+    }
 
     const result = await confirmAction({
       title: 'Receive Asset?',

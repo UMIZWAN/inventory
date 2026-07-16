@@ -36,13 +36,13 @@ function ItemsTable({ columns, items, onChange, onAdd, onRemove, showAddRemove =
                     formatOptionLabel={(opt, { context }) =>
                       context === "menu" ? (
                         <div className="flex justify-between">
-                          <span>{opt.label}</span>
+                          <span className={opt.isInactive ? "text-black line-through" : ""}>{opt.label}</span>
                           {opt.qty && opt.qty !== '—' && (
                             <span className="text-sm text-gray-500">({opt.qty})</span>
                           )}
                         </div>
                       ) : (
-                        `${opt.label}`
+                        <span className={opt.isInactive ? "text-black line-through" : ""}>{opt.label}</span>
                       )
                     }
                   />
