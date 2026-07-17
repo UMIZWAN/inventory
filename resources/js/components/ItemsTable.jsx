@@ -32,7 +32,17 @@ function ItemsTable({ columns, items, onChange, onAdd, onRemove, showAddRemove =
                     classNamePrefix="react-select"
                     menuPortalTarget={document.body}
                     maxMenuHeight={300}
-                    styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      // Let long item names wrap instead of being cut off with "…"
+                      singleValue: (base) => ({
+                        ...base,
+                        whiteSpace: "normal",
+                        overflow: "visible",
+                        textOverflow: "clip",
+                      }),
+                      control: (base) => ({ ...base, height: "auto", minHeight: 38 }),
+                    }}
                     formatOptionLabel={(opt, { context }) =>
                       context === "menu" ? (
                         <div className="flex justify-between">
@@ -42,7 +52,7 @@ function ItemsTable({ columns, items, onChange, onAdd, onRemove, showAddRemove =
                           )}
                         </div>
                       ) : (
-                        <span className={opt.isInactive ? "text-black line-through" : ""}>{opt.label}</span>
+                        <span title={opt.label} className={opt.isInactive ? "text-black line-through" : ""}>{opt.label}</span>
                       )
                     }
                   />
