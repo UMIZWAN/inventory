@@ -23,6 +23,43 @@ const ASSET_TAG_OPTIONS = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift',
 const toTitleCase = (str = '') =>
     str.toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
 
+const getStatusBadge = (totalUnits, stableUnit) => {
+    if (!totalUnits || !stableUnit) {
+        return (
+            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                Critical Stock
+            </span>
+        );
+    }
+    const percentage = (totalUnits / stableUnit) * 100;
+    if (percentage >= 100) {
+        return (
+            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                In Stock
+            </span>
+        );
+    } else if (percentage >= 50) {
+        return (
+            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                Low Stock
+            </span>
+        );
+    }
+    return (
+        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+            Critical Stock
+        </span>
+    );
+};
+
+const getStatusText = (totalUnits, stableUnit) => {
+    if (!totalUnits || !stableUnit) return 'Critical Stock';
+    const pct = (totalUnits / stableUnit) * 100;
+    if (pct >= 100) return 'In Stock';
+    if (pct >= 50) return 'Low Stock';
+    return 'Critical Stock';
+};
+
 const normalizeTags = (raw) => {
     if (raw == null || raw === '') return [];
     const items = Array.isArray(raw) ? raw : [raw];
@@ -113,6 +150,8 @@ const Assets = () => {
                 Quantity: user?.view_asset_masterlist
                     ? (asset.branch_values || []).map(bv => `${bv.asset_branch_name}: ${bv.asset_current_unit || 0}`).join(' | ') || '—'
                     : asset.branch_values[0]?.asset_current_unit || 0,
+                'Total Qty': asset.total_units || 0,
+                Status: getStatusText(asset.total_units, asset.asset_stable_unit),
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(fullExportData);
@@ -438,6 +477,12 @@ const Assets = () => {
                                             Quantity
                                         </th>
                                         <th className="px-1 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
+                                            Total Qty
+                                        </th>
+                                        <th className="px-1 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
+                                            Status
+                                        </th>
+                                        <th className="px-1 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-[0.08em]">
                                             Action
                                         </th>
                                     </tr>
@@ -551,6 +596,12 @@ const Assets = () => {
                                                 ) : (
                                                     `${asset.branch_values[0]?.asset_branch_name || '—'}: ${asset.branch_values[0]?.asset_current_unit || '0'}`
                                                 )}
+                                            </td>
+                                            <td className="px-1 py-2 whitespace-nowrap text-sm text-gray-500 text-center">
+                                                {asset.total_units || 0}
+                                            </td>
+                                            <td className="px-1 py-2 whitespace-nowrap text-center">
+                                                {getStatusBadge(asset.total_units, asset.asset_stable_unit)}
                                             </td>
                                             <td className="px-1 py-2 whitespace-nowrap text-center">
                                                 <div className="inline-flex flex-col items-center gap-1">

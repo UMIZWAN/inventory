@@ -490,12 +490,16 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                 <span>Quantity</span>
                             </div>
                             <div className="max-h-56 overflow-y-auto">
-                                {branches.map((branch, idx) => {
-                                    const alreadyEnabled = branchQtyMap.has(branch.id);
-                                    const isChecked = alreadyEnabled
-                                        ? !removedBranchIds.has(branch.id)
-                                        : newBranchIds.has(branch.id);
-                                    return (
+                                {[...branches]
+                                    .map(branch => {
+                                        const alreadyEnabled = branchQtyMap.has(branch.id);
+                                        const isChecked = alreadyEnabled
+                                            ? !removedBranchIds.has(branch.id)
+                                            : newBranchIds.has(branch.id);
+                                        return { branch, isChecked };
+                                    })
+                                    .sort((a, b) => (a.isChecked === b.isChecked ? 0 : a.isChecked ? -1 : 1))
+                                    .map(({ branch, isChecked }, idx) => (
                                         <label
                                             key={branch.id}
                                             className={`flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 border-b border-gray-100 last:border-b-0 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} ${editMode ? 'cursor-pointer' : ''}`}
@@ -510,8 +514,7 @@ const ItemDetails = ({ asset, onClose, onUpdated, startInEdit = false, asPage = 
                                             <span className="flex-1">{branch.name}</span>
                                             <span className="text-gray-500">{branchQtyMap.get(branch.id) ?? '—'}</span>
                                         </label>
-                                    );
-                                })}
+                                    ))}
                             </div>
                         </div>
                     </div>
