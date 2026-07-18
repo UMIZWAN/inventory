@@ -42,7 +42,10 @@ export const OptionProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await api.get("/api/purpose");
-      setInvType(res.data.data);
+      // AMEND is a system purpose for report reconciliation — never user-selectable
+      setInvType((res.data.data || []).filter(
+        (p) => p.asset_transaction_purpose_name?.toUpperCase() !== 'AMEND'
+      ));
     } catch (err) {
       console.error("Failed to fetch suppliers", err);
     } finally {

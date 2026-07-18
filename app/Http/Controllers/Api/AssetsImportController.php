@@ -7,6 +7,8 @@ use App\Models\Assets;
 use App\Models\AssetsBranchValues;
 use App\Models\AssetsBranch;
 use App\Models\AssetsCategory;
+use App\Models\AssetsTransaction;
+use App\Models\AssetsTransactionItemList;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -52,6 +54,9 @@ class AssetsImportController extends Controller
             }
 
             $results = [];
+            // Rows treated as fresh imports (qty > 0) are grouped per branch and turned
+            // into one ASSET IN transaction per branch after the row loop.
+            $pendingTransactions = [];
             foreach ($rows as $row) {
                 // Sanitize currency values
                 $row['asset_purchase_cost'] = $this->sanitizeCurrency($row['asset_purchase_cost'] ?? null);
@@ -86,42 +91,8 @@ class AssetsImportController extends Controller
 
                     $existingAsset = Assets::where('asset_running_number', $row['asset_running_number'])->first();
 
-                    if ($existingAsset) {
-                        $exists = AssetsBranchValues::where('asset_id', $existingAsset->id)
-                            ->where('asset_branch_id', $branchId)
-                            ->exists();
-
-                        if (!$exists) {
-                            AssetsBranchValues::create([
-                                'asset_id' => $existingAsset->id,
-                                'asset_branch_id' => $branchId,
-                                'asset_location_id' => null,
-                                'asset_current_unit' => $row['asset_current_unit'],
-                            ]);
-
-                            BranchValueLogger::incrementLog($branchId, null, 'CSV IMPORT', [
-                                ['asset_id' => $existingAsset->id, 'asset_unit' => $row['asset_current_unit']]
-                            ]);
-                        } else {
-                            AssetsBranchValues::where('asset_id', $existingAsset->id)
-                                ->where('asset_branch_id', $branchId)
-                                ->update([
-                                    'asset_current_unit' => $row['asset_current_unit'],
-                                    'asset_location_id' => null,
-                                ]);
-
-                            BranchValueLogger::incrementLog($branchId, null, 'CSV IMPORT AMEND', [
-                                ['asset_id' => $existingAsset->id, 'asset_unit' => $row['asset_current_unit']]
-                            ]);
-                        }
-
-                        $results[] = [
-                            'row' => $row,
-                            'success' => true,
-                            'asset_id' => $existingAsset->id,
-                        ];
-                    } else {
-                        $asset = Assets::create([
+                    if (!$existingAsset) {
+                        $existingAsset = Assets::create([
                             'name' => $row['name'],
                             'asset_running_number' => $row['asset_running_number'],
                             'asset_category_id' => $categoryId,
@@ -133,24 +104,53 @@ class AssetsImportController extends Controller
                             'asset_description' => $row['asset_description'] ?? '',
                             'assets_log' => Auth::user()->name . ' imported asset via CSV on ' . now(),
                         ]);
+                    }
 
+                    $branchValue = AssetsBranchValues::where('asset_id', $existingAsset->id)
+                        ->where('asset_branch_id', $branchId)
+                        ->first();
+
+                    $existingQty = (int) ($branchValue->asset_current_unit ?? 0);
+                    $newQty = (int) $row['asset_current_unit'];
+
+                    // Fresh stock (no quantity yet) = real import with a transaction record;
+                    // anything that already holds stock is an amend.
+                    $isImport = $existingQty === 0;
+
+                    if ($branchValue) {
+                        $branchValue->update([
+                            'asset_current_unit' => $newQty,
+                            'asset_location_id' => null,
+                            'is_enabled' => true,
+                        ]);
+                    } else {
                         AssetsBranchValues::create([
-                            'asset_id' => $asset->id,
+                            'asset_id' => $existingAsset->id,
                             'asset_branch_id' => $branchId,
                             'asset_location_id' => null,
-                            'asset_current_unit' => $row['asset_current_unit'],
+                            'asset_current_unit' => $newQty,
+                            'is_enabled' => true,
                         ]);
+                    }
 
-                        BranchValueLogger::incrementLog($branchId, null, 'CSV IMPORT', [
-                            ['asset_id' => $asset->id, 'asset_unit' => $row['asset_current_unit']]
-                        ]);
+                    BranchValueLogger::incrementLog($branchId, null, $isImport ? 'CSV IMPORT' : 'CSV IMPORT AMEND', [
+                        ['asset_id' => $existingAsset->id, 'asset_unit' => $newQty]
+                    ]);
 
-                        $results[] = [
-                            'row' => $row,
-                            'success' => true,
-                            'asset_id' => $asset->id,
+                    // Imports with quantity get an ASSET IN transaction record; zero-quantity imports and amends do not.
+                    if ($isImport && $newQty > 0) {
+                        $pendingTransactions[$branchId][] = [
+                            'asset_id' => $existingAsset->id,
+                            'asset_unit' => $newQty,
+                            'cost' => is_numeric($row['asset_purchase_cost']) ? (float) $row['asset_purchase_cost'] : 0,
                         ];
                     }
+
+                    $results[] = [
+                        'row' => $row,
+                        'success' => true,
+                        'asset_id' => $existingAsset->id,
+                    ];
 
                     DB::commit();
                 } catch (Exception $e) {
@@ -159,6 +159,43 @@ class AssetsImportController extends Controller
                         'row' => $row,
                         'success' => false,
                         'errors' => $e->getMessage(),
+                    ];
+                }
+            }
+
+            // One ASSET IN transaction per branch so imported stock shows up in the
+            // Item Report / transaction history like a normal stock-in.
+            foreach ($pendingTransactions as $branchId => $items) {
+                DB::beginTransaction();
+                try {
+                    $transaction = AssetsTransaction::create([
+                        'assets_transaction_running_number' => 'CSV-' . now()->format('YmdHis') . '-' . $branchId,
+                        'assets_transaction_type' => 'ASSET IN',
+                        'assets_transaction_status' => 'RECEIVED',
+                        'assets_from_branch_id' => $branchId,
+                        'assets_transaction_remark' => 'Imported via CSV',
+                        'assets_transaction_total_cost' => collect($items)->sum(fn($i) => $i['asset_unit'] * $i['cost']),
+                        'created_by' => Auth::id(),
+                        'received_by' => Auth::id(),
+                        'received_at' => now(),
+                    ]);
+
+                    foreach ($items as $item) {
+                        AssetsTransactionItemList::create([
+                            'asset_transaction_id' => $transaction->id,
+                            'asset_id' => $item['asset_id'],
+                            'asset_unit' => $item['asset_unit'],
+                            'status' => null,
+                        ]);
+                    }
+
+                    DB::commit();
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    $results[] = [
+                        'row' => ['name' => 'Transaction record for branch #' . $branchId],
+                        'success' => false,
+                        'errors' => 'Stock updated but transaction record failed: ' . $e->getMessage(),
                     ];
                 }
             }

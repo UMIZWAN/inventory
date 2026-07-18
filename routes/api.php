@@ -83,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
 
     Route::get('report/item', [AssetsTransactionController::class, 'getSingleReport']);
+    Route::post('report/item/amend', [AssetsTransactionController::class, 'amendItemReport']);
 
     Route::post('/clear-cache', function (Request $request) {
         try {

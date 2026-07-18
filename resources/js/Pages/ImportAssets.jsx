@@ -149,8 +149,12 @@ const ImportAssets = () => {
                         </button>
                     </div>
 
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-gray-500 mb-2">
                         Required fields: <span className="font-medium text-gray-700">{REQUIRED_FIELDS.join(', ')}</span>
+                    </p>
+
+                    <p className="text-sm text-gray-500 mb-4">
+                        New stock (quantity &gt; 0) creates a stock-in transaction record. Items that already hold stock are amended instead.
                     </p>
 
                     <label className="flex items-center gap-3 mb-4 px-3 py-3 border border-dashed border-gray-300 rounded-xl bg-gray-50/50 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-colors">

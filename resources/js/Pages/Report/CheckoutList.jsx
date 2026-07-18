@@ -49,6 +49,9 @@ export default function CheckoutList() {
     };
 
     const filteredList = assetOut.filter((txn) => {
+        // Amend adjustments are bookkeeping records, not real invoices
+        if (txn.asset_transaction_purpose_name === 'AMEND') return false;
+
         const txnDate = txn.created_at.slice(0, 10);
 
         const assetSearchText = txn.assets_transaction_item_list.map(item => {

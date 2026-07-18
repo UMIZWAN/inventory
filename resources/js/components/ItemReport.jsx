@@ -2,12 +2,16 @@ import React, { useEffect, useState } from 'react';
 import api from '../api/api';
 import ExportButton from './ExportButton';
 import TransactionModalWrapper from './TransactionModalWrapper';
+import { useAuth } from '../context/AuthContext';
 
 function ItemReport({ id, branchId }) {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [txnId, setTxnId] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [amending, setAmending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,7 +32,24 @@ function ItemReport({ id, branchId }) {
 
     if (id && branchId) fetchReport();
     return () => { cancelled = true; };
-  }, [id, branchId]);
+  }, [id, branchId, refreshKey]);
+
+  const handleAmend = async () => {
+    if (!confirm('Create an amend transaction so the transaction total matches the current quantity? This does not change stock.')) return;
+    setAmending(true);
+    try {
+      const res = await api.post('/api/report/item/amend', { asset_id: id, branch_id: branchId });
+      if (res.data.success) {
+        setRefreshKey(k => k + 1);
+      } else {
+        alert(res.data.message || 'Amend failed');
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Amend failed');
+    } finally {
+      setAmending(false);
+    }
+  };
 
   if (loading) return <div className="border border-gray-200 bg-white p-6 rounded-2xl text-sm text-gray-500">Loading report...</div>;
   if (!data) return <div className="border border-gray-200 bg-white p-6 rounded-2xl text-sm text-gray-500">No report data found.</div>;
@@ -38,6 +59,12 @@ function ItemReport({ id, branchId }) {
   const assetOuts = branch.asset_out || [];
   const branchLog = branch.branch_value_log || [];
   const maxRows = Math.max(assetIns.length, assetOuts.length, 1);
+
+  const currentQty = Number(branch.asset_current_unit) || 0;
+  const totalFromTable =
+    assetIns.reduce((sum, tx) => sum + (Number(tx.asset_unit) || 0), 0) -
+    assetOuts.reduce((sum, tx) => sum + (Number(tx.asset_unit) || 0), 0);
+  const qtyMatches = currentQty === totalFromTable;
 
   const exportData = [];
   const merges = [];
@@ -92,6 +119,21 @@ function ItemReport({ id, branchId }) {
             filename={`Item_Report_${data.asset_running_number}`}
             sheetName="TransactionHistory"
           />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className={`text-sm font-semibold ${qtyMatches ? 'text-green-600' : 'text-red-600'}`}>
+            Current Quantity: {currentQty} || {totalFromTable} (Total From Transaction)
+          </span>
+          {!qtyMatches && user?.add_edit_asset && (
+            <button
+              onClick={handleAmend}
+              disabled={amending}
+              className="inline-flex items-center justify-center gap-1 bg-white shadow-sm shadow-amber-600/30 px-3 py-0.5 rounded-full text-[11px] text-amber-600 hover:text-amber-800 disabled:opacity-50"
+            >
+              {amending ? 'Amending…' : 'Amend'}
+            </button>
+          )}
         </div>
 
         <div className="overflow-x-auto mt-4">

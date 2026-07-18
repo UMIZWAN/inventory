@@ -23,6 +23,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Http\Resources\TransactionHistoryResource;
 use App\Models\AssetsBranch;
+use App\Models\AssetsTransactionPurpose;
 use App\Helpers\BranchValueLogger;
 
 class AssetsTransactionController extends Controller
@@ -1278,5 +1279,128 @@ class AssetsTransactionController extends Controller
         return response()->json([
             'data' => new ReportResource($asset)
         ]);
+    }
+
+    /**
+     * Reconcile the Item Report: creates a record-only AMEND transaction so the
+     * transaction-history total matches the branch's actual current quantity.
+     * Does NOT change stock.
+     */
+    public function amendItemReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'asset_id' => 'required|exists:assets,id',
+            'branch_id' => 'required|exists:assets_branch,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation Error',
+                'data' => $validator->errors()
+            ], 422);
+        }
+
+        if (!(Auth::user()->accessLevel->add_edit_asset ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to amend.'
+            ], 403);
+        }
+
+        $assetId = (int) $request->asset_id;
+        $branchId = (int) $request->branch_id;
+
+        $branchValue = AssetsBranchValues::where('asset_id', $assetId)
+            ->where('asset_branch_id', $branchId)
+            ->first();
+
+        if (!$branchValue) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Asset not found for the specified branch'
+            ], 404);
+        }
+
+        $currentQty = (int) $branchValue->asset_current_unit;
+
+        // Mirror ReportResource: total = ASSET IN (not reverted) + transfers in - ASSET OUT - transfers out
+        $items = AssetsTransactionItemList::where('asset_id', $assetId)
+            ->whereHas('assetsTransaction', function ($q) use ($branchId) {
+                $q->where(function ($inner) use ($branchId) {
+                    $inner->where('assets_from_branch_id', $branchId)
+                        ->orWhere('assets_to_branch_id', $branchId);
+                });
+            })
+            ->with('assetsTransaction')
+            ->get();
+
+        $tableTotal = 0;
+        foreach ($items as $item) {
+            $trx = $item->assetsTransaction;
+            if (!$trx) continue;
+            $unit = (int) $item->asset_unit;
+
+            if ($trx->assets_transaction_type === 'ASSET IN' && $trx->assets_transaction_status !== 'REVERTED') {
+                $tableTotal += $unit;
+            } elseif ($trx->assets_transaction_type === 'ASSET OUT' && $trx->assets_from_branch_id == $branchId) {
+                $tableTotal -= $unit;
+            } elseif ($trx->assets_transaction_type === 'ASSET TRANSFER') {
+                if ($trx->assets_to_branch_id == $branchId) $tableTotal += $unit;
+                if ($trx->assets_from_branch_id == $branchId) $tableTotal -= $unit;
+            }
+        }
+
+        $diff = $currentQty - $tableTotal;
+
+        if ($diff === 0) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Quantities already match, nothing to amend.'
+            ]);
+        }
+
+        DB::beginTransaction();
+        try {
+            $purposeId = AssetsTransactionPurpose::firstOrCreate([
+                'asset_transaction_purpose_name' => 'AMEND',
+            ])->id;
+
+            $transaction = AssetsTransaction::create([
+                'assets_transaction_running_number' => 'AMEND-' . now()->format('YmdHis') . '-' . $branchId,
+                'assets_transaction_type' => $diff > 0 ? 'ASSET IN' : 'ASSET OUT',
+                'assets_transaction_status' => $diff > 0 ? 'RECEIVED' : 'COMPLETED',
+                'assets_from_branch_id' => $branchId,
+                'assets_transaction_purpose_id' => $purposeId,
+                'assets_transaction_remark' => 'Amend adjustment to match current quantity (' . $currentQty . ')',
+                'created_by' => Auth::id(),
+                'received_by' => Auth::id(),
+                'received_at' => now(),
+            ]);
+
+            AssetsTransactionItemList::create([
+                'asset_transaction_id' => $transaction->id,
+                'asset_id' => $assetId,
+                'asset_unit' => abs($diff),
+                'status' => null,
+            ]);
+
+            BranchValueLogger::incrementLog($branchId, null, 'CONFIRM AMEND', [
+                ['asset_id' => $assetId, 'asset_unit' => $currentQty]
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Amend transaction created',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
