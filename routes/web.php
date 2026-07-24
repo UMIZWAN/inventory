@@ -1,10 +1,48 @@
 <?php
 
 use Inertia\Inertia;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return inertia('Login');
+});
+
+// SSO landing page — validates one-time token, creates Sanctum token, hands it to localStorage
+Route::get('/sso-login', function (\Illuminate\Http\Request $request) {
+    $rawToken = $request->query('token', '');
+
+    if ($rawToken === '') {
+        return view('sso-login', ['token' => null, 'redirect' => '/', 'error' => 'No token provided.']);
+    }
+
+    $ssoToken = DB::table('sso_tokens')
+        ->where('token', $rawToken)
+        ->where('used', false)
+        ->first();
+
+    if (!$ssoToken || (int) $ssoToken->expires_at < time()) {
+        return view('sso-login', ['token' => null, 'redirect' => '/', 'error' => 'SSO token is invalid or has expired.']);
+    }
+
+    // Mark as used immediately
+    DB::table('sso_tokens')->where('id', $ssoToken->id)->update(['used' => true]);
+
+    $user = User::where('username', $ssoToken->username)->where('is_active', true)->first();
+
+    if (!$user) {
+        return view('sso-login', ['token' => null, 'redirect' => '/', 'error' => 'User not found in this system.']);
+    }
+
+    // Create a Sanctum token — same as normal login
+    $accessToken = $user->createToken('sso_login')->plainTextToken;
+
+    return view('sso-login', [
+        'token'    => $accessToken,
+        'redirect' => '/items/item-list',
+        'error'    => null,
+    ]);
 });
 
 Route::get('/users', function () {
@@ -65,6 +103,7 @@ Route::get('/report/item/{id}/{branch}', function ($id, $branch) {
 Route::prefix('items')->group(function () {
     Route::get('/master-list', fn() => Inertia::render('Items/MasterListPage'));
     Route::get('/item-list', fn() => Inertia::render('Items/Assets'));
+    Route::get('/item/{id}', fn($id) => Inertia::render('Items/ItemDetail', ['id' => (int) $id]));
     Route::get('/asset-transaction', fn() => Inertia::render('Items/StockTransfer'));
     Route::get('/asset-transfer', fn() => Inertia::render('Items/TransferForm'));
 });

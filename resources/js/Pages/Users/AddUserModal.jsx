@@ -4,6 +4,7 @@ import api from '../../api/api';
 const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
     const [formData, setFormData] = useState({
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -85,12 +86,16 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         setLoading(true);
         setErrors({});
 
+        console.log('Submitting user data:', formData);
+
         try {
             const response = await api.post('/api/users', formData);
+            console.log('User created successfully:', response.data);
 
             if (response.data.data) {
                 setFormData({
                     name: '',
+                    username: '',
                     email: '',
                     password: '',
                     password_confirmation: '',
@@ -102,11 +107,12 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                 onClose();
             }
         } catch (error) {
+            console.error('Error adding user:', error);
+            console.error('Error response:', error.response?.data);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                console.error('Error adding user:', error);
-                setErrors({ general: 'An error occurred while adding the user.' });
+                setErrors({ general: error.response?.data?.message || 'An error occurred while adding the user.' });
             }
         } finally {
             setLoading(false);
@@ -145,6 +151,19 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                             placeholder="Enter name"
                         />
                         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold mb-1">Username</label>
+                        <input
+                            type="text"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className={`w-full border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-sm`}
+                            placeholder="Enter username (optional)"
+                        />
+                        {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
                     </div>
 
                     <div className="mb-4">
@@ -212,12 +231,44 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                             onChange={(e) => setBranchSearch(e.target.value.toLowerCase())}
                         />
 
+                        {formData.branch_id.length > 0 && (
+                            <div className="mb-2">
+                                <p className="text-xs text-gray-500 mb-1">Selected:</p>
+                                <div className="flex flex-wrap gap-1">
+                                    {formData.branch_id.map(id => {
+                                        const branch = branches.find(b => b.id === id);
+                                        return branch ? (
+                                            <span
+                                                key={id}
+                                                className="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                                            >
+                                                {branch.name}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleBranchCheckboxChange({ target: { value: id, checked: false } })}
+                                                    className="ml-1 text-blue-600 hover:text-blue-900"
+                                                >
+                                                    &times;
+                                                </button>
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="max-h-48 overflow-y-auto border border-gray-200 rounded p-2 bg-white shadow-sm">
-                            {branches
+                            {[...branches]
                                 .filter(branch => branch.name.toLowerCase().includes(branchSearch))
-                                .slice(0, 4)
+                                .sort((a, b) => {
+                                    const aSelected = formData.branch_id.includes(a.id);
+                                    const bSelected = formData.branch_id.includes(b.id);
+                                    if (aSelected && !bSelected) return -1;
+                                    if (!aSelected && bSelected) return 1;
+                                    return 0;
+                                })
                                 .map(branch => (
-                                    <label key={branch.id} className="flex items-center space-x-2 py-1">
+                                    <label key={branch.id} className={`flex items-center space-x-2 py-1 cursor-pointer ${formData.branch_id.includes(branch.id) ? 'bg-blue-50 rounded px-1' : ''}`}>
                                         <input
                                             type="checkbox"
                                             value={branch.id}
@@ -230,26 +281,11 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                                 ))}
                         </div>
 
-                        {formData.branch_id.length > 0 && (
-                            <div className="mt-3">
-                                <p className="text-sm font-semibold mb-1 text-gray-700">Selected Branches:</p>
-                                <div className="flex flex-wrap gap-2 overflow-y-auto">
-                                    {formData.branch_id.map(id => {
-                                        const branch = branches.find(b => b.id === id);
-                                        return branch ? (
-                                            <span
-                                                key={id}
-                                                className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
-                                            >
-                                                {branch.name}
-                                            </span>
-                                        ) : null;
-                                    })}
-                                </div>
-                            </div>
+                        {errors.branch_id && (
+                            <p className="text-red-500 text-xs italic mt-1">
+                                {Array.isArray(errors.branch_id) ? errors.branch_id.join(', ') : errors.branch_id}
+                            </p>
                         )}
-
-                        {errors.branch_id && <p className="text-red-500 text-xs italic mt-1">{errors.branch_id}</p>}
                     </div>
 
                     <div className="flex justify-end">

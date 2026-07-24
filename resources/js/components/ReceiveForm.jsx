@@ -37,13 +37,21 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
       key: "item",
       label: "Item",
       type: "select",
-      options: itemList.map((a) => ({ value: a.id, label: a.name })),
-      width: "w-80"
+      options: itemList.map((a) => {
+        const branchQty = a.branch_values?.find(bv => bv.asset_branch_id === selectedBranch?.branch_id);
+        return {
+          value: a.id,
+          label: `${a.asset_running_number} - ${a.name}`,
+          qty: branchQty ? String(branchQty.asset_current_unit) : '0',
+          isInactive: a.is_active === false,
+        };
+      }),
+      width: "w-[500px]"
     },
-    { key: "unitMeasure", label: "Unit of Measure", align: "text-center" },
-    { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-center" },
-    { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-center" },
-    { key: "price", label: "Selling Price", type: "number", min: 0, step: "0.01", align: "text-center" },
+    { key: "unitMeasure", label: "Unit of Measure", align: "text-center", width: "w-32" },
+    { key: "recvQty", label: "Recv Qty", type: "number", min: 0, align: "text-center", width: "w-24" },
+    { key: "unitCost", label: "Unit Cost", type: "number", min: 0, step: "0.01", align: "text-center", width: "w-28" },
+    { key: "price", label: "Selling Price", type: "number", min: 0, step: "0.01", align: "text-center", width: "w-28" },
   ];
 
   useEffect(() => {
@@ -107,6 +115,21 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const deactivatedItem = items.find(({ item }) => {
+      const asset = itemList.find(a => a.id === Number(item));
+      return asset?.is_active === false;
+    });
+
+    if (deactivatedItem) {
+      const assetName = itemList.find(a => a.id === Number(deactivatedItem.item))?.name || 'Unknown item';
+      Swal.fire({
+        icon: 'error',
+        title: 'Deactivated Item Selected',
+        text: `"${assetName}" is deactivated. You have selected a deactivated item, cannot proceed with the transaction.`,
+      });
+      return;
+    }
+
     const result = await confirmAction({
       title: 'Receive Asset?',
       text: 'Are you sure you want to submit this form?',
@@ -115,7 +138,6 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
 
     if (!result.isConfirmed) return;
 
-    setShowReceiveForm(false);
     setSubmitting(true);
     try {
       await createAssetIn({
@@ -137,12 +159,27 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
         showConfirmButton: false,
       });
 
+      setShowReceiveForm(false);
+
     } catch (error) {
       console.error('Error submitting form:', error);
+      const data = error?.response?.data;
+      const validationErrors = data?.errors || data?.data;
+      let lines = [];
+
+      if (validationErrors && typeof validationErrors === 'object') {
+        Object.entries(validationErrors).forEach(([field, msgs]) => {
+          const messages = Array.isArray(msgs) ? msgs : [msgs];
+          messages.forEach(msg => lines.push(msg));
+        });
+      }
+
       Swal.fire({
         icon: 'error',
-        title: 'Failed',
-        text: 'Failed to receive stock.',
+        title: data?.message || 'Failed to receive stock',
+        html: lines.length > 0
+          ? '<ul style="text-align:left;margin:0;padding-left:1.2em;">' + lines.map(l => `<li>${l}</li>`).join('') + '</ul>'
+          : undefined,
       });
     } finally {
       setSubmitting(false);
@@ -151,7 +188,7 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
+      <div className="p-6 bg-white shadow-md rounded-xl w-full max-w-[95vw] max-h-[90vh] overflow-y-auto relative">
 
         <button
           onClick={() => setShowReceiveForm(false)}
@@ -216,16 +253,11 @@ function ReceiveForm({ setShowReceiveForm, selectedItems }) {
           <div>
             <label className="block text-sm font-medium">Receive Date</label>
             <input
-              type="date"
+              type="text"
               name="receive_date"
-              value={receiveDate}
+              value={receiveDate.split('-').reverse().join('/')}
               readOnly
               className="border rounded p-2 mt-1 bg-gray-100 cursor-not-allowed"
-              style={{
-                appearance: "none",
-                WebkitAppearance: "none",
-                MozAppearance: "textfield",
-              }}
             />
           </div>
 

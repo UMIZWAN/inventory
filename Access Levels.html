@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Access Levels — MIS</title>
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            :root {
+                --pg-accent: oklch(0.56 0.19 264);
+                --pg-accent-hover: oklch(0.49 0.19 264);
+                --pg-accent-soft: oklch(0.96 0.02 264);
+                --pg-accent-ink: oklch(0.4 0.15 264);
+                --pg-border: oklch(0.9 0.01 264);
+                --pg-muted: oklch(0.55 0.02 264);
+                --pg-ink: oklch(0.22 0.01 264);
+            }
+            body {
+                background: #fff;
+                color: var(--pg-ink);
+            }
+            .layout {
+                display: flex;
+                min-height: 100vh;
+            }
+            .sidebar {
+                width: 236px;
+                flex: none;
+                background: #fff;
+                border-right: 1px solid var(--color-divider);
+                padding: var(--space-4) var(--space-3);
+                display: flex;
+                flex-direction: column;
+                gap: var(--space-4);
+                position: sticky;
+                top: 0;
+                height: 100vh;
+            }
+            .sidebar-brand {
+                font-family: var(--font-heading);
+                font-weight: 600;
+                font-size: 26px;
+                letter-spacing: -0.01em;
+            }
+            .sidebar-clock {
+                font-size: 12px;
+                color: var(--pg-accent-ink);
+                margin-top: 2px;
+            }
+            .sidebar-field label {
+                display: block;
+                font-size: 11px;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-text) 55%, transparent);
+                margin-bottom: 5px;
+            }
+            .sidebar-select {
+                width: 100%;
+                min-height: 34px;
+                padding: 5px 8px;
+                font: inherit;
+                font-size: 13px;
+                background: transparent;
+                border: 1px solid var(--color-divider);
+                border-radius: 8px;
+                color: var(--color-text);
+            }
+            .nav-group-label {
+                font-size: 11px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: color-mix(in srgb, var(--color-text) 50%, transparent);
+                margin: 0 0 var(--space-1);
+            }
+            .nav-list {
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+            }
+            .nav-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 7px 8px;
+                font-size: 14px;
+                text-decoration: none;
+                color: var(--color-text);
+                border: 1px solid transparent;
+                border-radius: 8px;
+            }
+            .nav-item svg {
+                flex: none;
+                width: 16px;
+                height: 16px;
+                stroke: currentColor;
+                color: color-mix(in srgb, var(--color-text) 65%, transparent);
+            }
+            .nav-item:hover {
+                background: color-mix(
+                    in srgb,
+                    var(--color-text) 6%,
+                    transparent
+                );
+            }
+            .nav-item.active {
+                border-color: transparent;
+                color: var(--pg-accent-ink);
+                background: var(--pg-accent-soft);
+            }
+            .nav-item.active svg {
+                color: var(--pg-accent-ink);
+            }
+            .sidebar-footer {
+                margin-top: auto;
+                display: flex;
+                flex-direction: column;
+                gap: var(--space-2);
+            }
+            .sidebar-user-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+            .sidebar-user {
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--pg-accent-ink);
+            }
+            .main {
+                flex: 1;
+                padding: var(--space-6) var(--space-8);
+                display: flex;
+                flex-direction: column;
+                gap: var(--space-4);
+            }
+            .page-head {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: var(--space-4);
+            }
+            .panel {
+                border: 1px solid var(--pg-border);
+                border-radius: 16px;
+                padding: var(--space-4);
+                background: #fff;
+                box-shadow: 0 1px 2px rgba(20, 20, 40, 0.03);
+            }
+            .panel-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: var(--space-4);
+                margin-bottom: var(--space-3);
+            }
+            .panel-head h1 {
+                margin: 0;
+            }
+            .search-row {
+                margin-bottom: var(--space-3);
+            }
+            .table-head {
+                display: grid;
+                grid-template-columns: 32px 1fr 110px 80px 90px;
+                padding: 0 var(--space-3) var(--space-2);
+                font-size: 11px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--pg-muted);
+                border-bottom: 1px solid var(--pg-border);
+                margin-bottom: 4px;
+            }
+            .rows {
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+            }
+            .level-row {
+                display: grid;
+                grid-template-columns: 32px 1fr 110px 80px 90px;
+                align-items: center;
+                padding: 14px var(--space-3);
+                border: 0;
+                border-bottom: 1px solid
+                    color-mix(in srgb, var(--pg-border) 70%, transparent);
+                border-radius: 0;
+                font-size: 14px;
+                background: #fff;
+            }
+            .level-row.expandable {
+                cursor: pointer;
+                transition: background 0.12s;
+            }
+            .level-row.expandable:hover {
+                background: color-mix(in srgb, var(--pg-ink) 3%, transparent);
+            }
+            .level-row.selected {
+                background: var(--pg-accent-soft);
+            }
+            .sort-btns {
+                display: inline-flex;
+                gap: 4px;
+            }
+            .sort-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+                border: 1px solid var(--pg-border);
+                border-radius: 6px;
+                background: #fff;
+                cursor: pointer;
+                color: var(--pg-muted);
+            }
+            .sort-btn:hover {
+                border-color: var(--pg-accent);
+                color: var(--pg-accent);
+            }
+            .sort-btn.active {
+                background: var(--pg-accent-soft);
+                border-color: var(--pg-accent);
+                color: var(--pg-accent-ink);
+            }
+            .sort-btn svg {
+                width: 12px;
+                height: 12px;
+            }
+            .level-name {
+                font-weight: 600;
+                margin-left: 4px;
+            }
+            .chevron {
+                width: 14px;
+                height: 14px;
+                stroke: var(--pg-muted);
+                transition: transform 0.15s;
+            }
+            .chevron.open {
+                transform: rotate(90deg);
+                stroke: var(--pg-accent);
+            }
+            .detail {
+                border: none;
+                border-radius: 12px;
+                margin-top: -2px;
+                padding: var(--space-4);
+                background: transparent;
+            }
+            .detail-top {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                padding-bottom: var(--space-3);
+                margin-bottom: var(--space-3);
+                border-bottom: 1px solid var(--pg-border);
+            }
+            .detail-top .count {
+                font-size: 13px;
+                color: var(--pg-muted);
+            }
+            .detail-top .count b {
+                color: var(--pg-ink);
+                font-size: 15px;
+            }
+            .perm-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--space-3);
+            }
+            .perm-group {
+                border: 1px solid var(--pg-border);
+                border-radius: 10px;
+                padding: var(--space-3);
+            }
+            .perm-group h4 {
+                margin: 0 0 8px;
+                font-size: 11px;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--pg-muted);
+            }
+            .perm-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 5px 0;
+                font-size: 13.5px;
+            }
+            .perm-row svg {
+                flex: none;
+                width: 15px;
+                height: 15px;
+            }
+            .perm-row.allowed svg {
+                color: var(--pg-accent);
+            }
+            .perm-row.denied {
+                color: var(--pg-muted);
+            }
+            .perm-row.denied svg {
+                color: var(--pg-border);
+            }
+            .detail-title {
+                font-size: 20px;
+                margin-bottom: var(--space-3);
+            }
+            .detail-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0 var(--space-6);
+            }
+            .detail-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: var(--space-3);
+                padding: 9px 0;
+                border-bottom: 1px solid
+                    color-mix(in srgb, var(--color-text) 8%, transparent);
+                font-size: 14px;
+            }
+            .detail-item .label {
+                color: color-mix(in srgb, var(--color-text) 75%, transparent);
+            }
+            .btn {
+                border-radius: 8px !important;
+            }
+            .btn-primary {
+                background: var(--pg-accent) !important;
+                border-color: var(--pg-accent) !important;
+            }
+            .btn-primary:hover {
+                background: var(--pg-accent-hover) !important;
+            }
+            .btn-ghost {
+                color: var(--pg-accent) !important;
+            }
+            .input {
+                border-radius: 8px !important;
+                min-height: 38px !important;
+                background: #fff !important;
+                border: none !important;
+                border-bottom: 1px solid var(--pg-border) !important;
+                border-radius: 0 !important;
+            }
+            .btn-primary {
+                padding-top: 9px !important;
+                padding-bottom: 9px !important;
+            }
+            .input:focus-visible {
+                border-color: var(--pg-accent) !important;
+            }
+            .tag {
+                border-radius: 999px !important;
+            }
+            .tag-outline {
+                border-color: var(--pg-accent) !important;
+                color: var(--pg-accent-ink) !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layout">
+            <aside class="sidebar">
+                <div>
+                    <div class="sidebar-brand">MIS</div>
+                    <div class="sidebar-clock" id="clock"></div>
+                </div>
+                <div class="sidebar-field">
+                    <label>Branch</label>
+                    <select class="sidebar-select">
+                        <option>HQKK</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="nav-group-label">Administration</div>
+                    <div class="nav-list">
+                        <a class="nav-item active" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path
+                                    d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6l7-3z"
+                                /></svg
+                            >Access Levels</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <circle cx="9" cy="8" r="3.2" />
+                                <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+                                <circle cx="17" cy="9" r="2.6" />
+                                <path d="M15.5 14c2.5.2 4.5 2.4 4.5 6" /></svg
+                            >Users</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path
+                                    d="M12 21s7-5.4 7-11a7 7 0 10-14 0c0 5.6 7 11 7 11z"
+                                />
+                                <circle cx="12" cy="10" r="2.4" /></svg
+                            >Branches</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path
+                                    d="M20 11.5l-8-6-8 6V20a1 1 0 001 1h5v-6h4v6h5a1 1 0 001-1z"
+                                /></svg
+                            >Categories</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path d="M3 12l4-8h10l4 8" />
+                                <path
+                                    d="M3 12v6a1 1 0 001 1h16a1 1 0 001-1v-6"
+                                />
+                                <path d="M3 12h18" /></svg
+                            >Suppliers</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <rect
+                                    x="2"
+                                    y="8"
+                                    width="13"
+                                    height="8"
+                                    rx="1"
+                                />
+                                <path d="M15 11h3l3 3v2h-6z" />
+                                <circle cx="6.5" cy="18" r="1.6" />
+                                <circle cx="16.5" cy="18" r="1.6" /></svg
+                            >Shipping Option</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path d="M6 3h9l3 3v15H6z" />
+                                <path d="M9 9h6M9 13h6M9 17h4" /></svg
+                            >Invoice Purpose</a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <div class="nav-group-label">Manage Assets</div>
+                    <div class="nav-list">
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path d="M4 6h16M4 12h16M4 18h10" /></svg
+                            >Master List</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path d="M3 7l9-4 9 4-9 4-9-4z" />
+                                <path d="M3 7v10l9 4 9-4V7" />
+                                <path d="M12 11v10" /></svg
+                            >Stock List</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <path d="M4 8h13l-3-3M20 16H7l3 3" /></svg
+                            >Stock Movement</a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <div class="nav-group-label">Manage Report</div>
+                    <div class="nav-list">
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <rect
+                                    x="4"
+                                    y="4"
+                                    width="16"
+                                    height="16"
+                                    rx="1"
+                                />
+                                <path d="M9 12h6M12 9v6" /></svg
+                            >IN-OUT History</a
+                        >
+                        <a class="nav-item" href="#"
+                            ><svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="1.5"
+                            >
+                                <rect
+                                    x="6"
+                                    y="3"
+                                    width="12"
+                                    height="18"
+                                    rx="1"
+                                />
+                                <path d="M9 8h6M9 12h6M9 16h3" /></svg
+                            >Invoice</a
+                        >
+                    </div>
+                </div>
+                <div class="sidebar-footer">
+                    <div class="hr"></div>
+                    <div class="sidebar-user-row">
+                        <div class="sidebar-user">Kamaleiah Binti Harun</div>
+                        <button
+                            class="btn btn-secondary btn-icon"
+                            title="Logout"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                style="width: 16px; height: 16px"
+                            >
+                                <path
+                                    d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"
+                                />
+                                <path d="M16 17l5-5-5-5" />
+                                <path d="M21 12H9" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+            <main class="main">
+                <div class="panel">
+                    <div class="panel-head">
+                        <div
+                            class="search-row"
+                            style="margin-bottom: 0; position: relative"
+                        >
+                            <svg
+                                style="
+                                    position: absolute;
+                                    left: 8px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    width: 15px;
+                                    height: 15px;
+                                    stroke: var(--pg-muted);
+                                    pointer-events: none;
+                                "
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke-width="2"
+                            >
+                                <circle cx="11" cy="11" r="7" />
+                                <path d="M21 21l-4.3-4.3" />
+                            </svg>
+                            <input
+                                class="input"
+                                style="max-width: 340px; padding-left: 30px"
+                                type="text"
+                                placeholder="Search access by name…"
+                            />
+                        </div>
+                        <button class="btn btn-primary">
+                            Add Access Level
+                        </button>
+                    </div>
+                    <div class="table-head">
+                        <span></span><span>Name</span><span>User Count</span
+                        ><span>Sort</span><span>Actions</span>
+                    </div>
+                    <div id="rows" class="rows"></div>
+                </div>
+            </main>
+        </div>
+        <script>
+            const clock = document.getElementById("clock");
+            function tick() {
+                const d = new Date();
+                clock.textContent =
+                    d.toLocaleDateString("en-GB", {
+                        weekday: "short",
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                    }) +
+                    " · " +
+                    d.toLocaleTimeString("en-GB");
+            }
+            tick();
+            setInterval(tick, 1000);
+
+            const permGroups = [
+                ["Roles", ["View Role", "Add/Edit Role"]],
+                ["Users", ["View User", "Add/Edit User"]],
+                [
+                    "Assets",
+                    ["View Asset", "View Asset Masterlist", "Add/Edit Asset"],
+                ],
+                ["Branches", ["View Branch", "Add/Edit Branch"]],
+                [
+                    "Transactions",
+                    [
+                        "View Transaction",
+                        "Add/Edit Transaction",
+                        "Receive Transaction",
+                        "Approve/Reject Transaction",
+                    ],
+                ],
+                ["Reports", ["View Reports", "Download Reports"]],
+                ["General", ["Settings"]],
+            ];
+            const levels = [
+                { name: "IT", count: 1, open: true },
+                { name: "CSO", count: 23 },
+                { name: "CSE", count: 27 },
+                { name: "HQ", count: 5 },
+                { name: "MWP", count: 14 },
+            ];
+            const rowsEl = document.getElementById("rows");
+            function render() {
+                rowsEl.innerHTML = "";
+                levels.forEach((lv, i) => {
+                    const row = document.createElement("div");
+                    row.className =
+                        "level-row expandable" + (lv.open ? " selected" : "");
+                    row.innerHTML = `<svg class="chevron${lv.open ? " open" : ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg>
+<span class="level-name">${lv.name}</span><span>${lv.count}</span><span class="sort-btns"><button class="sort-btn" data-move="up" ${i === 0 ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button><button class="sort-btn" data-move="down" ${i === levels.length - 1 ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button></span><span><a class="btn btn-ghost" style="padding-inline:0" href="#">Edit</a></span>`;
+                    row.onclick = (e) => {
+                        if (
+                            e.target.closest("a") ||
+                            e.target.closest(".sort-btn")
+                        )
+                            return;
+                        lv.open = !lv.open;
+                        render();
+                    };
+                    row.querySelectorAll(".sort-btn").forEach((btn) => {
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            const dir = btn.dataset.move;
+                            const j = dir === "up" ? i - 1 : i + 1;
+                            if (j < 0 || j >= levels.length) return;
+                            [levels[i], levels[j]] = [levels[j], levels[i]];
+                            render();
+                        };
+                    });
+                    rowsEl.appendChild(row);
+                    if (lv.open) {
+                        const detail = document.createElement("div");
+                        detail.className = "detail";
+                        detail.innerHTML = `<div class="perm-grid">${permGroups.map(([g, items]) => `<div class="perm-group"><h4>${g}</h4>${items.map((p) => `<div class="perm-row allowed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>${p}</div>`).join("")}</div>`).join("")}</div>`;
+                        rowsEl.appendChild(detail);
+                    }
+                });
+            }
+            render();
+        </script>
+    </body>
+</html>

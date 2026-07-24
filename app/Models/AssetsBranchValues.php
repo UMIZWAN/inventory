@@ -17,6 +17,13 @@ class AssetsBranchValues extends Model
         'asset_rack_no',
         'asset_location_id',
         'asset_current_unit',
+        'branch_value_log',
+        'is_enabled',
+    ];
+
+    protected $casts = [
+        'branch_value_log' => 'array',
+        'is_enabled' => 'boolean',
     ];
 
     public $timestamps = false;

@@ -22,13 +22,21 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        // Determine if the login field is an email or username
+        $loginField = filter_var($request->input('email'), FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $credentials = [
+            $loginField => $request->input('email'),
+            'password' => $request->input('password')
+        ];
+
+        if (!Auth::attempt($credentials)) {
             return response()->json([
                 'message' => 'Invalid login credentials'
             ], 401);
         }
 
-        $user = User::where('email', $request['email'])->firstOrFail();
+        $user = User::where($loginField, $request->input('email'))->firstOrFail();
 
         // ✅ Block inactive users
         if (!$user->is_active) {
@@ -77,8 +85,9 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'username' => 'nullable|string|max:255|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:4|confirmed',
             'access_level_id' => 'required|integer|exists:access_level,id',
             'branch_id' => 'required|array',
             'branch_id.*' => 'integer|exists:assets_branch,id',
@@ -90,6 +99,7 @@ class AuthController extends Controller
 
         $user = User::create([
             'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'access_level_id' => $request->access_level_id,
@@ -107,6 +117,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Failed assigning branches', 'error' => $e->getMessage()], 500);
         }
 
+        // Load the relationships before returning
+        $user->load('accessLevel', 'userBranch');
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -127,6 +139,13 @@ class AuthController extends Controller
         // }
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
+            'username' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('users')->ignore($user->id),
+            ],
             'email' => [
                 'sometimes',
                 'required',
@@ -135,7 +154,7 @@ class AuthController extends Controller
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
-            'password' => 'sometimes|required|string|min:8|confirmed',
+            'password' => 'sometimes|required|string|min:4|confirmed',
             'access_level_id' => 'sometimes|required|integer|exists:access_level,id',
             'branch_id' => 'sometimes|required|array',
             'branch_id.*' => 'integer|exists:assets_branch,id',
@@ -149,6 +168,10 @@ class AuthController extends Controller
         // Update user attributes if they're present in the request
         if ($request->has('name')) {
             $user->name = $request->name;
+        }
+
+        if ($request->has('username')) {
+            $user->username = $request->username;
         }
 
         if ($request->has('email')) {

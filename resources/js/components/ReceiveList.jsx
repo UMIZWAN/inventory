@@ -39,11 +39,16 @@ export default function ReceiveList() {
     };
 
     const filteredList = assetIn.filter((txn) => {
+        // Amend adjustments are bookkeeping records, not real receives
+        if (txn.asset_transaction_purpose_name === 'AMEND') return false;
+
         const txnDate = txn.created_at.slice(0, 10);
 
-        const assetNames = txn.assets_transaction_item_list.map(item => {
+        const assetSearchText = txn.assets_transaction_item_list.map(item => {
             const asset = assets.find(a => a.id === item.asset_id);
-            return asset?.name?.toLowerCase() || '';
+            const name = item.asset_name || item.assets?.name || asset?.name || '';
+            const code = item.assets?.asset_running_number || asset?.asset_running_number || '';
+            return `${name.toLowerCase()} ${code.toLowerCase()}`;
         });
 
         const matchesSearch =
@@ -52,7 +57,7 @@ export default function ReceiveList() {
 
         const matchesItem =
             !filters.itemName ||
-            assetNames.some(name => name.includes(filters.itemName.toLowerCase()));
+            assetSearchText.some(text => text.includes(filters.itemName.toLowerCase()));
 
         const matchesPurpose =
             !filters.purpose ||
@@ -141,6 +146,7 @@ export default function ReceiveList() {
                             <th className="px-4 py-2 border">Items</th>
                             <th className="px-4 py-2 border">Total Cost</th>
                             <th className="px-4 py-2 border">Date Received</th>
+                            <th className="px-4 py-2 border">Status</th>
                             <th className="px-4 py-2 border">Action</th>
                         </tr>
                     </thead>
@@ -159,8 +165,9 @@ export default function ReceiveList() {
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
+                                                const isDeactivated = item.assets?.is_active === false;
                                                 return (
-                                                    <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
+                                                    <ul key={index} className={`list-disc list-inside text-sm mb-1 ${isDeactivated ? "text-black line-through" : "text-gray-800"}`}>
                                                         <li>{item.asset_name} — {item.asset_unit}</li>
                                                     </ul>
                                                 );
@@ -170,6 +177,17 @@ export default function ReceiveList() {
                                     <td className="px-4 py-2 border">{txn.assets_transaction_total_cost}</td>
                                     {/* new Date(txn.created_at).toLocaleDateString('en-GB') */}
                                     <td className="px-4 py-2 border">{new Date(txn.received_at).toLocaleDateString('en-GB')}</td>
+                                    <td className="px-4 py-2 border text-center">
+                                        {txn.assets_transaction_status === 'REVERTED' ? (
+                                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                Reverted
+                                            </span>
+                                        ) : (
+                                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                Received
+                                            </span>
+                                        )}
+                                    </td>
                                     <td className="px-4 py-2 border">
                                         <button
                                             onClick={() => openModal(txn)}
@@ -197,7 +215,18 @@ export default function ReceiveList() {
                 //     onClose={closeModal}
                 // />
 
-                <TransactionDetail transaction={selected} onClose={closeModal} type="receive" />
+                <TransactionDetail
+                    transaction={selected}
+                    onClose={closeModal}
+                    type="receive"
+                    onRevert={() => {
+                        const params = {
+                            branch_id: selectedBranch?.branch_id,
+                            assets_transaction_type: "ASSET IN",
+                        };
+                        fetchAssetIn(params);
+                    }}
+                />
             )}
         </>
     );

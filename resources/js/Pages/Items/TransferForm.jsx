@@ -53,7 +53,8 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
     branchItem.map((item) => ({
       value: item.id,
       label: item.name,
-      qty: item.branch_values[0]?.asset_current_unit || "0"
+      qty: item.branch_values[0]?.asset_current_unit || "0",
+      isInactive: item.is_active === false,
     }))
 
   useEffect(() => {
@@ -161,6 +162,22 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+
+    const deactivatedItem = form.items.find(({ item }) => {
+      const asset = branchItem.find(a => a.id === Number(item));
+      return asset?.is_active === false;
+    });
+
+    if (deactivatedItem) {
+      const assetName = branchItem.find(a => a.id === Number(deactivatedItem.item))?.name || 'Unknown item';
+      await Swal.fire({
+        icon: 'error',
+        title: 'Deactivated Item Selected',
+        text: `"${assetName}" is deactivated. You have selected a deactivated item, cannot proceed with the transaction.`,
+      });
+      setSubmitting(false);
+      return;
+    }
 
     if (form.status === "IN-TRANSIT") {
       const invalidItem = form.items.find(({ item, quantity }) => {
@@ -363,16 +380,11 @@ function TransferForm({ setShowTransferForm, initialData, isEditMode, transferSt
             <div>
               <label className="block font-medium mb-1">Date</label>
               <input
-                type="date"
+                type="text"
                 name="date"
-                value={form.date}
+                value={form.date.split('-').reverse().join('/')}
                 readOnly
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
-                style={{
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  MozAppearance: "textfield",
-                }}
               />
             </div>
 

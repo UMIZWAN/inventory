@@ -23,6 +23,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Http\Resources\TransactionHistoryResource;
 use App\Models\AssetsBranch;
+use App\Models\AssetsTransactionPurpose;
+use App\Helpers\BranchValueLogger;
 
 class AssetsTransactionController extends Controller
 {
@@ -124,6 +126,7 @@ class AssetsTransactionController extends Controller
                     'assets_transaction_item_list.*.asset_id' => 'required|integer|exists:assets,id',
                     'assets_transaction_item_list.*.status' => 'nullable|string|in:ON HOLD,DELIVERED,FROZEN,RECEIVED,RETURNED,DISPOSED',
                     'assets_transaction_item_list.*.asset_unit' => 'required|integer',
+                    'assets_transaction_item_list.*.asset_discount' => 'nullable|numeric|min:0|max:100',
                     'attachment' => 'nullable|file|mimes:pdf,xls,xlsx,doc,docx|max:10240', // Added attachment validation (max 10MB)
                 ]);
 
@@ -162,13 +165,14 @@ class AssetsTransactionController extends Controller
                         'attachment' => $attachmentPath,
                     ]);
 
-
+                    Log::info('ITEMS RECEIVED', $request->assets_transaction_item_list);
                     foreach ($request->assets_transaction_item_list as $item) {
                         AssetsTransactionItemList::create([
                             'asset_transaction_id' => $transaction->id,
                             'asset_id' => $item['asset_id'],
                             'status' => $item['status'],
-                            'asset_unit' => $item['asset_unit']
+                            'asset_unit' => $item['asset_unit'],
+                            'asset_discount' => $item['asset_discount'] ?? 0
                         ]);
                     }
 
@@ -182,6 +186,8 @@ class AssetsTransactionController extends Controller
                         }
                     }
 
+                    BranchValueLogger::decrementLog($request->assets_from_branch_id, null, 'ASSET OUT', $request->assets_transaction_item_list);
+
                     DB::commit();
 
                     return response()->json([
@@ -189,7 +195,7 @@ class AssetsTransactionController extends Controller
                         'message' => 'Asset transaction ' . $transaction->assets_transaction_running_number . ' created successfully',
                         'data' => $transaction->load('transactionItems', 'fromBranch', 'purpose', 'createdBy')
                     ], 201);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -297,6 +303,8 @@ class AssetsTransactionController extends Controller
                     }
                 }
 
+                BranchValueLogger::incrementLog($request->assets_from_branch_id, null, 'ASSET IN', $request->assets_transaction_item_list);
+
                 DB::commit();
 
                 return response()->json([
@@ -360,10 +368,31 @@ class AssetsTransactionController extends Controller
                             ->where('asset_id', $item['asset_id'])
                             ->first();
 
-                        if ($assetBranchValue) {
-                            $assetBranchValue->decrement('asset_current_unit', $item['asset_unit']);
+                        if (!$assetBranchValue || $assetBranchValue->asset_current_unit < $item['asset_unit']) {
+                            DB::rollBack();
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Insufficient stock for asset ID ' . $item['asset_id'] . '.',
+                            ], 422);
                         }
+
+                        $assetBranchValue->decrement('asset_current_unit', $item['asset_unit']);
                     }
+                }
+
+                if ($request->assets_transaction_status == 'IN-TRANSIT') {
+                    $logItems = collect($request->assets_transaction_item_list)
+                        ->map(fn($i) => [
+                            'asset_id' => $i['asset_id'],
+                            'asset_unit' => $i['asset_unit']
+                        ])->toArray();
+
+                    BranchValueLogger::decrementLog(
+                        $request->assets_from_branch_id,
+                        $request->assets_to_branch_id,
+                        'ASSET TRANSFER',
+                        $logItems
+                    );
                 }
 
                 DB::commit();
@@ -387,7 +416,7 @@ class AssetsTransactionController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED,IN PROGRESS,COMPLETED',
+                'assets_transaction_status' => 'required|in:REQUESTED,REJECTED,APPROVED,IN-TRANSIT,RECEIVED,IN PROGRESS,COMPLETED,REVERTED',
             ]);
 
             if ($validator->fails()) {
@@ -408,6 +437,111 @@ class AssetsTransactionController extends Controller
                         'success' => false,
                         'message' => 'Asset transfer already ' . $transaction->assets_transaction_status
                     ], 400);
+                }
+
+                // --------------------------------------------------------------------
+                // ASSET TRANSFER — REVERT
+                //   REQUESTED (no stock changes yet)    → just update the status
+                //   IN-TRANSIT (deducted from from_branch) → add back to from_branch, delete
+                //   RECEIVED (also added to to_branch)     → add back to from_branch,
+                //                                            deduct from to_branch (must have stock), delete
+                //   Any other state fails.
+                // --------------------------------------------------------------------
+                if ($request->assets_transaction_status === 'REVERTED') {
+                    $currentStatus = $transaction->assets_transaction_status;
+
+                    // No stock changes yet: just mark the record and keep it
+                    if ($currentStatus === 'REQUESTED') {
+                        $transaction->update(['assets_transaction_status' => 'REVERTED']);
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Transaction status updated. No stock changes were required.',
+                        ]);
+                    }
+
+                    if (!in_array($currentStatus, ['IN-TRANSIT', 'RECEIVED'])) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Cannot revert an ASSET TRANSFER in status '{$currentStatus}'.",
+                        ], 400);
+                    }
+
+                    DB::beginTransaction();
+                    try {
+                        $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+
+                        // If RECEIVED, first verify the destination branch still has enough stock.
+                        // Failing early keeps the from_branch untouched.
+                        if ($currentStatus === 'RECEIVED') {
+                            foreach ($transactionItems as $item) {
+                                $toBranchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_to_branch_id)
+                                    ->where('asset_id', $item->asset_id)
+                                    ->first();
+
+                                if (!$toBranchValue || $toBranchValue->asset_current_unit < $item->asset_unit) {
+                                    $available = $toBranchValue ? $toBranchValue->asset_current_unit : 0;
+                                    throw new Exception("Insufficient stock at destination branch for asset ID {$item->asset_id}. Available: {$available}, required to revert: {$item->asset_unit}.");
+                                }
+                            }
+
+                            // Now safely deduct from destination
+                            foreach ($transactionItems as $item) {
+                                AssetsBranchValues::where('asset_branch_id', $transaction->assets_to_branch_id)
+                                    ->where('asset_id', $item->asset_id)
+                                    ->first()
+                                    ->decrement('asset_current_unit', $item->asset_unit);
+                            }
+
+                            BranchValueLogger::decrementLog(
+                                $transaction->assets_to_branch_id,
+                                null,
+                                'REVERT',
+                                $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
+                            );
+                        }
+
+                        // Return the stock to the source branch (applies to both IN-TRANSIT and RECEIVED)
+                        foreach ($transactionItems as $item) {
+                            $fromBranchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                                ->where('asset_id', $item->asset_id)
+                                ->first();
+
+                            if (!$fromBranchValue) {
+                                AssetsBranchValues::create([
+                                    'asset_branch_id' => $transaction->assets_from_branch_id,
+                                    'asset_location_id' => $transaction->assets_from_branch_id,
+                                    'asset_id' => $item->asset_id,
+                                    'asset_current_unit' => $item->asset_unit,
+                                ]);
+                            } else {
+                                $fromBranchValue->increment('asset_current_unit', $item->asset_unit);
+                            }
+                        }
+
+                        BranchValueLogger::incrementLog(
+                            $transaction->assets_from_branch_id,
+                            null,
+                            'REVERT',
+                            $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
+                        );
+
+                        AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->delete();
+                        $transaction->delete();
+
+                        DB::commit();
+
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Transfer reverted and deleted successfully. Stock has been returned.',
+                        ]);
+                    } catch (Exception $e) {
+                        DB::rollBack();
+                        Log::error('Revert ASSET TRANSFER failed: ' . $e->getMessage());
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Failed to revert transfer: ' . $e->getMessage(),
+                        ], 500);
+                    }
                 }
 
                 // ✅ Expect selected item IDs
@@ -461,6 +595,29 @@ class AssetsTransactionController extends Controller
                     DB::beginTransaction();
 
                     try {
+                        // Check stock availability before approving
+                        $itemsToApprove = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
+                            ->whereIn('id', $selectedItems)
+                            ->get();
+
+                        $insufficientItems = [];
+                        foreach ($itemsToApprove as $item) {
+                            $branchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                                ->where('asset_id', $item->asset_id)
+                                ->first();
+
+                            $currentUnit = $branchValue ? $branchValue->asset_current_unit : 0;
+
+                            if ($currentUnit < $item->asset_unit) {
+                                $asset = Assets::find($item->asset_id);
+                                $insufficientItems[] = ($asset->name ?? "ID {$item->asset_id}") . " (Available: {$currentUnit}, Requested: {$item->asset_unit})";
+                            }
+                        }
+
+                        if (!empty($insufficientItems)) {
+                            throw new Exception("Insufficient stock for: " . implode(', ', $insufficientItems));
+                        }
+
                         // ✅ Approve selected (including nulls)
                         AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                             ->whereIn('id', $selectedItems)
@@ -545,6 +702,14 @@ class AssetsTransactionController extends Controller
                             'updated_at' => now(),
                         ]);
 
+                        // Log deduction from source branch
+                        BranchValueLogger::decrementLog(
+                            $transaction->assets_from_branch_id,
+                            $transaction->assets_to_branch_id,
+                            'ASSET TRANSFER',
+                            $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
+                        );
+
                         DB::commit();
 
                         return response()->json([
@@ -581,16 +746,18 @@ class AssetsTransactionController extends Controller
                             ->whereIn('id', $selectedItems)
                             ->where(function ($q) {
                                 $q->where('status', 'IN-TRANSIT')
-                                    ->orWhereNull('status');
+                                    ->orWhereNull('status')
+                                    ->orWhere('status', '');
                             })
                             ->get();
 
-                        // ✅ If no specific items were selected, fallback to all IN-TRANSIT or NULL items
+                        // ✅ If no specific items were selected, fallback to all receivable items
                         if ($transactionItems->isEmpty() && empty($selectedItems)) {
                             $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
                                 ->where(function ($q) {
                                     $q->where('status', 'IN-TRANSIT')
-                                        ->orWhereNull('status');
+                                        ->orWhereNull('status')
+                                        ->orWhere('status', '');
                                 })
                                 ->get();
                         }
@@ -616,9 +783,6 @@ class AssetsTransactionController extends Controller
                                     'asset_location_id' => $transaction->assets_to_branch_id,
                                     'asset_id' => $item->asset_id,
                                     'asset_current_unit' => $item->asset_unit,
-                                    'asset_min_unit' => 0,
-                                    'asset_max_unit' => 0,
-                                    'created_by' => Auth::id(),
                                 ]);
                             }
                         }
@@ -629,9 +793,13 @@ class AssetsTransactionController extends Controller
                             ->where('status', 'IN-TRANSIT')
                             ->update(['status' => 'IN-TRANSIT']);
 
-                        // ✅ If all items are done (no IN-TRANSIT left), mark transaction RECEIVED
+                        // ✅ If all items are done (no pending items left), mark transaction RECEIVED
                         $stillInTransit = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)
-                            ->where('status', 'IN-TRANSIT')
+                            ->where(function ($q) {
+                                $q->where('status', 'IN-TRANSIT')
+                                    ->orWhereNull('status')
+                                    ->orWhere('status', '');
+                            })
                             ->exists();
 
                         if (!$stillInTransit) {
@@ -642,6 +810,24 @@ class AssetsTransactionController extends Controller
                                 'received_at' => now(),
                             ]);
                         }
+
+                        $logItems = $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray();
+
+                        // // Log decrement on source branch
+                        // BranchValueLogger::decrementLog(
+                        //     $transaction->assets_from_branch_id,
+                        //     $transaction->assets_to_branch_id,
+                        //     'ASSET TRANSFER',
+                        //     $logItems
+                        // );
+
+                        // Log increment on destination branch
+                        BranchValueLogger::incrementLog(
+                            $transaction->assets_from_branch_id,
+                            $transaction->assets_to_branch_id,
+                            'ASSET TRANSFER',
+                            $logItems
+                        );
 
                         DB::commit();
 
@@ -659,6 +845,112 @@ class AssetsTransactionController extends Controller
                 }
             }
 
+
+            // --------------------------------------------------------------------
+            // ASSET IN — REVERT (deduct stock, then delete transaction)
+            // --------------------------------------------------------------------
+            if ($transaction->assets_transaction_type === 'ASSET IN' && $request->assets_transaction_status === 'REVERTED') {
+                DB::beginTransaction();
+
+                try {
+                    $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+
+                    foreach ($transactionItems as $item) {
+                        $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                            ->where('asset_id', $item->asset_id)
+                            ->first();
+
+                        if (!$assetBranchValue) {
+                            throw new Exception("Branch value not found for asset ID {$item->asset_id}. Revert cancelled.");
+                        }
+
+                        if ($assetBranchValue->asset_current_unit < $item->asset_unit) {
+                            throw new Exception("Insufficient stock for asset ID {$item->asset_id}. Current: {$assetBranchValue->asset_current_unit}, Required: {$item->asset_unit}. Revert cancelled.");
+                        }
+
+                        $assetBranchValue->decrement('asset_current_unit', $item->asset_unit);
+                    }
+
+                    // Log before deleting (so branch_value records still exist)
+                    BranchValueLogger::decrementLog(
+                        $transaction->assets_from_branch_id,
+                        null,
+                        'REVERT',
+                        $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
+                    );
+
+                    // Delete transaction items then the transaction
+                    AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->delete();
+                    $transaction->delete();
+
+                    DB::commit();
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Transaction reverted and deleted successfully. Stock has been deducted.',
+                    ]);
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::error('Revert transaction failed: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to revert transaction: ' . $e->getMessage(),
+                    ], 500);
+                }
+            }
+
+            // --------------------------------------------------------------------
+            // ASSET OUT — REVERT (add stock back to from_branch, then delete transaction)
+            // --------------------------------------------------------------------
+            if ($transaction->assets_transaction_type === 'ASSET OUT' && $request->assets_transaction_status === 'REVERTED') {
+                DB::beginTransaction();
+
+                try {
+                    $transactionItems = AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->get();
+
+                    foreach ($transactionItems as $item) {
+                        $assetBranchValue = AssetsBranchValues::where('asset_branch_id', $transaction->assets_from_branch_id)
+                            ->where('asset_id', $item->asset_id)
+                            ->first();
+
+                        if (!$assetBranchValue) {
+                            // Create the branch value row so the returned stock has somewhere to live
+                            AssetsBranchValues::create([
+                                'asset_branch_id' => $transaction->assets_from_branch_id,
+                                'asset_location_id' => $transaction->assets_from_branch_id,
+                                'asset_id' => $item->asset_id,
+                                'asset_current_unit' => $item->asset_unit,
+                            ]);
+                        } else {
+                            $assetBranchValue->increment('asset_current_unit', $item->asset_unit);
+                        }
+                    }
+
+                    BranchValueLogger::incrementLog(
+                        $transaction->assets_from_branch_id,
+                        null,
+                        'REVERT',
+                        $transactionItems->map(fn($i) => ['asset_id' => $i->asset_id, 'asset_unit' => $i->asset_unit])->toArray()
+                    );
+
+                    AssetsTransactionItemList::where('asset_transaction_id', $transaction->id)->delete();
+                    $transaction->delete();
+
+                    DB::commit();
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Transaction reverted and deleted successfully. Stock has been returned to the branch.',
+                    ]);
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::error('Revert ASSET OUT transaction failed: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to revert transaction: ' . $e->getMessage(),
+                    ], 500);
+                }
+            }
 
             if ($transaction->assets_transaction_type == 'ASSET OUT' && $transaction->assets_transaction_status == 'IN PROGRESS') {
 
@@ -717,6 +1009,16 @@ class AssetsTransactionController extends Controller
                         'received_by' => Auth::user()->id,
                         'received_at' => Carbon::now()
                     ]);
+
+                    BranchValueLogger::incrementLog(
+                        $transaction->assets_from_branch_id,
+                        null,
+                        'ASSET OUT',
+                        collect($request->input('assets_transaction_item_list'))->map(fn($i) => [
+                            'asset_id' => $i['asset_id'],
+                            'asset_unit' => $i['asset_unit'],
+                        ])->toArray()
+                    );
 
                     DB::commit();
 
@@ -777,7 +1079,7 @@ class AssetsTransactionController extends Controller
                 'message' => 'Latest Running Number Retrieved',
                 'data' => $latestTransaction
             ], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve latest running number: ' . $e->getMessage()
@@ -900,6 +1202,7 @@ class AssetsTransactionController extends Controller
             'transactionItems.assetsTransaction' => fn($q) => $q->select(
                 'id',
                 'assets_transaction_type',
+                'assets_transaction_status',
                 'assets_transaction_purpose_id',
                 'supplier_id',
                 'assets_from_branch_id',
@@ -954,6 +1257,7 @@ class AssetsTransactionController extends Controller
                 'transactionItems.assetsTransaction' => fn($q) => $q->select(
                     'id',
                     'assets_transaction_type',
+                    'assets_transaction_status',
                     'assets_transaction_purpose_id',
                     'supplier_id',
                     'assets_from_branch_id',
@@ -963,7 +1267,7 @@ class AssetsTransactionController extends Controller
                     'id',
                     'asset_transaction_purpose_name'
                 ),
-                'branchValues' => fn($q) => $q->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit')
+                'branchValues' => fn($q) => $q->select('id', 'asset_id', 'asset_branch_id', 'asset_current_unit', 'branch_value_log')
                     ->where('asset_branch_id', $branchId)
             ])
             ->first();
@@ -975,5 +1279,128 @@ class AssetsTransactionController extends Controller
         return response()->json([
             'data' => new ReportResource($asset)
         ]);
+    }
+
+    /**
+     * Reconcile the Item Report: creates a record-only AMEND transaction so the
+     * transaction-history total matches the branch's actual current quantity.
+     * Does NOT change stock.
+     */
+    public function amendItemReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'asset_id' => 'required|exists:assets,id',
+            'branch_id' => 'required|exists:assets_branch,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation Error',
+                'data' => $validator->errors()
+            ], 422);
+        }
+
+        if (!(Auth::user()->accessLevel->add_edit_asset ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to amend.'
+            ], 403);
+        }
+
+        $assetId = (int) $request->asset_id;
+        $branchId = (int) $request->branch_id;
+
+        $branchValue = AssetsBranchValues::where('asset_id', $assetId)
+            ->where('asset_branch_id', $branchId)
+            ->first();
+
+        if (!$branchValue) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Asset not found for the specified branch'
+            ], 404);
+        }
+
+        $currentQty = (int) $branchValue->asset_current_unit;
+
+        // Mirror ReportResource: total = ASSET IN (not reverted) + transfers in - ASSET OUT - transfers out
+        $items = AssetsTransactionItemList::where('asset_id', $assetId)
+            ->whereHas('assetsTransaction', function ($q) use ($branchId) {
+                $q->where(function ($inner) use ($branchId) {
+                    $inner->where('assets_from_branch_id', $branchId)
+                        ->orWhere('assets_to_branch_id', $branchId);
+                });
+            })
+            ->with('assetsTransaction')
+            ->get();
+
+        $tableTotal = 0;
+        foreach ($items as $item) {
+            $trx = $item->assetsTransaction;
+            if (!$trx) continue;
+            $unit = (int) $item->asset_unit;
+
+            if ($trx->assets_transaction_type === 'ASSET IN' && $trx->assets_transaction_status !== 'REVERTED') {
+                $tableTotal += $unit;
+            } elseif ($trx->assets_transaction_type === 'ASSET OUT' && $trx->assets_from_branch_id == $branchId) {
+                $tableTotal -= $unit;
+            } elseif ($trx->assets_transaction_type === 'ASSET TRANSFER') {
+                if ($trx->assets_to_branch_id == $branchId) $tableTotal += $unit;
+                if ($trx->assets_from_branch_id == $branchId) $tableTotal -= $unit;
+            }
+        }
+
+        $diff = $currentQty - $tableTotal;
+
+        if ($diff === 0) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Quantities already match, nothing to amend.'
+            ]);
+        }
+
+        DB::beginTransaction();
+        try {
+            $purposeId = AssetsTransactionPurpose::firstOrCreate([
+                'asset_transaction_purpose_name' => 'AMEND',
+            ])->id;
+
+            $transaction = AssetsTransaction::create([
+                'assets_transaction_running_number' => 'AMEND-' . now()->format('YmdHis') . '-' . $branchId,
+                'assets_transaction_type' => $diff > 0 ? 'ASSET IN' : 'ASSET OUT',
+                'assets_transaction_status' => $diff > 0 ? 'RECEIVED' : 'COMPLETED',
+                'assets_from_branch_id' => $branchId,
+                'assets_transaction_purpose_id' => $purposeId,
+                'assets_transaction_remark' => 'Amend adjustment to match current quantity (' . $currentQty . ')',
+                'created_by' => Auth::id(),
+                'received_by' => Auth::id(),
+                'received_at' => now(),
+            ]);
+
+            AssetsTransactionItemList::create([
+                'asset_transaction_id' => $transaction->id,
+                'asset_id' => $assetId,
+                'asset_unit' => abs($diff),
+                'status' => null,
+            ]);
+
+            BranchValueLogger::incrementLog($branchId, null, 'CONFIRM AMEND', [
+                ['asset_id' => $assetId, 'asset_unit' => $currentQty]
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Amend transaction created',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

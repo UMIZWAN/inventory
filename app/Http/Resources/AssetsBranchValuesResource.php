@@ -22,6 +22,8 @@ class AssetsBranchValuesResource extends JsonResource
             // 'asset_location_id' => $this->asset_location_id,
             // 'asset_location_name' => $this->location->name,
             'asset_current_unit' => $this->asset_current_unit,
+            'branch_value_log' => $this->branch_value_log,
+            'is_enabled' => (bool) $this->is_enabled,
         ];
     }
 }

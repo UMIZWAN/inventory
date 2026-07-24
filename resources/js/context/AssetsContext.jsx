@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import api from '../api/api';
 import { useAuth } from './AuthContext';
 
@@ -20,7 +20,7 @@ export const AssetMetaProvider = ({ children }) => {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     lastPage: 1,
-    perPage: 10,
+    perPage: Number(localStorage.getItem('assets_per_page')) || 10,
     total: 0
   });
 
@@ -41,10 +41,17 @@ export const AssetMetaProvider = ({ children }) => {
       });
   };
 
+  // Guards against out-of-order responses: only the latest request may update state,
+  // otherwise a slow page-1 response can overwrite a newer page-2 result and
+  // re-trigger the fetch effect in a loop.
+  const branchAssetsReqId = useRef(0);
+
   const fetchBranchAssets = (params = {}) => {
+    const reqId = ++branchAssetsReqId.current;
     setLoading(true);
     api.get('/api/assets/get-by-branch', { params })
       .then(response => {
+        if (reqId !== branchAssetsReqId.current) return; // stale response, discard
         if (response.data.success) {
           const paginationData = response.data.pagination;
           setAssets(response.data.data); // paginated list
@@ -60,7 +67,7 @@ export const AssetMetaProvider = ({ children }) => {
         console.error('Error fetching assets:', error);
       })
       .finally(() => {
-        setLoading(false);
+        if (reqId === branchAssetsReqId.current) setLoading(false);
       });
   };
 
@@ -145,9 +152,9 @@ export const AssetMetaProvider = ({ children }) => {
         };
       }
 
-      await api.post(`/api/assets/${id}/upload`, data, config);
-      fetchAssets(user?.branch_id);
-      fetchBranchAssets();
+      const response = await api.post(`/api/assets/${id}/upload`, data, config);
+      const payload = response.data?.data;
+      return payload?.data ?? payload;
     } catch (err) {
       console.error('Failed to update asset:', err);
       throw err;
@@ -319,6 +326,7 @@ export const AssetMetaProvider = ({ children }) => {
           asset_id: parseInt(item.item),
           asset_unit: parseFloat(item.quantity),
           status: "",
+          asset_discount: parseFloat(item.discount || 0),
         })),
       };
 

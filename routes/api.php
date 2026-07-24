@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\TaxController;
 use App\Http\Controllers\Api\PurchaseOrderController;
 use App\Http\Controllers\Api\ShippingOptionController;
 use App\Http\Controllers\Api\UsersBranchController;
+use App\Http\Controllers\Api\AssetsImportController;
+use App\Http\Controllers\Api\SsoController;
 use Illuminate\Support\Facades\Cache;
 
 Route::get('/user', function (Request $request) {
@@ -33,6 +35,8 @@ Route::get('/user', function (Request $request) {
 |
 */
 
+// SSO token deposit — called by infonet-super, no user auth required
+Route::post('/sso/store-token', [SsoController::class, 'storeToken']);
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -65,7 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Assets Routes
     Route::get('assets/get-list-branch', [AssetsController::class, 'getListByBranch']);
     Route::get('assets/get-itemlist', [AssetsController::class, 'getAssetList']);
-    Route::post('/assets/import', [AssetsController::class, 'importFromCSV']);
+    Route::post('/assets/import', [AssetsImportController::class, 'importFromCSV']);
     Route::post('/assets/{id}/copy', [AssetsController::class, 'copyItems']);
     Route::get('assets/get-by-branch', [AssetsController::class, 'getByBranch']);
     Route::apiResource('assets', AssetsController::class);
@@ -79,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/assets/{id}/upload', [AssetsController::class, 'update']);
 
     Route::get('report/item', [AssetsTransactionController::class, 'getSingleReport']);
+    Route::post('report/item/amend', [AssetsTransactionController::class, 'amendItemReport']);
 
     Route::post('/clear-cache', function (Request $request) {
         try {
@@ -91,6 +96,81 @@ Route::middleware('auth:sanctum')->group(function () {
             Cache::forget('shipping_option_cache');
             Cache::forget('suppliers_cache');
             return response()->json(['message' => 'Cache cleared successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    });
+
+    // Fix transfer stock — restricted to kamal@gmail.com
+    Route::post('/fix-transfer-stock', function () {
+        if (auth()->user()?->email !== 'kamal@gmail.com') {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+        try {
+            $transactions = \App\Models\AssetsTransaction::where('assets_transaction_type', 'ASSET TRANSFER')
+                ->whereIn('assets_transaction_status', ['RECEIVED', 'IN-TRANSIT'])
+                ->with('transactionItems')
+                ->get();
+
+            $fixed = 0;
+            $skipped = 0;
+            $log = [];
+
+            foreach ($transactions as $txn) {
+                foreach ($txn->transactionItems as $item) {
+                    if ($item->status === 'REJECTED') { $skipped++; continue; }
+
+                    $bv = \App\Models\AssetsBranchValues::where('asset_branch_id', $txn->assets_from_branch_id)
+                        ->where('asset_id', $item->asset_id)
+                        ->first();
+
+                    if (!$bv) { $skipped++; $log[] = "SKIP TXN#{$txn->id} Asset#{$item->asset_id} — no source branch value"; continue; }
+
+                    $entries = $bv->branch_value_log ?? [];
+                    $alreadyFixed = collect($entries)->contains(fn($e) => str_contains($e['message'] ?? '', 'FIX: ASSET TRANSFER'));
+                    $alreadyLogged = collect($entries)->contains(fn($e) => str_contains($e['message'] ?? '', '→'));
+
+                    if ($alreadyFixed || $alreadyLogged) { $skipped++; $log[] = "OK   TXN#{$txn->id} ({$txn->assets_transaction_running_number}) Asset#{$item->asset_id} — already handled"; continue; }
+
+                    if ($bv->asset_current_unit < $item->asset_unit) {
+                        $skipped++;
+                        $log[] = "SKIP TXN#{$txn->id} ({$txn->assets_transaction_running_number}) Asset#{$item->asset_id} — stock already 0 or deducted elsewhere (current: {$bv->asset_current_unit}, needed: {$item->asset_unit})";
+                        continue;
+                    }
+
+                    \DB::beginTransaction();
+                    try {
+                        $bv->decrement('asset_current_unit', $item->asset_unit);
+                        $entries[] = ['message' => "FIX: ASSET TRANSFER deduction for {$txn->assets_transaction_running_number} ({$item->asset_unit})", 'user_id' => null, 'timestamp' => now()->toDateTimeString()];
+                        $bv->update(['branch_value_log' => $entries]);
+                        \DB::commit();
+                        $fixed++;
+                        $log[] = "FIX  TXN#{$txn->id} ({$txn->assets_transaction_running_number}) Asset#{$item->asset_id} — deducted {$item->asset_unit}";
+                    } catch (\Exception $e) {
+                        \DB::rollBack();
+                        $log[] = "ERR  TXN#{$txn->id} Asset#{$item->asset_id} — {$e->getMessage()}";
+                    }
+                }
+            }
+
+            return response()->json(['message' => "Done. Fixed: {$fixed}, Skipped: {$skipped}", 'output' => implode("\n", $log)]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    });
+
+    // Run pending migrations — restricted to kamal@gmail.com
+    Route::post('/run-migrations', function () {
+        if (auth()->user()?->email !== 'kamal@gmail.com') {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+        try {
+            $exitCode = \Artisan::call('migrate', ['--force' => true]);
+            $output   = \Artisan::output();
+            if ($exitCode !== 0) {
+                return response()->json(['error' => 'Migration failed', 'output' => $output], 500);
+            }
+            return response()->json(['message' => 'Migrations ran successfully', 'output' => $output]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

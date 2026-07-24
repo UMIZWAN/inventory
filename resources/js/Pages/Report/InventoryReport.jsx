@@ -7,6 +7,7 @@ import ExportButton from '../../components/ExportButton';
 import TransactionModalWrapper from '../../components/TransactionModalWrapper';
 import Pagination from '../../components/Pagination';
 import * as XLSX from "xlsx";
+import { Head } from "@inertiajs/react";
 
 function InventoryReport() {
     const { user } = useAuth();
@@ -148,6 +149,7 @@ function InventoryReport() {
 
     return (
         <Layout>
+            <Head title="Inventory Report" />
             <div className="overflow-x-auto bg-white shadow rounded-lg p-4 space-y-4 mt-4">
                 <h1 className="text-2xl font-bold mb-4">Inventory Report</h1>
 

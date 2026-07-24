@@ -23,22 +23,19 @@ class ReportResource extends JsonResource
                     $assetInTransactions = $this->transactionItems
                         ->filter(function ($item) use ($branch) {
                             $trx = $item->assetsTransaction;
-                            // An ASSET IN transaction's assets_from_branch_id is effectively its origin (supplier or branch)
-                            // This seems to imply direct branch entry or transfer in.
-                            // Assuming ASSET IN is always into the current branch, but checking from_branch_id to be safe.
                             return ($trx->assets_from_branch_id === $branch->asset_branch_id || $trx->assets_to_branch_id === $branch->asset_branch_id) &&
-                                $trx->assets_transaction_type === 'ASSET IN';
+                                $trx->assets_transaction_type === 'ASSET IN' &&
+                                $trx->assets_transaction_status !== 'REVERTED';
                         })
                         ->map(function ($item) {
                             $trx = $item->assetsTransaction;
                             return [
                                 'transaction_id' => $trx->id,
                                 'asset_transaction_type' => $trx->assets_transaction_type,
+                                'assets_transaction_status' => $trx->assets_transaction_status,
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,
                                 'supplier_name' => $trx->supplier->supplier_name ?? null,
-                                // 'assets_from_branch_id' => $trx->assets_from_branch_id,
-                                // 'assets_from_branch_name' => $trx->fromBranch->name ?? null,
                                 'asset_unit' => $item->asset_unit,
                             ];
                         }); // No ->values() here yet, we'll concat first
@@ -99,6 +96,7 @@ class ReportResource extends JsonResource
                             return [
                                 'transaction_id' => $trx->id,
                                 'asset_transaction_type' => $trx->assets_transaction_type,
+                                'asset_transaction_purpose_name' => $trx->purpose->asset_transaction_purpose_name ?? null,
                                 'created_at' => $item->created_at,
                                 'supplier_id' => $trx->supplier_id,
                                 'assets_from_branch_id' => $trx->assets_from_branch_id ?? $trx->supplier_id,
@@ -115,6 +113,7 @@ class ReportResource extends JsonResource
                         'asset_current_unit' => $branch->asset_current_unit,
                         'asset_in' => $combinedAssetIn->isNotEmpty() ? $combinedAssetIn : null,
                         'asset_out' => $combinedAssetOut->isNotEmpty() ? $combinedAssetOut : null,
+                        'branch_value_log' => $branch->branch_value_log,
                     ];
                 })->values(),
         ];

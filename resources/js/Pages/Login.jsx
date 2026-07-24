@@ -8,128 +8,138 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSubmitting(true);
 
-    const result = await login(email, password);
+    try {
+      const result = await login(email, password);
 
-    if (!result.success) {
-      setError(result.message);
-    } else {
-      console.log("Login success!");
-      router.visit("/items/item-list");
+      if (!result.success) {
+        setError(result.message);
+      } else {
+        router.visit("/items/item-list");
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center bg-gray-50 overflow-hidden">
+    <div
+      className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 flex justify-center items-center px-4"
+      style={{ fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }}
+    >
       <Head title="Login" />
-      {/* Background SVG Circles */}
-      <div className="absolute inset-0 z-0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 800 800">
-          <g fillOpacity="0.22">
-            <circle fill="rgba(59,130,246,0.1)" cx="400" cy="400" r="600" />
-            <circle fill="rgba(59,130,246,0.2)" cx="400" cy="400" r="500" />
-            <circle fill="rgba(59,130,246,0.3)" cx="400" cy="400" r="300" />
-            <circle fill="rgba(59,130,246,0.4)" cx="400" cy="400" r="200" />
-            <circle fill="rgba(59,130,246,0.5)" cx="400" cy="400" r="100" />
-          </g>
-        </svg>
-      </div>
 
-      {/* <div className="flex justify-center mb-20">
-        <img src={logo} alt="logo" className="h-9" />
-      </div> */}
+      {/* Loading overlay */}
+      {submitting && (
+        <div
+          className="fixed inset-0 z-50 flex justify-center items-center"
+          style={{ backgroundColor: "rgba(18, 24, 40, 0.55)" }}
+        >
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-white border-t-transparent" />
+        </div>
+      )}
 
-      <div className="relative z-10 max-w-md w-full mx-auto p-6 bg-white shadow-xl rounded-xl">
-        {/* Logo */}
-        <div className="flex justify-center items-center py-4 bg-blue-600 rounded-t-xl">
-          <h1 className="text-white font-bold uppercase tracking-wider">Marketing Inventory System</h1>
+      {/* Split card */}
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+
+        {/* Left panel */}
+        <div className="md:w-1/2 bg-gradient-to-br from-indigo-700 to-indigo-600 text-white p-8 lg:p-10">
+          <span className="inline-block border border-white/40 bg-white/10 text-white text-xs font-medium px-3 py-1 rounded-full mb-6">
+            Marketing workspace
+          </span>
+
+          <h1 className="text-3xl font-bold mb-4">Marketing Inventory System</h1>
+
+          <p className="text-indigo-100 mb-6">
+            A cleaner, modern workspace for stock, branches, and transaction follow-up.
+          </p>
+
+          <ul className="space-y-2 text-sm text-indigo-50">
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Real-time stock across branches
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Faster receive, transfer, and invoicing
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Full transaction history and reports
+            </li>
+          </ul>
         </div>
 
-        <div className="p-6">
-          <div className="text-center mb-6">
-            <h4 className="text-xl font-bold text-gray-800">Sign In</h4>
-            <p className="text-gray-500 text-sm">
-              Enter your email address and password
-            </p>
-          </div>
+        {/* Right panel */}
+        <div className="md:w-1/2 p-8 lg:p-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-1">Sign in</h2>
+          <p className="text-gray-500 text-sm mb-6">Use your MIS account to continue.</p>
 
-          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+          {error && (
+            <p className="text-red-500 text-sm mb-4">{error}</p>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email or Username
               </label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
 
             <div className="mb-4">
-              <div className="flex justify-between items-center">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                {/* <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                  Forgot your password?
-                </a> */}
-              </div>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
             </div>
 
-            <div className="mb-4">
-              {/* <label className="inline-flex items-center">
+            <div className="mb-6">
+              <label className="inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  className="form-checkbox text-blue-600"
-                  defaultChecked
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Remember me</span>
-              </label> */}
+                <span className="ml-2 text-sm text-gray-700">Keep me logged in for 30 days</span>
+              </label>
             </div>
 
-            <div className="mb-0 mt-4">
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
-              >
-                Log In
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-indigo-600 text-white text-base font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Signing in..." : "Sign in"}
+            </button>
           </form>
         </div>
-
-        {/* <div className="text-center text-sm text-gray-500 mt-4">
-          Don't have an account?
-          <a href="/register" className="ml-1 text-blue-600 font-medium hover:underline">
-            Sign Up
-          </a>
-        </div> */}
       </div>
-
-      <footer className="mt-6 text-center text-xs text-gray-400 z-10">
-        {/* 2018 - {new Date().getFullYear()} © Hyper - Coderthemes.com */}
-      </footer>
     </div>
   );
 };

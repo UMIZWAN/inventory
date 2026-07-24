@@ -4,6 +4,7 @@ import api from '../../api/api';
 const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
     const [formData, setFormData] = useState({
         name: '',
+        username: '',
         email: '',
         access_level_id: '',
         branch_id: [],
@@ -21,9 +22,10 @@ const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
         if (isOpen && user) {
             setFormData({
                 name: user.name || '',
+                username: user.username || '',
                 email: user.email || '',
                 access_level_id: user.access_level_id || '',
-                branch_id: Array.isArray(user.branch_id) ? user.branch_id : [user.branch_id].filter(Boolean),
+                branch_id: user.users_branch?.map(b => b.branch_id) || [],
                 password: '',
                 password_confirmation: ''
             });
@@ -147,6 +149,20 @@ const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
                     </div>
 
                     <div className="mb-4">
+                        <label className="block text-sm font-bold mb-2" htmlFor="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className={`shadow appearance-none border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded w-full py-2 px-3 text-gray-700 focus:outline-none`}
+                            placeholder="Enter username (optional)"
+                        />
+                        {errors.username && <p className="text-red-500 text-xs italic mt-1">{errors.username}</p>}
+                    </div>
+
+                    <div className="mb-4">
                         <label className="block text-sm font-bold mb-2" htmlFor="email">Email</label>
                         <input
                             type="email"
@@ -187,12 +203,44 @@ const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
                             onChange={(e) => setBranchSearch(e.target.value.toLowerCase())}
                         />
 
+                        {formData.branch_id.length > 0 && (
+                            <div className="mb-2">
+                                <p className="text-xs text-gray-500 mb-1">Selected:</p>
+                                <div className="flex flex-wrap gap-1">
+                                    {formData.branch_id.map(id => {
+                                        const branch = branches.find(b => b.id === id);
+                                        return branch ? (
+                                            <span
+                                                key={id}
+                                                className="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                                            >
+                                                {branch.name}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleBranchCheckboxChange({ target: { value: id, checked: false } })}
+                                                    className="ml-1 text-blue-600 hover:text-blue-900"
+                                                >
+                                                    &times;
+                                                </button>
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="max-h-48 overflow-y-auto border border-gray-200 rounded p-2 bg-white shadow-sm">
-                            {branches
+                            {[...branches]
                                 .filter(branch => branch.name.toLowerCase().includes(branchSearch))
-                                .slice(0, 4) // ✅ Limit to 4 visible results
+                                .sort((a, b) => {
+                                    const aSelected = formData.branch_id.includes(a.id);
+                                    const bSelected = formData.branch_id.includes(b.id);
+                                    if (aSelected && !bSelected) return -1;
+                                    if (!aSelected && bSelected) return 1;
+                                    return 0;
+                                })
                                 .map(branch => (
-                                    <label key={branch.id} className="flex items-center space-x-2 py-1">
+                                    <label key={branch.id} className={`flex items-center space-x-2 py-1 cursor-pointer ${formData.branch_id.includes(branch.id) ? 'bg-blue-50 rounded px-1' : ''}`}>
                                         <input
                                             type="checkbox"
                                             value={branch.id}
@@ -203,25 +251,7 @@ const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
                                         <span className="text-sm text-gray-700">{branch.name}</span>
                                     </label>
                                 ))}
-                        </div>{formData.branch_id.length > 0 && (
-                            <div className="mt-3">
-                                <p className="text-sm font-semibold mb-1 text-gray-700">Selected Branches:</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {formData.branch_id.map(id => {
-                                        const branch = branches.find(b => b.id === id);
-                                        return branch ? (
-                                            <span
-                                                key={id}
-                                                className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
-                                            >
-                                                {branch.name}
-                                            </span>
-                                        ) : null;
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                        {/* Display selected branches */}
+                        </div>
 
 
                         {errors.branch_id && <p className="text-red-500 text-xs italic mt-1">{errors.branch_id}</p>}

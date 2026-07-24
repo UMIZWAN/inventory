@@ -55,7 +55,7 @@ function StockTransfer() {
 
   return (
     <Layout>
-      <Head title="Transaction" />
+      <Head title="Stock Movement" />
       <div className="p-4">
         <div className="flex border-b border-gray-400 mb-4">
           {tabs.map((tab) => (

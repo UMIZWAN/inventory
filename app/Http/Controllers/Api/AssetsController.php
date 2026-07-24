@@ -22,7 +22,9 @@ class AssetsController extends Controller
     public function index()
     {
         try {
-            $assets = Assets::with(['category', 'tag', 'branchValues'])->latest()->get();
+            $assets = Assets::with(['category', 'branchValues' => function ($query) {
+                $query->where('is_enabled', true);
+            }])->latest()->get();
 
             return response()->json([
                 'success' => true,
@@ -45,7 +47,7 @@ class AssetsController extends Controller
     public function show($id)
     {
         try {
-            $asset = Assets::with(['category', 'tag', 'branchValues'])->find($id);
+            $asset = Assets::with(['category', 'branchValues'])->find($id);
 
             if (!$asset) {
                 return response()->json([
@@ -75,7 +77,8 @@ class AssetsController extends Controller
             'asset_description' => 'nullable|string',
             'asset_type' => 'nullable|string|max:255',
             'asset_category_id' => 'required|exists:assets_category,id',
-            // 'asset_tag_id' => 'required|exists:assets_tag,id',
+            'asset_tag' => 'nullable|array',
+            'asset_tag.*' => 'string|max:255',
             'asset_stable_unit' => 'required|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
@@ -99,7 +102,7 @@ class AssetsController extends Controller
                 'asset_description',
                 'asset_type',
                 'asset_category_id',
-                'asset_tag_id',
+                'asset_tag',
                 'asset_stable_unit',
                 'asset_purchase_cost',
                 'asset_sales_cost',
@@ -147,7 +150,7 @@ class AssetsController extends Controller
 
 
 
-            $asset->load(['category', 'tag', 'branchValues']);
+            $asset->load(['category', 'branchValues']);
 
 
             return response()->json([
@@ -173,7 +176,9 @@ class AssetsController extends Controller
             'asset_description' => 'nullable|string',
             'asset_type' => 'nullable|string|max:255',
             'asset_category_id' => 'nullable|exists:assets_category,id',
-            // 'asset_tag_id' => 'required|exists:assets_tag,id',
+            'asset_tag' => 'nullable|array',
+            'asset_tag.*' => 'string|max:255',
+            'is_active' => 'nullable|boolean',
             'asset_stable_unit' => 'nullable|integer|min:0',
             'asset_purchase_cost' => 'nullable|numeric|min:0',
             'asset_sales_cost' => 'nullable|numeric|min:0',
@@ -262,6 +267,14 @@ class AssetsController extends Controller
                     $branchChanges = [];
 
                     if ($branch) {
+                        if (!$branch->is_enabled) {
+                            $branchChanges['assets_branch_id'] = [
+                                'old' => null,
+                                'new' => $branchValue['asset_branch_id']
+                            ];
+                            $branch->is_enabled = true;
+                        }
+
                         if (isset($branchValue['asset_location_id']) && $branch->asset_location_id != $branchValue['asset_location_id']) {
                             $branchChanges['assets_location_id'] = [
                                 'old' => $branch->asset_location_id,
@@ -285,6 +298,7 @@ class AssetsController extends Controller
                             'asset_branch_id' => $branchValue['asset_branch_id'],
                             'asset_location_id' => $branchValue['asset_location_id'] ?? null,
                             'asset_current_unit' => $branchValue['asset_current_unit'] ?? 0,
+                            'is_enabled' => true,
                         ]);
 
                         $branchChanges['assets_branch_id'] = [
@@ -307,12 +321,29 @@ class AssetsController extends Controller
                 }
             }
 
-            $asset->load(['category', 'tag', 'branchValues']);
+            // Remove branch records unticked in the UI; only allowed when the branch holds no stock
+            if ($request->has('asset_branch_values_remove') && is_array($request->asset_branch_values_remove)) {
+                foreach ($request->asset_branch_values_remove as $branchId) {
+                    $branch = AssetsBranchValues::where('asset_id', $asset->id)
+                        ->where('asset_branch_id', $branchId)
+                        ->first();
+
+                    if ($branch && $branch->is_enabled && ($branch->asset_current_unit ?? 0) == 0) {
+                        $branch->is_enabled = false;
+                        $branch->save();
+                        $asset->appendLogSentence('mengemaskini cabang', [
+                            'assets_branch_id' => ['old' => $branchId, 'new' => null],
+                        ]);
+                    }
+                }
+            }
+
+            $asset->load(['category', 'branchValues']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Asset updated successfully',
-                'data' => $asset
+                'data' => new AssetsResource($asset)
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -366,6 +397,7 @@ class AssetsController extends Controller
                 'asset_description' => $asset->asset_description ?? null,
                 'asset_type' => $asset->asset_type ?? null,
                 'asset_category_id' => $asset->asset_category_id,
+                'asset_tag' => $asset->asset_tag,
                 'asset_stable_unit' => $asset->asset_stable_unit,
                 'asset_purchase_cost' => $asset->asset_purchase_cost ?? null,
                 'asset_sales_cost' => $asset->asset_sales_cost ?? null,
@@ -413,13 +445,21 @@ class AssetsController extends Controller
             $search = $request->search;
             $type = $request->type;
             $categoryId = $request->input('asset_category_id');
+            $tag = $request->input('asset_tag');
+            $includeInactive = $request->boolean('include_inactive');
+            // Masterlist viewers get the quantity breakdown across all branches;
+            // everyone else only sees the quantity at the currently selected branch.
+            $allBranches = $request->boolean('all_branches') && (Auth::user()->accessLevel->view_asset_masterlist ?? false);
 
-            $query = Assets::with(['category', 'tag'])
+            $query = Assets::with(['category'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                    $query->where('asset_branch_id', $branchId)->where('is_enabled', true);
                 })
-                ->with(['branchValues' => function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                ->with(['branchValues' => function ($query) use ($branchId, $allBranches) {
+                    if (!$allBranches) {
+                        $query->where('asset_branch_id', $branchId);
+                    }
+                    $query->where('is_enabled', true);
                 }]);
 
             if ($search) {
@@ -437,6 +477,25 @@ class AssetsController extends Controller
 
             if (!empty($categoryId)) {
                 $query->where('asset_category_id', $categoryId);
+            }
+
+            if (!$includeInactive) {
+                $query->where('is_active', true);
+            }
+
+            if (!empty($tag)) {
+                if ($tag === 'Others') {
+                    $presets = ['Delivery Gift', 'Insurance Gift', 'Test Drive Gift', 'Doorgift', 'Vip Gift', 'Premium Gift', 'Event Gift', 'Booking Gift', 'Customer Visit Gift'];
+                    // Match assets whose tag array contains at least one value not in the preset list.
+                    // Works on MySQL 5.7+ (no JSON_TABLE required).
+                    $sumExpr = collect($presets)
+                        ->map(fn() => "IF(JSON_CONTAINS(asset_tag, JSON_QUOTE(?)), 1, 0)")
+                        ->implode(' + ');
+                    $query->whereNotNull('asset_tag')
+                        ->whereRaw("JSON_LENGTH(asset_tag) > ($sumExpr)", $presets);
+                } else {
+                    $query->whereJsonContains('asset_tag', $tag);
+                }
             }
 
             $assets = $query->latest()->paginate($perPage);
@@ -460,171 +519,11 @@ class AssetsController extends Controller
         }
     }
 
-    public function importFromCSV(Request $request)
-    {
-        try {
-            $request->validate([
-                'csv_file' => 'required|file|mimes:csv,txt',
-            ]);
-
-            $path = $request->file('csv_file')->getRealPath();
-
-            $rows = [];
-            if (($handle = fopen($path, 'r')) !== false) {
-                // Read the header
-                $header = fgetcsv($handle);
-                $header = array_map('trim', $header);
-
-                // Read the rest of the rows
-                while (($data = fgetcsv($handle)) !== false) {
-                    // Combine header and data
-                    $row = array_combine($header, $data);
-
-                    // Clean multiline fields, e.g. name and description
-                    if (isset($row['name'])) {
-                        $row['name'] = preg_replace("/[\r\n]+/", " ", trim($row['name']));
-                    }
-                    if (isset($row['asset_description'])) {
-                        $row['asset_description'] = preg_replace("/[\r\n]+/", " ", trim($row['asset_description']));
-                    }
-
-                    $rows[] = $row;
-                }
-                fclose($handle);
-            } else {
-                throw new Exception('Unable to open CSV file');
-            }
-
-            $results = [];
-            foreach ($rows as $row) {
-                // Sanitize currency values
-                $row['asset_purchase_cost'] = $this->sanitizeCurrency($row['asset_purchase_cost'] ?? null);
-                $row['asset_sales_cost'] = $this->sanitizeCurrency($row['asset_sales_cost'] ?? null);
-
-                // Validation and rest of your code unchanged...
-                $validator = Validator::make($row, [
-                    'name' => 'required|string|max:255',
-                    'asset_running_number' => 'required|string|max:255',
-                    'asset_category' => 'required|string|max:255',
-                    'asset_stable_unit' => 'required|integer|min:0',
-                    'asset_purchase_cost' => 'nullable|numeric|min:0',
-                    'asset_sales_cost' => 'nullable|numeric|min:0',
-                    'asset_unit_measure' => 'required|string|max:255',
-                    'asset_branch' => 'required|string|max:255',
-                    'asset_current_unit' => 'required|integer|min:0',
-                    'asset_description' => 'nullable|string',
-                ]);
-
-                if ($validator->fails()) {
-                    $results[] = [
-                        'row' => $row,
-                        'success' => false,
-                        'errors' => $validator->errors(),
-                    ];
-                    continue;
-                }
-
-                DB::beginTransaction();
-                try {
-                    // Your existing DB logic here (unchanged) ...
-                    $branchId = AssetsBranch::firstOrCreate(['name' => $row['asset_branch']])->id;
-                    $categoryId = AssetsCategory::firstOrCreate(['name' => $row['asset_category']])->id;
-
-                    $existingAsset = Assets::where('asset_running_number', $row['asset_running_number'])->first();
-
-                    if ($existingAsset) {
-                        $exists = AssetsBranchValues::where('asset_id', $existingAsset->id)
-                            ->where('asset_branch_id', $branchId)
-                            ->exists();
-
-                        if (!$exists) {
-                            AssetsBranchValues::create([
-                                'asset_id' => $existingAsset->id,
-                                'asset_branch_id' => $branchId,
-                                'asset_location_id' => null,
-                                'asset_current_unit' => $row['asset_current_unit'],
-                            ]);
-                        } else {
-                            AssetsBranchValues::where('asset_id', $existingAsset->id)
-                                ->where('asset_branch_id', $branchId)
-                                ->update([
-                                    'asset_current_unit' => $row['asset_current_unit'],
-                                    'asset_location_id' => null,
-                                ]);
-                        }
-
-
-                        $results[] = [
-                            'row' => $row,
-                            'success' => true,
-                            'asset_id' => $existingAsset->id,
-                        ];
-                    } else {
-                        $asset = Assets::create([
-                            'name' => $row['name'],
-                            'asset_running_number' => $row['asset_running_number'],
-                            'asset_category_id' => $categoryId,
-                            'asset_type' => $row['asset_type'] ?? null,
-                            'asset_stable_unit' => $row['asset_stable_unit'],
-                            'asset_purchase_cost' => is_numeric($row['asset_purchase_cost']) ? $row['asset_purchase_cost'] : null,
-                            'asset_sales_cost' => is_numeric($row['asset_sales_cost']) ? $row['asset_sales_cost'] : null,
-                            'asset_unit_measure' => $row['asset_unit_measure'],
-                            'asset_description' => $row['asset_description'] ?? '',
-                            'assets_log' => Auth::user()->name . ' imported asset via CSV on ' . now(),
-                        ]);
-
-                        AssetsBranchValues::create([
-                            'asset_id' => $asset->id,
-                            'asset_branch_id' => $branchId,
-                            'asset_location_id' => null,
-                            'asset_current_unit' => $row['asset_current_unit'],
-                        ]);
-
-                        $results[] = [
-                            'row' => $row,
-                            'success' => true,
-                            'asset_id' => $asset->id,
-                        ];
-                    }
-
-                    DB::commit();
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    $results[] = [
-                        'row' => $row,
-                        'success' => false,
-                        'errors' => $e->getMessage(),
-                    ];
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Import complete',
-                'results' => $results,
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-
-    // Add this helper method to the same controller
-    private function sanitizeCurrency($value)
-    {
-        if (is_null($value)) return null;
-
-        // Remove commas and anything that is not a digit or a dot
-        return preg_replace('/[^\d.]/', '', str_replace(',', '', $value));
-    }
-
-
     public function getAssetList()
     {
-        $assets = Assets::with(['category', 'tag', 'branchValues'])->latest()->get();
+        $assets = Assets::with(['category', 'branchValues' => function ($query) {
+            $query->where('is_enabled', true);
+        }])->latest()->get();
 
         if ($assets->isEmpty()) {
             return response()->json([
@@ -638,12 +537,19 @@ class AssetsController extends Controller
             return [
                 'id' => $asset->id,
                 'name' => $asset->name,
+                'is_active' => $asset->is_active ?? true,
                 'asset_running_number' => $asset->asset_running_number,
                 'asset_category_id' => $asset->asset_category_id,
                 'asset_category_name' => $asset->category->name ?? null,
                 'asset_purchase_cost' => $asset->asset_purchase_cost,
                 'asset_sales_cost' => $asset->asset_sales_cost,
                 'asset_unit_measure' => $asset->asset_unit_measure,
+                'branch_values' => $asset->branchValues->map(function ($bv) {
+                    return [
+                        'asset_branch_id' => $bv->asset_branch_id,
+                        'asset_current_unit' => $bv->asset_current_unit,
+                    ];
+                }),
             ];
         });
 
@@ -671,12 +577,12 @@ class AssetsController extends Controller
             // Validate the branch ID
             $branchId = $request->asset_branch_id;
 
-            $assets = Assets::with(['category', 'tag'])
+            $assets = Assets::with(['category'])
                 ->whereHas('branchValues', function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                    $query->where('asset_branch_id', $branchId)->where('is_enabled', true);
                 })
                 ->with(['branchValues' => function ($query) use ($branchId) {
-                    $query->where('asset_branch_id', $branchId);
+                    $query->where('asset_branch_id', $branchId)->where('is_enabled', true);
                 }])
                 ->latest()
                 ->get();

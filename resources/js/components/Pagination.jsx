@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Pagination({ pagination, onPageChange }) {
+function Pagination({ pagination, onPageChange, onPerPageChange, perPageOptions = [10, 25, 50, 100] }) {
 
     if (!pagination || pagination.total <= 0) return null;
 
@@ -45,12 +45,28 @@ function Pagination({ pagination, onPageChange }) {
 
     return (
         <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-700">
-                Showing <span className="font-medium">
-                    {(pagination.currentPage - 1) * pagination.perPage + 1}
-                </span> to <span className="font-medium">
-                    {Math.min(pagination.currentPage * pagination.perPage, pagination.total)}
-                </span> of <span className="font-medium">{pagination.total}</span> results
+            <div className="flex items-center gap-4">
+                {onPerPageChange && (
+                    <label className="flex items-center gap-2 text-sm text-gray-700">
+                        Show
+                        <select
+                            value={pagination.perPage}
+                            onChange={(e) => onPerPageChange(Number(e.target.value))}
+                            className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {perPageOptions.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                    </label>
+                )}
+                <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">
+                        {(pagination.currentPage - 1) * pagination.perPage + 1}
+                    </span> to <span className="font-medium">
+                        {Math.min(pagination.currentPage * pagination.perPage, pagination.total)}
+                    </span> of <span className="font-medium">{pagination.total}</span> results
+                </div>
             </div>
             <nav className="flex items-center">
                 <button

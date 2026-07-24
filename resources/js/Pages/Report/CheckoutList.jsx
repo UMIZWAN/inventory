@@ -7,6 +7,7 @@ import ExportButton from "../../components/ExportButton";
 import TransactionDetail from "../../components/TransactionDetail";
 import Layout from "../../components/layout/Layout";
 import { useOptions } from "../../context/OptionContext";
+import { Head } from "@inertiajs/react";
 
 export default function CheckoutList() {
     const { user, selectedBranch } = useAuth();
@@ -48,11 +49,16 @@ export default function CheckoutList() {
     };
 
     const filteredList = assetOut.filter((txn) => {
+        // Amend adjustments are bookkeeping records, not real invoices
+        if (txn.asset_transaction_purpose_name === 'AMEND') return false;
+
         const txnDate = txn.created_at.slice(0, 10);
 
-        const assetNames = txn.assets_transaction_item_list.map(item => {
+        const assetSearchText = txn.assets_transaction_item_list.map(item => {
             const asset = assets.find(a => a.id === item.asset_id);
-            return asset?.name?.toLowerCase() || '';
+            const name = item.asset_name || item.assets?.name || asset?.name || '';
+            const code = item.assets?.asset_running_number || asset?.asset_running_number || '';
+            return `${name.toLowerCase()} ${code.toLowerCase()}`;
         });
 
         const matchesSearch =
@@ -61,7 +67,7 @@ export default function CheckoutList() {
 
         const matchesItem =
             !filters.itemName ||
-            assetNames.some(name => name.includes(filters.itemName.toLowerCase()));
+            assetSearchText.some(text => text.includes(filters.itemName.toLowerCase()));
 
         const matchesPurpose =
             !filters.purpose || txn.asset_transaction_purpose_name == filters.purpose;
@@ -84,6 +90,7 @@ export default function CheckoutList() {
 
     return (
         <Layout>
+            <Head title="Invoice List" />
             {/* {showCheckoutForm && (
                 <CheckoutForm
                     setShowCheckoutForm={setShowCheckoutForm}
@@ -175,8 +182,9 @@ export default function CheckoutList() {
                                     <td className="px-4 py-2 border">
                                         <div className="space-y-4 mt-2">
                                             {txn?.assets_transaction_item_list?.map((item, index) => {
+                                                const isDeactivated = item.assets?.is_active === false;
                                                 return (
-                                                    <ul key={index} className="list-disc list-inside text-sm text-gray-800 mb-1">
+                                                    <ul key={index} className={`list-disc list-inside text-sm mb-1 ${isDeactivated ? "text-black line-through" : "text-gray-800"}`}>
                                                         <li>{item.asset_name} — {item.asset_unit}</li>
                                                     </ul>
                                                 );

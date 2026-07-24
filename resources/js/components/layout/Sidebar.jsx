@@ -15,10 +15,35 @@ import {
     TbReportMoney,
     TbReportAnalytics,
 } from "react-icons/tb";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { useAuth } from "../../context/AuthContext";
 import { useAssetMeta } from "../../context/AssetsContext";
 import moment from "moment";
+
+const NavItem = ({ href, icon: Icon, label, badge = null }) => {
+    const { url } = usePage();
+    const isActive = url === href || url.startsWith(href + "?") || url.startsWith(href + "/");
+
+    return (
+        <Link
+            href={href}
+            className={`relative flex items-center gap-2.5 px-2 py-[7px] rounded-lg text-sm transition-colors ${
+                isActive
+                    ? "bg-indigo-50 text-indigo-800"
+                    : "text-gray-800 hover:bg-gray-100"
+            }`}
+        >
+            <Icon
+                className={`flex-shrink-0 w-4 h-4 ${isActive ? "text-indigo-800" : "text-gray-500"}`}
+                strokeWidth={1.5}
+            />
+            <span>{label}</span>
+            {badge && (
+                <span className={`absolute right-2 w-2 h-2 rounded-full ${badge}`} />
+            )}
+        </Link>
+    );
+};
 
 const Sidebar = () => {
     const { user, fetchUser, setLoading } = useAuth();
@@ -132,179 +157,81 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-white p-2 shadow-md h-full overflow-y-auto">
-            <div className="mb-2 rounded px-2">
-                <div className="border-b border-gray-300 my-2 py-2">
-                    <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3">
-                        Administration
-                    </label>
+        <div className="w-full min-h-full bg-white flex flex-col gap-4">
+            <div>
+                <div className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-1 px-2">
+                    Administration
                 </div>
-                <ul className="space-y-1">
+                <nav className="flex flex-col gap-[1px]">
                     {user?.view_role && (
-                        <Link href="/access-levels">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiShield className="text-sky-600" />
-                                <span className="font-medium">
-                                    Access Levels
-                                </span>
-                            </li>
-                        </Link>
+                        <NavItem href="/access-levels" icon={FiShield} label="Access Levels" />
                     )}
-
                     {user?.view_user && (
-                        <Link href="/users">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiUsers className="text-sky-600" />
-                                <span className="font-medium">Users</span>
-                            </li>
-                        </Link>
+                        <NavItem href="/users" icon={FiUsers} label="Users" />
                     )}
-
                     {user?.view_branch && (
-                        <Link href="/branch">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiMapPin className="text-sky-600" />
-                                <span className="font-medium">Branches</span>
-                            </li>
-                        </Link>
+                        <NavItem href="/branch" icon={FiMapPin} label="Branches" />
                     )}
-
                     {user?.settings && (
-                        <Link href="/categories">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiTag className="text-sky-600" />
-                                <span className="font-medium">Categories</span>
-                            </li>
-                        </Link>
+                        <NavItem href="/categories" icon={FiTag} label="Categories" />
                     )}
-
                     {user?.settings && (
-                        <Link href="/supplier">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <TbBuildingCommunity className="text-sky-600" />
-                                <span className="font-medium">Suppliers</span>
-                            </li>
-                        </Link>
+                        <NavItem href="/supplier" icon={TbBuildingCommunity} label="Suppliers" />
                     )}
-
                     {user?.settings && (
-                        <Link href="/shipping">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiTruck className="text-sky-600" />
-                                <span className="font-medium">
-                                    Shipping Option
-                                </span>
-                            </li>
-                        </Link>
+                        <NavItem href="/shipping" icon={FiTruck} label="Shipping Option" />
                     )}
-
                     {user?.settings && (
-                        <Link href="/purpose">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FaFileInvoice className="text-sky-600" />
-                                <span className="font-medium">
-                                    Invoice Purpose{" "}
-                                </span>
-                            </li>
-                        </Link>
+                        <NavItem href="/purpose" icon={FaFileInvoice} label="Invoice Purpose" />
                     )}
-
                     {(user?.email === "dayangnh95@gmail.com" ||
-                        user?.email === "umwongsw@gmail.com") && (
-                        <Link href="/import">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiShield className="text-sky-600" />
-                                <span className="font-medium">Import CSV</span>
-                            </li>
-                        </Link>
+                        user?.email === "umwongsw@gmail.com" ||
+                        user?.email === "nafiqahcyindy@gmail.com") && (
+                        <NavItem href="/import" icon={FiShield} label="Import CSV" />
                     )}
-                </ul>
-                <div className="border-b border-gray-300 my-2 py-2">
-                    <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3 mt-3">
-                        Manage Assets
-                    </label>
-                </div>
-                <ul className="space-y-1">
-                    {user?.view_asset_masterlist && (
-                        <Link href="/items/master-list">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer relative">
-                                <FiList className="text-sky-600" />
-                                <span className="font-medium">MasterList</span>
-                                {hasLowOrCriticalStock && (
-                                    <span className="absolute right-3 w-2 h-2 bg-red-500 rounded-full"></span>
-                                )}
-                            </li>
-                        </Link>
-                    )}
-
-                    {user?.view_asset && (
-                        <Link href="/items/item-list">
-                            <li className="flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiPackage className="text-sky-600" />
-                                <span className="font-medium">Stock List</span>
-                            </li>
-                        </Link>
-                    )}
-
-                    {user?.view_transaction && (
-                        <Link href="/items/asset-transaction">
-                            <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <FiRepeat className="text-sky-600" />
-                                <span className="font-medium">
-                                    Stock Movement
-                                </span>
-                                {hasIncomingTransfer && (
-                                    <span
-                                        className={`absolute right-3 w-2 h-2 rounded-full ${
-                                            hasOverdueTransfer
-                                                ? "bg-red-500"
-                                                : "bg-green-500"
-                                        }`}
-                                    />
-                                )}
-                            </li>
-                        </Link>
-                    )}
-                </ul>
-                <div className="border-b border-gray-300 my-2 py-2">
-                    <label className="text-gray-700 font-semibold text-xs uppercase tracking-wide px-3 mt-3">
-                        Manage Report
-                    </label>
-                </div>
-                <ul className="space-y-1">
-                    {user?.view_reports && (
-                        <Link href="/inventory">
-                            <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <TbReportAnalytics className="text-sky-600" />
-                                <span className="font-medium">
-                                    IN-OUT History
-                                </span>
-                            </li>
-                        </Link>
-                    )}
-                    {user?.view_reports && (
-                        <Link href="/inv-list">
-                            <li className="relative flex items-center gap-2 px-3 py-2 rounded hover:bg-sky-100 cursor-pointer">
-                                <TbReportMoney className="text-sky-600" />
-                                <span className="font-medium">Invoice</span>
-                            </li>
-                        </Link>
-                    )}
-                </ul>
+                </nav>
             </div>
-            {/* {menu.map((section, index) => {
-                const isOpen = openSections[section.title];
-                return (
-                    <SidebarSection
-                        key={index}
-                        title={section.title}
-                        items={section.items}
-                        prefix={section.prefix}
-                        isOpen={isOpen}
-                        onToggle={() => toggleSection(section.title)}
-                    />
-                );
-            })} */}
+
+            <div>
+                <div className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-1 px-2">
+                    Manage Assets
+                </div>
+                <nav className="flex flex-col gap-[1px]">
+                    {user?.view_asset_masterlist && (
+                        <NavItem
+                            href="/items/master-list"
+                            icon={FiList}
+                            label="Master List"
+                            badge={hasLowOrCriticalStock ? "bg-red-500" : null}
+                        />
+                    )}
+                    {user?.view_asset && (
+                        <NavItem href="/items/item-list" icon={FiPackage} label="Stock List" />
+                    )}
+                    {user?.view_transaction && (
+                        <NavItem
+                            href="/items/asset-transaction"
+                            icon={FiRepeat}
+                            label="Stock Movement"
+                            badge={hasIncomingTransfer ? (hasOverdueTransfer ? "bg-red-500" : "bg-green-500") : null}
+                        />
+                    )}
+                </nav>
+            </div>
+
+            <div>
+                <div className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-1 px-2">
+                    Manage Report
+                </div>
+                <nav className="flex flex-col gap-[1px]">
+                    {user?.view_reports && (
+                        <NavItem href="/inventory" icon={TbReportAnalytics} label="IN-OUT History" />
+                    )}
+                    {user?.view_reports && (
+                        <NavItem href="/inv-list" icon={TbReportMoney} label="Invoice" />
+                    )}
+                </nav>
+            </div>
         </div>
     );
 };
